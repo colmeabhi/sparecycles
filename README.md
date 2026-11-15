@@ -8,8 +8,8 @@ A client submits a large compute job and the platform divides it into ~60-second
 
 ## Documentation
 
-- [Project Proposal](./docs/proposal.md) ([PDF](./docs/SpareCycles_Proposal.pdf))
-- [Course Project Instructions](./docs/project-instructions.md) ([PDF](./docs/finalProjectDistributedSys.pdf))
+- [Project Proposal](./docs/proposal.md)
+- [Course Project Instructions](./docs/project-instructions.md)
 
 ## Planned Stack
 

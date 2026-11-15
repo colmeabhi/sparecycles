@@ -2,8 +2,6 @@
 
 **Team Members:** Tejas Chakkarwar, Kushagra Bainsla, Abhishek Ahirrao
 
-> Source: [`SpareCycles_Proposal.pdf`](./SpareCycles_Proposal.pdf)
-
 ## 1. Problem Description
 
 SpareCycles is a volunteer computing platform. A client submits a large compute job. The platform divides the job into work units of approximately 60 seconds each. Volunteer computers run the work units and send back the results. Example workloads are fractal image tiles, Monte Carlo simulations, and text embeddings.

@@ -1,7 +1,5 @@
 # Distributed Systems Final Project Instructions
 
-> Source: [`finalProjectDistributedSys.pdf`](./finalProjectDistributedSys.pdf)
-
 For your final project, you will design, implement, and deploy a real-world distributed system or experiment with distributed algorithms in a suitable simulation. Your project should demonstrate key distributed systems scalability, fault tolerance, or consistency.
 
 The project should have a working prototype by early Nov, with improvements in late Nov, leading to a mature system by the end of the course. Choose a feasible, ambitious idea that aligns with the course timeline. You may select from provided examples or propose your own.
