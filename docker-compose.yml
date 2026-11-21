@@ -22,6 +22,7 @@ services:
       SC_NODE_ID: "1"
       SC_LISTEN_ADDR: ":7400"
       SC_METRICS_ADDR: ":9400"
+      SC_ADVERTISE_ADDR: "coordinator:7400"
       SC_PEERS: ""
     ports:
       - "7400:7400"
@@ -35,6 +36,9 @@ services:
     environment:
       SC_COORDINATORS: "coordinator:7400"
       SC_VOLUNTEER_NAME: ""
+      # Each replica listens for gossip on 7500. Its container host name is its address on the network.
+      SC_GOSSIP_ADDR: ":7500"
+      SC_GOSSIP_HOST: "hostname"
     depends_on:
       - coordinator
     deploy:

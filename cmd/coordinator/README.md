@@ -13,7 +13,7 @@ make run-coordinator
 ## What `main` does
 
 1. Loads `.env` and the coordinator settings (`internal/config`).
-2. Builds each part and passes it to `coordinator.New` in `Deps`.
+2. Builds each part and passes it to `coordinator.New` in `Deps`. The SWIM member has the ID `coord-<SC_NODE_ID>`, uses `SC_ADVERTISE_ADDR`, and has the other coordinators in `SC_PEERS` as seeds.
 3. Serves gRPC on `SC_LISTEN_ADDR` (default `:7400`).
 4. Serves `/metrics` and `/healthz` on `SC_METRICS_ADDR` (default `:9400`).
 5. Stops cleanly on Ctrl+C or `SIGTERM`.
@@ -24,7 +24,7 @@ make run-coordinator
 | --- | --- | --- |
 | Elector | `election.NewStatic` | Bully (#13) |
 | Replicator | `replication.Noop` | Quorum (#14) |
-| Membership | `membership.NewStatic` | SWIM (#10) |
+| Membership | `membership.NewSWIM` (done, #10) | — |
 | Leases | `lease.NoExpiry` | Timeout (#6) |
 | Verifier | `verify.FirstResult` | Majority (#7) |
 | Scheduler | `scheduler.FIFO` | Matcher (#8) |

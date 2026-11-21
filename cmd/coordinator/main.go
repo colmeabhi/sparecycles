@@ -57,7 +57,9 @@ func run(cfg config.Coordinator, log *slog.Logger) error {
 
 	m := metrics.NewCoordinator()
 	elector := election.NewStatic(cfg.NodeID, cfg.Peers)
-	srv := newServer(cfg, elector, m, log)
+	transport := membership.NewGRPCTransport()
+	defer transport.Close()
+	srv := newServer(cfg, elector, newMembership(cfg, transport, m, log), m, log)
 
 	lis, err := net.Listen("tcp", cfg.ListenAddr)
 	if err != nil {
@@ -95,12 +97,12 @@ func run(cfg config.Coordinator, log *slog.Logger) error {
 
 // newServer builds the coordinator with the current implementation of each part.
 // To replace a stub, change only its line here (see README.md).
-func newServer(cfg config.Coordinator, elector election.Elector, m *metrics.Coordinator, log *slog.Logger) *coordinator.Server {
+func newServer(cfg config.Coordinator, elector election.Elector, members membership.Membership, m *metrics.Coordinator, log *slog.Logger) *coordinator.Server {
 	return coordinator.New(coordinator.Deps{
 		Table:        tasktable.New(),
 		Elector:      elector,
 		Replicator:   replication.Noop{},
-		Membership:   membership.NewStatic(),
+		Membership:   members,
 		Leases:       lease.NoExpiry{Length: cfg.LeaseDuration},
 		Verifier:     verify.FirstResult{},
 		Scheduler:    scheduler.FIFO{},
@@ -111,6 +113,29 @@ func newServer(cfg config.Coordinator, elector election.Elector, m *metrics.Coor
 		VoteReplicas: cfg.VoteReplicas,
 		Log:          log,
 	})
+}
+
+// newMembership builds the SWIM member of this coordinator. The other coordinators are the seeds.
+func newMembership(cfg config.Coordinator, t membership.Transport, m *metrics.Coordinator, log *slog.Logger) *membership.SWIM {
+	seeds := make([]membership.Member, 0, len(cfg.Peers))
+	for id, addr := range cfg.Peers {
+		seeds = append(seeds, membership.Member{ID: coordinatorMemberID(id), Address: addr, Coordinator: true})
+	}
+	return membership.NewSWIM(membership.SWIMConfig{
+		Self:           membership.Member{ID: coordinatorMemberID(cfg.NodeID), Address: cfg.AdvertiseAddr, Coordinator: true},
+		Seeds:          seeds,
+		Transport:      t,
+		Interval:       cfg.Gossip.Interval,
+		PingTimeout:    cfg.Gossip.PingTimeout,
+		SuspectTimeout: cfg.Gossip.SuspectTimeout,
+		IndirectProbes: cfg.Gossip.IndirectProbes,
+		Metrics:        m.Gossip,
+		Log:            log,
+	})
+}
+
+func coordinatorMemberID(nodeID int) string {
+	return fmt.Sprintf("coord-%d", nodeID)
 }
 
 // newHTTPServer serves /metrics for Prometheus and /healthz for health checks.
