@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpareCycles · one job, many machines</title>
+<meta name="description" content="Fault-tolerant volunteer computing. Big jobs split into small units, run on volunteer machines, and every result checked by majority vote.">
+<meta property="og:title" content="SpareCycles · one job, many machines">
+<meta property="og:description" content="Fault-tolerant volunteer computing. Every result checked by majority vote.">
+<meta property="og:image" content="assets/fractal.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'><rect width='9' height='9' fill='%23f3f2ed'/><rect x='0' y='0' width='2.6' height='2.6' fill='%23161616'/><rect x='3.2' y='0' width='2.6' height='2.6' fill='%232f5bff'/><rect x='6.4' y='0' width='2.6' height='2.6' fill='%23161616'/><rect x='0' y='3.2' width='2.6' height='2.6' fill='%23161616'/><rect x='3.2' y='3.2' width='2.6' height='2.6' fill='%23161616'/><rect x='6.4' y='3.2' width='2.6' height='2.6' fill='%23ff5a1f'/><rect x='0' y='6.4' width='2.6' height='2.6' fill='%23dcdad2'/><rect x='3.2' y='6.4' width='2.6' height='2.6' fill='%23161616'/><rect x='6.4' y='6.4' width='2.6' height='2.6' fill='%23161616'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f3f2ed; --paper-2:#eae8e1; --ink:#161616; --ink-2:#55544f; --ink-3:#8d8b84;
+  --line:#d9d7cf; --pending:#dcdad2; --run:#2f5bff; --bad:#ff5a1f; --ok:#161616;
+  --pixel:"Silkscreen",ui-monospace,monospace;
+  --sans:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --max:1160px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+::selection{background:var(--run);color:#fff}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.px{font-family:var(--pixel)}
+.mono{font-family:var(--mono)}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;background:rgba(243,242,237,.92);backdrop-filter:blur(6px);border-bottom:2px solid var(--ink)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;font-family:var(--pixel);font-size:16px}
+.logo-mark{display:grid;grid-template-columns:repeat(3,6px);gap:2px}
+.logo-mark i{width:6px;height:6px;background:var(--ink)}
+.logo-mark i.b{background:var(--run)} .logo-mark i.o{background:var(--bad)} .logo-mark i.e{background:var(--pending)}
+nav ul{display:flex;gap:28px;list-style:none;margin:0;padding:0}
+nav ul a{text-decoration:none;font-size:14px;font-weight:500}
+nav ul a:hover{color:var(--run)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:12px 18px;font:400 13px/1 var(--pixel);text-decoration:none;border:2px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--ink);transition:transform .1s,box-shadow .1s}
+.btn:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.small{padding:8px 12px;font-size:11px;box-shadow:3px 3px 0 var(--ink)}
+
+/* hero */
+.hero{padding:72px 0 80px;border-bottom:2px solid var(--ink)}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.kicker{font-family:var(--mono);font-size:12px;color:var(--ink-2);display:flex;gap:10px;align-items:center}
+.kicker i{width:8px;height:8px;background:var(--run);display:inline-block}
+h1{font-family:var(--pixel);font-weight:400;font-size:clamp(38px,5.6vw,68px);line-height:1.02;letter-spacing:-.01em;margin:20px 0 24px}
+h1 span{color:var(--run)}
+.lead{font-size:18px;color:var(--ink-2);max-width:500px;margin:0 0 32px}
+.cta{display:flex;gap:16px;flex-wrap:wrap}
+.counters{display:flex;gap:24px;margin-top:36px;font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.counters b{font-family:var(--pixel);font-weight:400;font-size:22px;color:var(--ink);display:block}
+
+.board{border:2px solid var(--ink);background:var(--paper);box-shadow:8px 8px 0 var(--ink)}
+.board-head{display:flex;justify-content:space-between;padding:10px 14px;border-bottom:2px solid var(--ink);font-family:var(--mono);font-size:11.5px}
+.board-head .live{display:flex;align-items:center;gap:6px}
+.board-head .live i{width:8px;height:8px;background:var(--bad);animation:pulse 1s steps(2) infinite}
+@keyframes pulse{50%{background:var(--paper)}}
+.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;padding:14px;aspect-ratio:1/1}
+.t{background:var(--pending);position:relative;background-size:800% 800%;transition:background-color .15s}
+.t.run{background:var(--paper);box-shadow:inset 0 0 0 3px var(--run)}
+.t.run::after{content:"";position:absolute;inset:7px;background:var(--run);animation:work .6s steps(2) infinite}
+@keyframes work{50%{inset:11px}}
+.t.bad{background:var(--bad)}
+.t.ok{background-color:var(--ink);background-image:url(assets/fractal.png)}
+.legend{display:flex;gap:18px;padding:10px 14px;border-top:2px solid var(--ink);font-family:var(--mono);font-size:11.5px;color:var(--ink-2);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;display:inline-block}
+
+/* marquee */
+.ticker{background:var(--ink);color:var(--paper);overflow:hidden;white-space:nowrap;border-bottom:2px solid var(--ink)}
+.ticker div{display:inline-block;padding:12px 0;font-family:var(--pixel);font-size:14px;animation:slide 40s linear infinite}
+.ticker span{margin:0 28px} .ticker em{font-style:normal;color:var(--run)}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* sections */
+section{padding:100px 0;border-bottom:2px solid var(--ink);scroll-margin-top:60px}
+.head{display:flex;justify-content:space-between;align-items:end;gap:40px;margin-bottom:56px;flex-wrap:wrap}
+.head .no{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+h2{font-family:var(--pixel);font-weight:400;font-size:clamp(28px,3.6vw,44px);line-height:1.05;margin:10px 0 0;max-width:640px}
+.head p{max-width:400px;color:var(--ink-2);margin:0}
+
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);border:2px solid var(--ink)}
+.step{padding:22px;background:var(--paper)}
+.step+.step{border-left:2px solid var(--ink)}
+.art{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;width:100%;max-width:120px;aspect-ratio:1/1;margin-bottom:20px}
+.art i{background:var(--pending)}
+.art i.k{background:var(--ink)} .art i.b{background:var(--run)} .art i.o{background:var(--bad)} .art i.l{background:transparent;box-shadow:inset 0 0 0 2px var(--ink)}
+.step .n{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.step h3{font-family:var(--pixel);font-weight:400;font-size:18px;margin:6px 0 8px}
+.step p{margin:0;font-size:14px;color:var(--ink-2)}
+
+/* failures */
+.fails{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.fail{border:2px solid var(--ink);padding:26px;background:var(--paper);box-shadow:6px 6px 0 var(--ink)}
+.fail .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.badge{font-family:var(--mono);font-size:11px;padding:3px 8px;border:1.5px solid var(--ink)}
+.badge.wip{border-color:var(--bad);color:var(--bad)} .badge.ok{background:var(--ink);color:var(--paper)}
+.fail h3{font-family:var(--pixel);font-weight:400;font-size:20px;margin:0}
+.strip{display:flex;align-items:center;gap:10px;margin:6px 0 18px;flex-wrap:wrap}
+.frame{display:grid;grid-template-columns:repeat(3,18px);gap:3px}
+.frame i{width:18px;height:18px;background:var(--pending)}
+.frame i.k{background:var(--ink)} .frame i.b{background:var(--run)} .frame i.o{background:var(--bad)} .frame i.x{background:transparent;box-shadow:inset 0 0 0 2px var(--ink-3)}
+.strip .arr{font-family:var(--pixel);color:var(--ink-3);font-size:14px}
+.fail dl{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;margin:0;font-size:14px}
+.fail dt{font-family:var(--mono);font-size:12px;color:var(--ink-3);padding-top:2px}
+.fail dd{margin:0}
+
+/* fit */
+.fit{display:grid;grid-template-columns:1fr 1fr;border:2px solid var(--ink)}
+.fit>div{padding:30px}
+.fit>div+div{border-left:2px solid var(--ink);background:var(--paper-2)}
+.fit h3{font-family:var(--pixel);font-weight:400;font-size:20px;margin:0 0 18px;display:flex;gap:12px;align-items:center}
+.fit h3 i{width:22px;height:22px;display:inline-block}
+.fit ul{list-style:none;margin:0;padding:0}
+.fit li{padding:12px 0;border-top:1.5px solid var(--line);font-size:15px;color:var(--ink-2)}
+.fit li b{color:var(--ink);font-weight:500}
+.rule{margin-top:24px;font-family:var(--pixel);font-size:18px;line-height:1.4;max-width:860px}
+.rule span{background:var(--run);color:#fff;padding:0 6px}
+
+/* algorithms */
+.algos{display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--ink);border-left:2px solid var(--ink)}
+.algo{padding:28px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);position:relative;transition:background .15s}
+.algo:hover{background:var(--paper-2)}
+.algo .big{font-family:var(--pixel);font-size:48px;line-height:1;color:var(--pending)}
+.algo:hover .big{color:var(--run)}
+.algo h3{font-family:var(--pixel);font-weight:400;font-size:19px;margin:18px 0 8px}
+.algo p{margin:0 0 18px;font-size:14px;color:var(--ink-2)}
+.algo .meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.algo .meta a{color:var(--run);text-decoration:none}
+
+/* run */
+.run{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:start}
+.term{background:var(--ink);color:#e8e6df;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--run)}
+.term-head{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid #2c2c2a}
+.term-head i{width:10px;height:10px;background:#3b3b38;display:block}
+.term pre{margin:0;padding:20px;font:13px/1.85 var(--mono);overflow-x:auto}
+.term .p{color:#9fb4ff} .term .d{color:#8d8b84} .term .g{color:#b9f26b}
+.checks{list-style:none;margin:0;padding:0}
+.checks li{display:grid;grid-template-columns:24px 1fr;gap:14px;padding:16px 0;border-bottom:1.5px solid var(--line);font-size:15px;color:var(--ink-2)}
+.checks li i{width:14px;height:14px;background:var(--ink);margin-top:5px}
+.checks li i.w{background:transparent;box-shadow:inset 0 0 0 2px var(--bad)}
+.checks b{color:var(--ink);font-weight:500}
+
+/* roadmap */
+.bar{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.seg .cells{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin-bottom:16px}
+.seg .cells i{aspect-ratio:1/1;background:var(--pending)}
+.seg.done .cells i{background:var(--ink)}
+.seg.wip .cells i:nth-child(-n+3){background:var(--run)}
+.seg .d{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.seg h3{font-family:var(--pixel);font-weight:400;font-size:16px;margin:4px 0 6px}
+.seg p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.seg .s{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:11px}
+
+/* team */
+.team{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.person{border:2px solid var(--ink);padding:24px;display:grid;grid-template-columns:56px 1fr;gap:18px;align-items:center}
+.ava{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;width:56px;height:56px}
+.ava i{background:var(--pending)} .ava i.k{background:var(--ink)} .ava i.b{background:var(--run)} .ava i.o{background:var(--bad)}
+.person h3{font-family:var(--pixel);font-weight:400;font-size:16px;margin:0}
+.person a{font-family:var(--mono);font-size:12px;color:var(--run);text-decoration:none}
+.person p{grid-column:1/-1;margin:0;font-size:14px;color:var(--ink-2)}
+
+footer{padding:36px 0 48px;font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer a{text-decoration:none} footer a:hover{color:var(--run)}
+
+@media (max-width:980px){
+  .hero-grid,.run{grid-template-columns:minmax(0,1fr)}
+  .flow{grid-template-columns:repeat(2,1fr)}
+  .step:nth-child(odd){border-left:0}
+  .step:nth-child(n+3){border-top:2px solid var(--ink)}
+  .step:last-child{grid-column:1/-1}
+  .algos{grid-template-columns:repeat(2,1fr)}
+  .bar{grid-template-columns:repeat(2,1fr);gap:28px}
+  .team{grid-template-columns:1fr}
+  nav ul{display:none}
+}
+@media (max-width:640px){
+  .fails,.fit,.algos,.flow,.bar{grid-template-columns:minmax(0,1fr)}
+  .fit>div+div{border-left:0;border-top:2px solid var(--ink)}
+  .step+.step{border-left:0;border-top:2px solid var(--ink)}
+  .fail dl{grid-template-columns:1fr}
+  .board{box-shadow:5px 5px 0 var(--ink)}
+}
+@media (prefers-reduced-motion:reduce){
+  .ticker div,.board-head .live i,.t.run::after{animation:none}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top">
+      <span class="logo-mark" aria-hidden="true"><i></i><i class="b"></i><i></i><i></i><i></i><i class="o"></i><i class="e"></i><i></i><i></i></span>
+      SpareCycles
+    </a>
+    <ul>
+      <li><a href="#flow">How it works</a></li>
+      <li><a href="#failures">Failures</a></li>
+      <li><a href="#algorithms">Algorithms</a></li>
+      <li><a href="#run">Run it</a></li>
+    </ul>
+    <a class="btn small" href="https://github.com/colmeabhi/sparecycles">GitHub</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="kicker"><i></i>fault-tolerant volunteer computing</div>
+      <h1>One job.<br>Many machines.<br><span>Verified.</span></h1>
+      <p class="lead">SpareCycles cuts a big job into small squares of work, runs each square on 3 volunteer machines, and keeps a result only when 2 of them agree.</p>
+      <div class="cta">
+        <a class="btn primary" href="#run">Run it locally</a>
+        <a class="btn" href="#flow">How it works</a>
+      </div>
+      <div class="counters" aria-live="polite">
+        <div><b id="c-ok">0</b>accepted</div>
+        <div><b id="c-run">0</b>running</div>
+        <div><b id="c-bad">0</b>outvoted</div>
+      </div>
+    </div>
+
+    <figure class="board" style="margin:0">
+      <div class="board-head"><span>simulation · 64 units · 3 copies each</span><span class="live"><i></i>live</span></div>
+      <div class="grid" id="grid" aria-label="Simulation of 64 work units being computed, voted on and assembled into a fractal image"></div>
+      <figcaption class="legend">
+        <span><i style="background:var(--pending)"></i>waiting</span>
+        <span><i style="box-shadow:inset 0 0 0 2px var(--run)"></i>running</span>
+        <span><i style="background:var(--bad)"></i>outvoted, retry</span>
+        <span><i style="background:var(--ink)"></i>accepted</span>
+      </figcaption>
+    </figure>
+  </div>
+</header>
+
+<div class="ticker" aria-hidden="true"><div>
+  <span>leases</span><em>■</em><span>swim gossip</span><em>■</em><span>bully election</span><em>■</em><span>majority vote</span><em>■</em><span>replication</span><em>■</em><span>resource discovery</span><em>■</em>
+  <span>leases</span><em>■</em><span>swim gossip</span><em>■</em><span>bully election</span><em>■</em><span>majority vote</span><em>■</em><span>replication</span><em>■</em><span>resource discovery</span><em>■</em>
+</div></div>
+
+<main>
+
+<section id="flow">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="no">01 · how it works</div><h2>From one big job to one answer you can trust.</h2></div>
+      <p>The leader splits the job, volunteers pull the squares, and votes decide which results to keep.</p>
+    </div>
+    <div class="flow">
+      <div class="step">
+        <div class="art" aria-hidden="true"><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i></div>
+        <div class="n">01</div><h3>Split</h3><p>The job becomes squares of about 60 seconds each.</p>
+      </div>
+      <div class="step">
+        <div class="art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="b"></i><i></i><i></i><i></i><i></i><i></i><i class="b"></i><i></i><i></i><i></i><i></i><i></i><i class="b"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="n">02</div><h3>Pull</h3><p>Volunteers ask for work. Each square goes to 3 of them.</p>
+      </div>
+      <div class="step">
+        <div class="art" aria-hidden="true"><i class="k"></i><i class="k"></i><i class="b"></i><i></i><i></i><i class="k"></i><i class="b"></i><i class="b"></i><i></i><i></i><i class="b"></i><i class="b"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="n">03</div><h3>Run</h3><p>Each volunteer computes before its lease ends.</p>
+      </div>
+      <div class="step">
+        <div class="art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="k"></i><i></i><i class="k"></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="n">04</div><h3>Vote</h3><p>2 matching results win. The odd one is outvoted.</p>
+      </div>
+      <div class="step">
+        <div class="art" aria-hidden="true"><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i></div>
+        <div class="n">05</div><h3>Merge</h3><p>All squares join into one final result.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="failures">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="no">02 · when things go wrong</div><h2>Built to expect failure.</h2></div>
+      <p>Each failure has a way to find it and a plan to recover. These recovery paths are being built now.</p>
+    </div>
+    <div class="fails">
+      <article class="fail">
+        <div class="top"><h3>A volunteer leaves</h3><span class="badge wip">in progress #6</span></div>
+        <div class="strip" aria-hidden="true">
+          <div class="frame"><i class="b"></i><i class="k"></i><i></i></div><span class="arr">›</span>
+          <div class="frame"><i class="x"></i><i class="k"></i><i></i></div><span class="arr">›</span>
+          <div class="frame"><i class="b"></i><i class="k"></i><i class="b"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="k"></i><i class="k"></i><i class="k"></i></div>
+        </div>
+        <dl><dt>found by</dt><dd>The lease ends, or gossip marks it dead</dd><dt>response</dt><dd>Another volunteer gets the square</dd></dl>
+      </article>
+      <article class="fail">
+        <div class="top"><h3>A volunteer lies</h3><span class="badge wip">in progress #7</span></div>
+        <div class="strip" aria-hidden="true">
+          <div class="frame"><i class="b"></i><i class="b"></i><i class="b"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="k"></i><i class="o"></i><i class="k"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="k"></i><i class="x"></i><i class="k"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="k"></i><i class="k"></i><i class="k"></i></div>
+        </div>
+        <dl><dt>found by</dt><dd>Majority vote on the result</dd><dt>response</dt><dd>It loses 2 to 1, and its trust drops</dd></dl>
+      </article>
+      <article class="fail">
+        <div class="top"><h3>The leader crashes</h3><span class="badge wip">in progress #13</span></div>
+        <div class="strip" aria-hidden="true">
+          <div class="frame"><i class="b"></i><i class="k"></i><i class="k"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="x"></i><i class="k"></i><i class="k"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="x"></i><i class="k"></i><i class="b"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="k"></i><i class="k"></i><i class="b"></i></div>
+        </div>
+        <dl><dt>found by</dt><dd>Backups miss its heartbeats</dd><dt>response</dt><dd>Bully election, then continue from the copied table</dd></dl>
+      </article>
+      <article class="fail">
+        <div class="top"><h3>The network splits</h3><span class="badge wip">in progress #13</span></div>
+        <div class="strip" aria-hidden="true">
+          <div class="frame"><i class="b"></i><i class="k"></i><i class="k"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="b"></i><i class="x"></i><i class="x"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="x"></i><i class="k"></i><i class="b"></i></div><span class="arr">›</span>
+          <div class="frame"><i class="k"></i><i class="k"></i><i class="b"></i></div>
+        </div>
+        <dl><dt>found by</dt><dd>Term numbers</dd><dt>response</dt><dd>A leader acts only while it reaches 2 of 3 coordinators</dd></dl>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="fit">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="no">03 · use cases</div><h2>Made for jobs that cut into squares.</h2></div>
+      <p>Each square must run alone and give the same answer every time.</p>
+    </div>
+    <div class="fit">
+      <div>
+        <h3><i style="background:var(--ink)"></i>Great fit</h3>
+        <ul>
+          <li><b>Image rendering</b> · fractals, frames, map tiles</li>
+          <li><b>Monte Carlo</b> · each run is separate</li>
+          <li><b>Parameter search</b> · one small model per square</li>
+          <li><b>Batch inference</b> · one batch of inputs per square</li>
+          <li><b>Data preparation</b> · one shard per square</li>
+        </ul>
+      </div>
+      <div>
+        <h3><i style="background:var(--bad)"></i>Not a fit</h3>
+        <ul>
+          <li><b>Training one large model</b> · machines sync many times a second</li>
+          <li><b>Games and live apps</b> · need replies in milliseconds</li>
+          <li><b>Pieces that talk</b> · one slow machine blocks the rest</li>
+          <li><b>Private data</b> · squares run on other people's machines</li>
+        </ul>
+      </div>
+    </div>
+    <p class="rule">Can you cut it into squares that each run alone and always give the <span>same result</span>? Then SpareCycles can run it.</p>
+  </div>
+</section>
+
+<section id="algorithms">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="no">04 · under the hood</div><h2>Six distributed algorithms, written from scratch.</h2></div>
+      <p>No consensus or gossip libraries. Each one is a small Go package behind a clear interface.</p>
+    </div>
+    <div class="algos">
+      <div class="algo"><div class="big">01</div><h3>Leader election</h3><p>Bully algorithm with terms. The highest live node leads, and only one leader acts.</p><div class="meta"><span>internal/election</span><a href="https://github.com/colmeabhi/sparecycles/issues/13">#13</a></div></div>
+      <div class="algo"><div class="big">02</div><h3>Replication</h3><p>Each task-table change reaches a backup before the leader confirms it.</p><div class="meta"><span>internal/replication</span><a href="https://github.com/colmeabhi/sparecycles/issues/14">#14</a></div></div>
+      <div class="algo"><div class="big">03</div><h3>Gossip</h3><p>SWIM probes and indirect pings find failed nodes with a fixed load per node.</p><div class="meta"><span>internal/membership</span><a href="https://github.com/colmeabhi/sparecycles/issues/10">#10</a></div></div>
+      <div class="algo"><div class="big">04</div><h3>Leases</h3><p>Each square is lent, not given. When the lease ends, someone else gets it.</p><div class="meta"><span>internal/lease</span><a href="https://github.com/colmeabhi/sparecycles/issues/6">#6</a></div></div>
+      <div class="algo"><div class="big">05</div><h3>Majority vote</h3><p>3 volunteers run each square. 2 matching results win. No majority means 2 more.</p><div class="meta"><span>internal/verify</span><a href="https://github.com/colmeabhi/sparecycles/issues/7">#7</a></div></div>
+      <div class="algo"><div class="big">06</div><h3>Resource discovery</h3><p>Match squares to volunteer speed and trust, based on VECTrust.</p><div class="meta"><span>internal/scheduler</span><a href="https://github.com/colmeabhi/sparecycles/issues/8">#8</a></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="run">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="no">05 · run it</div><h2>A cluster on your laptop in a minute.</h2></div>
+      <p>You need Go 1.27 or later. No config file is needed to start.</p>
+    </div>
+    <div class="run">
+      <div class="term">
+        <div class="term-head"><i></i><i></i><i></i></div>
+<pre><span class="d"># get the code and run the tests</span>
+<span class="p">$</span> git clone https://github.com/colmeabhi/sparecycles.git
+<span class="p">$</span> make -C sparecycles test
+
+<span class="d"># one terminal each</span>
+<span class="p">$</span> make run-coordinator
+<span class="p">$</span> make run-volunteer
+<span class="p">$</span> make run-client
+submitted job-d2aa3e085e2e with 16 units
+16/16 units done
+<span class="g">done in 1.002s · saved result.png</span></pre>
+      </div>
+      <ul class="checks">
+        <li><i></i><span><b>Docker Compose.</b> <span class="mono">make up</span> starts a coordinator, 3 volunteers and Prometheus.</span></li>
+        <li><i></i><span><b>Metrics.</b> Jobs, units, leases and wrong results on <span class="mono">:9400/metrics</span>.</span></li>
+        <li><i></i><span><b>One config style.</b> Every setting is an <span class="mono">SC_</span> variable with a safe default.</span></li>
+        <li><i></i><span><b>Your own workload.</b> Write Split, Run and Merge, then register it.</span></li>
+        <li><i class="w"></i><span><b>AWS.</b> Terraform for 3 zones and spot volunteers, in progress (#15).</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <div class="head">
+      <div><div class="no">06 · roadmap</div><h2>Where we are.</h2></div>
+    </div>
+    <div class="bar">
+      <div class="seg done"><div class="cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="d">Oct 9 – 19</div><h3>Core pipeline</h3><p>Coordinator, volunteers and the fractal workload over gRPC.</p><span class="s">■ done</span></div>
+      <div class="seg wip"><div class="cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="d">Oct 20 – Nov 2</div><h3>Leases, voting, AWS</h3><p>Reassign lost work, vote on results, deploy to EC2.</p><span class="s" style="color:var(--run)">■ in progress</span></div>
+      <div class="seg wip"><div class="cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="d">Nov 3 – 16</div><h3>Election, gossip</h3><p>Three coordinators, Bully election, SWIM gossip.</p><span class="s" style="color:var(--run)">■ in progress</span></div>
+      <div class="seg wip"><div class="cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="d">Nov 17 – 25</div><h3>Security, workloads</h3><p>Volunteer tokens, signed tasks, Monte Carlo.</p><span class="s" style="color:var(--run)">■ in progress</span></div>
+      <div class="seg"><div class="cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="d">Nov 26 – Dec 4</div><h3>Evaluation</h3><p>Load tests, failure demos, report and demo.</p><span class="s" style="color:var(--ink-3)">□ planned</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="team" style="border-bottom:0">
+  <div class="wrap">
+    <div class="head"><div><div class="no">07 · team</div><h2>The people behind it.</h2></div></div>
+    <div class="team">
+      <div class="person"><div class="ava" aria-hidden="true"><i class="k"></i><i class="k"></i><i class="k"></i><i class="b"></i><i></i><i class="k"></i><i></i><i></i><i></i><i class="k"></i><i></i><i class="b"></i><i class="b"></i><i class="k"></i><i></i><i></i></div><div><h3>Tejas Chakkarwar</h3><a href="https://github.com/Tejas-Chakkarwar">@Tejas-Chakkarwar</a></div><p>Leases, majority voting, resource discovery, Monte Carlo.</p></div>
+      <div class="person"><div class="ava" aria-hidden="true"><i class="k"></i><i></i><i class="b"></i><i class="k"></i><i class="k"></i><i class="k"></i><i></i><i></i><i class="k"></i><i></i><i class="k"></i><i class="o"></i><i class="k"></i><i></i><i></i><i class="k"></i></div><div><h3>Kushagra Bainsla</h3><a href="https://github.com/Kushagrabainsla">@Kushagrabainsla</a></div><p>Core platform, SWIM gossip, security, evaluation.</p></div>
+      <div class="person"><div class="ava" aria-hidden="true"><i></i><i class="k"></i><i class="k"></i><i></i><i class="k"></i><i class="b"></i><i class="b"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i class="k"></i><i></i><i></i><i class="k"></i></div><div><h3>Abhishek Ahirrao</h3><a href="https://github.com/colmeabhi">@colmeabhi</a></div><p>Leader election, replication, AWS deployment.</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>SpareCycles · Distributed Systems final project · Fall 2026</span>
+    <span><a href="https://github.com/colmeabhi/sparecycles">GitHub</a> · <a href="https://github.com/colmeabhi/sparecycles/blob/main/docs/setup.md">Setup</a> · <a href="#top">Top ↑</a></span>
+  </div>
+</footer>
+
+<script>
+// Hero simulation: 64 units run on volunteers, some get outvoted and retried,
+// and accepted units show their slice of the fractal. It is an illustration only.
+(function () {
+  const SIZE = 8, TOTAL = SIZE * SIZE, SLOTS = 7, BAD_RATE = 0.08;
+  const grid = document.getElementById('grid');
+  const counters = { ok: document.getElementById('c-ok'), run: document.getElementById('c-run'), bad: document.getElementById('c-bad') };
+  const tiles = [], state = [], timer = [];
+  let outvoted = 0, resetting = false;
+
+  for (let i = 0; i < TOTAL; i++) {
+    const t = document.createElement('div');
+    t.className = 't';
+    const x = i % SIZE, y = Math.floor(i / SIZE);
+    t.style.backgroundPosition = (x * 100 / (SIZE - 1)) + '% ' + (y * 100 / (SIZE - 1)) + '%';
+    grid.appendChild(t);
+    tiles.push(t);
+  }
+
+  function setState(i, s) { state[i] = s; tiles[i].className = 't' + (s === 'wait' ? '' : ' ' + s); }
+
+  function reset() {
+    outvoted = 0;
+    for (let i = 0; i < TOTAL; i++) { setState(i, 'wait'); timer[i] = 0; }
+  }
+
+  function render() {
+    counters.ok.textContent = state.filter(s => s === 'ok').length;
+    counters.run.textContent = state.filter(s => s === 'run').length;
+    counters.bad.textContent = outvoted;
+  }
+
+  function tick() {
+    if (resetting) return;
+    for (let i = 0; i < TOTAL; i++) {
+      if (state[i] === 'run' && --timer[i] <= 0) {
+        if (Math.random() < BAD_RATE) { setState(i, 'bad'); timer[i] = 3; outvoted++; }
+        else setState(i, 'ok');
+      } else if (state[i] === 'bad' && --timer[i] <= 0) {
+        setState(i, 'wait');
+      }
+    }
+    let running = state.filter(s => s === 'run').length;
+    const waiting = [];
+    for (let i = 0; i < TOTAL; i++) if (state[i] === 'wait') waiting.push(i);
+    while (running < SLOTS && waiting.length) {
+      const pick = waiting.splice(Math.floor(Math.random() * Math.min(waiting.length, 10)), 1)[0];
+      setState(pick, 'run'); timer[pick] = 3 + Math.floor(Math.random() * 6); running++;
+    }
+    render();
+    if (state.every(s => s === 'ok')) {
+      resetting = true;
+      setTimeout(() => { reset(); render(); resetting = false; }, 2600);
+    }
+  }
+
+  reset();
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    for (let i = 0; i < TOTAL; i++) setState(i, 'ok');
+    render();
+    return;
+  }
+  setInterval(tick, 260);
+})();
+</script>
+</body>
+</html>

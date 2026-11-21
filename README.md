@@ -1,27 +1,40 @@
+<div align="center">
+
 # SpareCycles
 
-A fault-tolerant volunteer computing platform for the Distributed Systems final project.
+**Your spare computers, working as one.**
 
-A client submits a large compute job and the platform divides it into ~60-second work units that volunteers run in Docker containers. Three replicated coordinators lease work units to volunteers, verify results by majority vote, and recover from coordinator failure via leader election.
+Fault-tolerant volunteer computing: big jobs split into small units, run on volunteer machines, and every answer checked by majority vote.
 
-**Team:** Tejas Chakkarwar, Kushagra Bainsla, Abhishek Ahirrao
+[![CI](https://github.com/colmeabhi/sparecycles/actions/workflows/ci.yml/badge.svg)](https://github.com/colmeabhi/sparecycles/actions/workflows/ci.yml)
+![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white)
+
+**[Product page](https://colmeabhi.github.io/sparecycles/)** · [Setup guide](docs/setup.md) · [Project guide](AGENTS.md)
+
+</div>
+
+## Quick start
+
+```bash
+make test              # run all tests
+make run-coordinator   # terminal 1
+make run-volunteer     # terminal 2
+make run-client        # terminal 3: saves result.png
+```
+
+You need Go 1.27 or later. No `.env` file is needed to start.
 
 ## Documentation
 
-- [Project Proposal](./docs/proposal.md)
-- [Course Project Instructions](./docs/project-instructions.md)
-- [Setup and Run](./docs/setup.md)
+| Document | Content |
+| --- | --- |
+| [Setup guide](docs/setup.md) | Install, settings, local and Docker runs |
+| [Project guide](AGENTS.md) | Rules, design decisions, code layout, definition of done |
+| [Proposal](docs/proposal.md) · [Instructions](docs/project-instructions.md) | Course documents |
+| [Grading checklist](docs/grading-checklist.md) | Every graded requirement and its status |
 
-## Planned Stack
+Each folder has a `README.md` that explains what it does.
 
-Go, gRPC, Docker, Terraform, AWS EC2, Prometheus
+## Team
 
-## Milestones
-
-| Milestone | Dates | Result |
-| --- | --- | --- |
-| M1 Core pipeline | Oct 9 – Oct 19 | One coordinator and volunteers run the fractal workload with gRPC |
-| M2 Leases, voting, AWS | Oct 20 – Nov 2 | Lease reassignment, majority voting, AWS deployment; working prototype |
-| M3 Election, gossip | Nov 3 – Nov 16 | Three coordinators, Bully election, gossip, resource discovery |
-| M4 Security, workloads | Nov 17 – Nov 25 | Authentication, signed tasks, malicious volunteer test, more workloads |
-| M5 Evaluation | Nov 26 – Dec 4 | Benchmarks, failure tests, final report, presentation |
+[Tejas Chakkarwar](https://github.com/Tejas-Chakkarwar) · [Kushagra Bainsla](https://github.com/Kushagrabainsla) · [Abhishek Ahirrao](https://github.com/colmeabhi)
