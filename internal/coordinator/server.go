@@ -50,6 +50,7 @@ type Deps struct {
 	VoteReplicas int
 	Log          *slog.Logger
 	Now          func() time.Time // for tests; nil means time.Now
+	TickInterval time.Duration    // leader background work; zero means 1 second
 }
 
 // Server is a coordinator.
@@ -73,6 +74,9 @@ func New(d Deps) *Server {
 	if d.Log == nil {
 		d.Log = slog.Default()
 	}
+	if d.TickInterval <= 0 {
+		d.TickInterval = time.Second
+	}
 	return &Server{d: d, volunteers: map[string]scheduler.Volunteer{}, submitted: map[string]time.Time{}}
 }
 
@@ -93,7 +97,7 @@ func (s *Server) Run(ctx context.Context) error {
 	if err := s.d.Membership.Start(ctx); err != nil {
 		return fmt.Errorf("start membership: %w", err)
 	}
-	tick := time.NewTicker(time.Second)
+	tick := time.NewTicker(s.d.TickInterval)
 	defer tick.Stop()
 	for {
 		select {
@@ -112,6 +116,11 @@ func (s *Server) tick(ctx context.Context) {
 		return
 	}
 	s.d.Metrics.IsLeader.Set(1)
+	s.releaseExpiredLeases(ctx)
+	s.releaseDeadVolunteers(ctx)
+}
+
+func (s *Server) releaseExpiredLeases(ctx context.Context) {
 	for _, e := range s.d.Leases.Expired(s.d.Table.OpenUnits(), s.d.Now()) {
 		err := s.commit(ctx, tasktable.Change{Kind: tasktable.LeaseReleased, UnitID: e.UnitID, VolunteerID: e.VolunteerID})
 		if err != nil {
@@ -120,6 +129,34 @@ func (s *Server) tick(ctx context.Context) {
 		}
 		s.d.Metrics.LeasesExpired.Inc()
 		s.d.Log.Info("lease expired", "unit", e.UnitID, "volunteer", e.VolunteerID)
+	}
+}
+
+// releaseDeadVolunteers releases the leases of volunteers that gossip declared dead,
+// so their units move on before the lease ends. It also forgets those volunteers:
+// if one was wrongly declared dead, its next request gets NotFound and it registers again.
+func (s *Server) releaseDeadVolunteers(ctx context.Context) {
+	for _, u := range s.d.Table.OpenUnits() {
+		for volunteerID := range u.Assignments {
+			if !s.d.Membership.Dead(volunteerID) {
+				continue
+			}
+			err := s.commit(ctx, tasktable.Change{Kind: tasktable.LeaseReleased, UnitID: u.ID, VolunteerID: volunteerID})
+			if err != nil {
+				s.d.Log.Warn("release lease of dead volunteer", "unit", u.ID, "volunteer", volunteerID, "err", err)
+				continue
+			}
+			s.d.Metrics.LeasesDeadVolunteer.Inc()
+			s.d.Log.Info("lease released: volunteer dead", "unit", u.ID, "volunteer", volunteerID)
+		}
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for id := range s.volunteers {
+		if s.d.Membership.Dead(id) {
+			delete(s.volunteers, id)
+			s.d.Log.Info("volunteer removed: dead", "volunteer", id)
+		}
 	}
 }
 

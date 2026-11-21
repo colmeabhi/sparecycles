@@ -21,15 +21,25 @@ func LoadDotEnv() {
 	_ = godotenv.Load()
 }
 
+// Gossip holds the SWIM failure detector settings. Coordinators and volunteers share them.
+type Gossip struct {
+	Interval       time.Duration // time between two probes
+	PingTimeout    time.Duration // wait for a direct ack
+	SuspectTimeout time.Duration // time from suspect to dead
+	IndirectProbes int           // members asked to ping a target that did not answer
+}
+
 // Coordinator holds the settings for one coordinator node.
 type Coordinator struct {
 	NodeID         int
 	ListenAddr     string
+	AdvertiseAddr  string         // address that other nodes use to reach this node
 	Peers          map[int]string // other coordinators, by node ID
 	MetricsAddr    string
 	VolunteerToken string
 	LeaseDuration  time.Duration
 	VoteReplicas   int
+	Gossip         Gossip
 }
 
 // LoadCoordinator reads the coordinator settings.
@@ -40,6 +50,7 @@ func LoadCoordinator() (Coordinator, error) {
 		return c, err
 	}
 	c.ListenAddr = stringVar("SC_LISTEN_ADDR", ":7400")
+	c.AdvertiseAddr = stringVar("SC_ADVERTISE_ADDR", defaultAdvertise(c.ListenAddr))
 	if c.Peers, err = peersVar("SC_PEERS"); err != nil {
 		return c, err
 	}
@@ -54,8 +65,14 @@ func LoadCoordinator() (Coordinator, error) {
 	if c.VoteReplicas < 1 {
 		return c, fmt.Errorf("SC_VOTE_REPLICAS must be 1 or more, got %d", c.VoteReplicas)
 	}
+	if c.Gossip, err = loadGossip(); err != nil {
+		return c, err
+	}
 	return c, nil
 }
+
+// GossipOff is the SC_GOSSIP_ADDR value that turns the volunteer gossip listener off.
+const GossipOff = "off"
 
 // Volunteer holds the settings for one volunteer.
 type Volunteer struct {
@@ -65,6 +82,9 @@ type Volunteer struct {
 	CPUCores     int
 	MemoryMB     int
 	SpeedScore   float64
+	GossipAddr   string // listen address for gossip, or GossipOff
+	GossipHost   string // host name that other nodes use to reach this volunteer
+	Gossip       Gossip
 }
 
 // LoadVolunteer reads the volunteer settings.
@@ -84,7 +104,49 @@ func LoadVolunteer() (Volunteer, error) {
 	if v.SpeedScore, err = floatVar("SC_SPEED_SCORE", 1.0); err != nil {
 		return v, err
 	}
+	v.GossipAddr = stringVar("SC_GOSSIP_ADDR", ":0")
+	v.GossipHost = stringVar("SC_GOSSIP_HOST", "127.0.0.1")
+	if v.GossipHost == "hostname" {
+		v.GossipHost = host
+	}
+	if v.Gossip, err = loadGossip(); err != nil {
+		return v, err
+	}
 	return v, nil
+}
+
+func loadGossip() (Gossip, error) {
+	var g Gossip
+	var err error
+	if g.Interval, err = durationVar("SC_GOSSIP_INTERVAL", time.Second); err != nil {
+		return g, err
+	}
+	if g.PingTimeout, err = durationVar("SC_GOSSIP_PING_TIMEOUT", 400*time.Millisecond); err != nil {
+		return g, err
+	}
+	if g.SuspectTimeout, err = durationVar("SC_GOSSIP_SUSPECT_TIMEOUT", 5*time.Second); err != nil {
+		return g, err
+	}
+	if g.IndirectProbes, err = intVar("SC_GOSSIP_INDIRECT", 3); err != nil {
+		return g, err
+	}
+	switch {
+	case g.Interval <= 0 || g.PingTimeout <= 0 || g.SuspectTimeout <= 0:
+		return g, fmt.Errorf("SC_GOSSIP_INTERVAL, SC_GOSSIP_PING_TIMEOUT and SC_GOSSIP_SUSPECT_TIMEOUT must be positive")
+	case g.PingTimeout >= g.Interval:
+		return g, fmt.Errorf("SC_GOSSIP_PING_TIMEOUT (%s) must be less than SC_GOSSIP_INTERVAL (%s)", g.PingTimeout, g.Interval)
+	case g.IndirectProbes < 0:
+		return g, fmt.Errorf("SC_GOSSIP_INDIRECT must be 0 or more, got %d", g.IndirectProbes)
+	}
+	return g, nil
+}
+
+// defaultAdvertise turns a listen address such as ":7400" into "127.0.0.1:7400".
+func defaultAdvertise(listen string) string {
+	if strings.HasPrefix(listen, ":") {
+		return "127.0.0.1" + listen
+	}
+	return listen
 }
 
 // Client holds the settings for the job client.

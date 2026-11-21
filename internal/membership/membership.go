@@ -1,9 +1,9 @@
 // Package membership tracks which nodes are alive.
 //
 // Owner: Kushagra (gossip and failure detection, SWIM style).
-// The base version thinks that every node it knows is alive.
-// The real version pings random members, uses indirect pings through other
-// members, and spreads alive, suspect and dead updates by gossip.
+// Static thinks that every node it knows is alive. SWIM pings members in turn,
+// uses indirect pings through other members, and spreads alive, suspect and
+// dead updates on its messages (see swim.go).
 package membership
 
 import (
@@ -28,8 +28,11 @@ type Membership interface {
 	Start(ctx context.Context) error
 	// Join adds a member, for example a new volunteer.
 	Join(m Member)
-	// Alive reports whether a member is alive now.
+	// Alive reports whether a member is alive or suspect now. An unknown member is not alive.
 	Alive(id string) bool
+	// Dead reports whether the group has declared the member dead.
+	// An unknown member is not dead. Act on failures only with Dead, never with !Alive.
+	Dead(id string) bool
 	// Members returns all members that are not dead.
 	Members() []Member
 }
@@ -63,6 +66,9 @@ func (s *Static) Alive(id string) bool {
 	_, ok := s.members[id]
 	return ok
 }
+
+// Dead always returns false.
+func (s *Static) Dead(string) bool { return false }
 
 // Members returns all added members.
 func (s *Static) Members() []Member {

@@ -23,7 +23,9 @@ type Coordinator struct {
 	UnitsAccepted        prometheus.Counter
 	WrongResults         prometheus.Counter
 	LeasesExpired        prometheus.Counter
+	LeasesDeadVolunteer  prometheus.Counter
 	ReplicationErrors    prometheus.Counter
+	Gossip               *Gossip
 }
 
 // NewCoordinator creates the coordinator metrics in a new registry.
@@ -62,9 +64,13 @@ func NewCoordinator() *Coordinator {
 		LeasesExpired: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_leases_expired_total", Help: "Leases released because they expired.",
 		}),
+		LeasesDeadVolunteer: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_leases_dead_volunteer_total", Help: "Leases released because gossip marked the volunteer dead.",
+		}),
 		ReplicationErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_replication_errors_total", Help: "Changes that could not be replicated.",
 		}),
+		Gossip: NewGossip(reg),
 	}
 	reg.MustRegister(
 		m.IsLeader,
@@ -77,11 +83,49 @@ func NewCoordinator() *Coordinator {
 		m.UnitsAccepted,
 		m.WrongResults,
 		m.LeasesExpired,
+		m.LeasesDeadVolunteer,
 		m.ReplicationErrors,
 		prometheus.NewGoCollector(),
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 	)
 	return m
+}
+
+// Gossip holds the SWIM failure detector metrics.
+type Gossip struct {
+	Members          *prometheus.GaugeVec // label: state (alive, suspect, dead)
+	PingsSent        prometheus.Counter
+	PingFailures     prometheus.Counter
+	IndirectProbes   prometheus.Counter
+	Refutations      prometheus.Counter
+	DetectionSeconds prometheus.Histogram
+}
+
+// NewGossip creates the gossip metrics and registers them in reg.
+func NewGossip(reg prometheus.Registerer) *Gossip {
+	g := &Gossip{
+		Members: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "sc_gossip_members", Help: "Known members, by state.",
+		}, []string{"state"}),
+		PingsSent: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_gossip_pings_total", Help: "Direct pings sent.",
+		}),
+		PingFailures: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_gossip_ping_failures_total", Help: "Direct pings with no valid ack.",
+		}),
+		IndirectProbes: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_gossip_indirect_probes_total", Help: "Indirect ping requests sent to helper members.",
+		}),
+		Refutations: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_gossip_refutations_total", Help: "Times this node refuted a suspicion about itself.",
+		}),
+		DetectionSeconds: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name: "sc_gossip_detection_seconds", Help: "Time from the last contact with a member to marking it dead.",
+			Buckets: prometheus.ExponentialBuckets(0.5, 2, 10),
+		}),
+	}
+	reg.MustRegister(g.Members, g.PingsSent, g.PingFailures, g.IndirectProbes, g.Refutations, g.DetectionSeconds)
+	return g
 }
 
 // Handler returns the HTTP handler for /metrics.

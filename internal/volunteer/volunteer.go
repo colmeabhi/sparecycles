@@ -26,6 +26,8 @@ type Config struct {
 	CPUCores   int
 	MemoryMB   int
 	SpeedScore float64
+	// OnRegister is called with the new volunteer ID after each registration. It may be nil.
+	OnRegister func(id string)
 }
 
 // Volunteer runs units for the leader.
@@ -94,6 +96,9 @@ func (v *Volunteer) register(ctx context.Context) error {
 		}
 		v.id = resp.GetVolunteerId()
 		v.log.Info("registered", "volunteer", v.id)
+		if v.cfg.OnRegister != nil {
+			v.cfg.OnRegister(v.id)
+		}
 		return nil
 	})
 }
