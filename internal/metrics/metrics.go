@@ -12,20 +12,21 @@ import (
 
 // Coordinator holds the coordinator metrics.
 type Coordinator struct {
-	Registry             *prometheus.Registry
-	IsLeader             prometheus.Gauge
-	JobsSubmitted        prometheus.Counter
-	JobsFinished         *prometheus.CounterVec // label: state (done, failed)
-	JobDuration          prometheus.Histogram
-	VolunteersRegistered prometheus.Counter
-	UnitsAssigned        prometheus.Counter
-	ResultsReceived      prometheus.Counter
-	UnitsAccepted        prometheus.Counter
-	WrongResults         prometheus.Counter
-	LeasesExpired        prometheus.Counter
-	LeasesDeadVolunteer  prometheus.Counter
-	ReplicationErrors    prometheus.Counter
-	Gossip               *Gossip
+	Registry              *prometheus.Registry
+	IsLeader              prometheus.Gauge
+	JobsSubmitted         prometheus.Counter
+	JobsFinished          *prometheus.CounterVec // label: state (done, failed)
+	JobDuration           prometheus.Histogram
+	VolunteersRegistered  prometheus.Counter
+	RegistrationsRejected prometheus.Counter
+	UnitsAssigned         prometheus.Counter
+	ResultsReceived       prometheus.Counter
+	UnitsAccepted         prometheus.Counter
+	WrongResults          prometheus.Counter
+	LeasesExpired         prometheus.Counter
+	LeasesDeadVolunteer   prometheus.Counter
+	ReplicationErrors     prometheus.Counter
+	Gossip                *Gossip
 }
 
 // NewCoordinator creates the coordinator metrics in a new registry.
@@ -48,6 +49,9 @@ func NewCoordinator() *Coordinator {
 		}),
 		VolunteersRegistered: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_volunteers_registered_total", Help: "Volunteer registrations.",
+		}),
+		RegistrationsRejected: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_registrations_rejected_total", Help: "Volunteer registrations rejected for a bad token.",
 		}),
 		UnitsAssigned: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_units_assigned_total", Help: "Unit leases given to volunteers.",
@@ -78,6 +82,7 @@ func NewCoordinator() *Coordinator {
 		m.JobsFinished,
 		m.JobDuration,
 		m.VolunteersRegistered,
+		m.RegistrationsRejected,
 		m.UnitsAssigned,
 		m.ResultsReceived,
 		m.UnitsAccepted,

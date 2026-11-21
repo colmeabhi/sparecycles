@@ -259,7 +259,10 @@ func (s *Server) Register(_ context.Context, req *pb.RegisterRequest) (*pb.Regis
 	if err := s.requireLeader(); err != nil {
 		return nil, err
 	}
-	if err := s.d.Auth.Authenticate(req.GetToken()); err != nil {
+	tokenName, err := s.d.Auth.Authenticate(req.GetToken())
+	if err != nil {
+		s.d.Metrics.RegistrationsRejected.Inc()
+		s.d.Log.Warn("registration rejected", "name", req.GetName(), "reason", err)
 		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 	r := req.GetResources()
@@ -274,7 +277,8 @@ func (s *Server) Register(_ context.Context, req *pb.RegisterRequest) (*pb.Regis
 	s.mu.Unlock()
 	s.d.Membership.Join(membership.Member{ID: v.ID, Address: v.Address})
 	s.d.Metrics.VolunteersRegistered.Inc()
-	s.d.Log.Info("volunteer registered", "volunteer", v.ID, "name", v.Name, "cpu", v.Resources.CPUCores, "speed", v.Resources.SpeedScore)
+	s.d.Log.Info("volunteer registered", "volunteer", v.ID, "name", v.Name, "token", tokenName,
+		"cpu", v.Resources.CPUCores, "speed", v.Resources.SpeedScore)
 	return &pb.RegisterResponse{VolunteerId: v.ID}, nil
 }
 
@@ -321,9 +325,10 @@ func (s *Server) RequestWork(ctx context.Context, req *pb.RequestWorkRequest) (*
 	job, _ := s.d.Table.Job(u.JobID)
 	s.d.Metrics.UnitsAssigned.Inc()
 	s.d.Log.Debug("unit assigned", "unit", u.ID, "volunteer", v.ID, "lease_expiry", expiry)
+	msg := security.TaskMessage(u.ID, job.Workload, expiry.UnixMilli(), u.Payload)
 	return &pb.RequestWorkResponse{Unit: &pb.WorkUnit{
 		UnitId: u.ID, JobId: u.JobID, Workload: job.Workload, Payload: u.Payload,
-		LeaseExpiresUnixMs: expiry.UnixMilli(), Signature: s.d.Signer.Sign(u.Payload),
+		LeaseExpiresUnixMs: expiry.UnixMilli(), Signature: s.d.Signer.Sign(msg),
 	}}, nil
 }
 

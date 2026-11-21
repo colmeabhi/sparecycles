@@ -35,17 +35,17 @@ type Volunteer struct {
 	cfg       Config
 	pool      *leaderclient.Pool
 	workloads *workload.Registry
-	signer    security.Signer
+	verifier  security.Verifier
 	log       *slog.Logger
 	id        string
 }
 
-// New returns a Volunteer.
-func New(cfg Config, pool *leaderclient.Pool, workloads *workload.Registry, signer security.Signer, log *slog.Logger) *Volunteer {
+// New returns a Volunteer. The verifier checks the signature of each task before it runs.
+func New(cfg Config, pool *leaderclient.Pool, workloads *workload.Registry, verifier security.Verifier, log *slog.Logger) *Volunteer {
 	if log == nil {
 		log = slog.Default()
 	}
-	return &Volunteer{cfg: cfg, pool: pool, workloads: workloads, signer: signer, log: log}
+	return &Volunteer{cfg: cfg, pool: pool, workloads: workloads, verifier: verifier, log: log}
 }
 
 // Run works until ctx ends.
@@ -65,6 +65,10 @@ func (v *Volunteer) Run(ctx context.Context) error {
 		}
 		wait, err := v.step(ctx)
 		if err != nil {
+			var stop *stopError
+			if errors.As(err, &stop) {
+				return err
+			}
 			if status.Code(err) == codes.NotFound {
 				v.log.Info("leader does not know this volunteer, registering again")
 				v.id = ""
@@ -124,6 +128,13 @@ func (v *Volunteer) step(ctx context.Context) (time.Duration, error) {
 		return retry, nil
 	}
 
+	if err := v.verifier.Verify(security.TaskMessage(unit.GetUnitId(), unit.GetWorkload(), unit.GetLeaseExpiresUnixMs(), unit.GetPayload()), unit.GetSignature()); err != nil {
+		// A bad signature means a wrong key or a forged task. Every later task would fail too,
+		// so stop instead of taking units that this volunteer will never run.
+		v.log.Error("bad signature: check SC_SIGNING_PUBLIC_KEY", "unit", unit.GetUnitId(), "err", err)
+		return 0, &stopError{fmt.Errorf("bad signature on unit %s: %w", unit.GetUnitId(), err)}
+	}
+
 	output, err := v.run(ctx, unit)
 	if err != nil {
 		// Do not send a result. The lease expires and another volunteer gets the unit.
@@ -143,10 +154,13 @@ func (v *Volunteer) step(ctx context.Context) (time.Duration, error) {
 	})
 }
 
+// stopError is an error after which the volunteer must stop working.
+type stopError struct{ err error }
+
+func (e *stopError) Error() string { return e.err.Error() }
+func (e *stopError) Unwrap() error { return e.err }
+
 func (v *Volunteer) run(ctx context.Context, unit *pb.WorkUnit) ([]byte, error) {
-	if err := v.signer.Verify(unit.GetPayload(), unit.GetSignature()); err != nil {
-		return nil, fmt.Errorf("bad signature: %w", err)
-	}
 	w, err := v.workloads.Get(unit.GetWorkload())
 	if err != nil {
 		return nil, err

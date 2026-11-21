@@ -1,13 +1,14 @@
 MODULE := github.com/colmeabhi/sparecycles
 GOBIN  := $(shell go env GOPATH)/bin
 
-.PHONY: help proto build test vet run-coordinator run-volunteer run-client up down logs clean
+.PHONY: help proto build test vet keys run-coordinator run-volunteer run-client up down logs clean
 
 help:
 	@echo "make build            Build all binaries into ./bin"
 	@echo "make test             Run all tests with the race detector"
 	@echo "make vet              Run go vet"
 	@echo "make proto            Regenerate gRPC code (needs protoc and plugins)"
+	@echo "make keys             Print a new task signing key pair for .env"
 	@echo "make run-coordinator  Run one coordinator on this machine"
 	@echo "make run-volunteer    Run one volunteer on this machine"
 	@echo "make run-client       Submit a fractal job and save result.png"
@@ -30,6 +31,9 @@ test:
 
 vet:
 	go vet ./...
+
+keys:
+	@go run ./cmd/keygen
 
 run-coordinator:
 	go run ./cmd/coordinator

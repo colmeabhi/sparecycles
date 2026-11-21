@@ -66,9 +66,27 @@ func run(cfg config.Volunteer, log *slog.Logger) error {
 		log.Info("gossip off: this volunteer is found dead only by lease expiry")
 	}
 
-	v := volunteer.New(vcfg, pool, workload.Default(), security.NoSign{}, log)
+	verifier, err := newVerifier(cfg, log)
+	if err != nil {
+		return err
+	}
+	v := volunteer.New(vcfg, pool, workload.Default(), verifier, log)
 	log.Info("volunteer started", "coordinators", cfg.Coordinators, "gossip", vcfg.Address)
 	return v.Run(ctx)
+}
+
+// newVerifier returns the task signature check. With no public key, tasks are not checked.
+func newVerifier(cfg config.Volunteer, log *slog.Logger) (security.Verifier, error) {
+	if cfg.SigningPublicKey == "" {
+		log.Warn("SC_SIGNING_PUBLIC_KEY is empty: task signatures are not checked")
+		return security.NoSign{}, nil
+	}
+	v, err := security.NewEd25519Verifier(cfg.SigningPublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("SC_SIGNING_PUBLIC_KEY: %w", err)
+	}
+	log.Info("task signatures are checked with Ed25519")
+	return v, nil
 }
 
 type gossipNode struct {

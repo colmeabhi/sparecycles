@@ -31,15 +31,17 @@ type Gossip struct {
 
 // Coordinator holds the settings for one coordinator node.
 type Coordinator struct {
-	NodeID         int
-	ListenAddr     string
-	AdvertiseAddr  string         // address that other nodes use to reach this node
-	Peers          map[int]string // other coordinators, by node ID
-	MetricsAddr    string
-	VolunteerToken string
-	LeaseDuration  time.Duration
-	VoteReplicas   int
-	Gossip         Gossip
+	NodeID          int
+	ListenAddr      string
+	AdvertiseAddr   string         // address that other nodes use to reach this node
+	Peers           map[int]string // other coordinators, by node ID
+	MetricsAddr     string
+	VolunteerToken  string   // one token for all volunteers; used when VolunteerTokens is empty
+	VolunteerTokens []string // per-volunteer tokens, "name=token" or "token"
+	SigningKey      string   // base64 Ed25519 seed; empty means tasks are not signed
+	LeaseDuration   time.Duration
+	VoteReplicas    int
+	Gossip          Gossip
 }
 
 // LoadCoordinator reads the coordinator settings.
@@ -56,6 +58,8 @@ func LoadCoordinator() (Coordinator, error) {
 	}
 	c.MetricsAddr = stringVar("SC_METRICS_ADDR", ":9400")
 	c.VolunteerToken = stringVar("SC_VOLUNTEER_TOKEN", "")
+	c.VolunteerTokens = listVar("SC_VOLUNTEER_TOKENS", nil)
+	c.SigningKey = stringVar("SC_SIGNING_KEY", "")
 	if c.LeaseDuration, err = durationVar("SC_LEASE_DURATION", 3*time.Minute); err != nil {
 		return c, err
 	}
@@ -85,6 +89,8 @@ type Volunteer struct {
 	GossipAddr   string // listen address for gossip, or GossipOff
 	GossipHost   string // host name that other nodes use to reach this volunteer
 	Gossip       Gossip
+	// SigningPublicKey is the base64 Ed25519 public key of the coordinators. Empty means no check.
+	SigningPublicKey string
 }
 
 // LoadVolunteer reads the volunteer settings.
@@ -104,6 +110,7 @@ func LoadVolunteer() (Volunteer, error) {
 	if v.SpeedScore, err = floatVar("SC_SPEED_SCORE", 1.0); err != nil {
 		return v, err
 	}
+	v.SigningPublicKey = stringVar("SC_SIGNING_PUBLIC_KEY", "")
 	v.GossipAddr = stringVar("SC_GOSSIP_ADDR", ":0")
 	v.GossipHost = stringVar("SC_GOSSIP_HOST", "127.0.0.1")
 	if v.GossipHost == "hostname" {

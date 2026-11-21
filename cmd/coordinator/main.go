@@ -55,11 +55,15 @@ func run(cfg config.Coordinator, log *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	sec, err := newSecurity(cfg, log)
+	if err != nil {
+		return err
+	}
 	m := metrics.NewCoordinator()
 	elector := election.NewStatic(cfg.NodeID, cfg.Peers)
 	transport := membership.NewGRPCTransport()
 	defer transport.Close()
-	srv := newServer(cfg, elector, newMembership(cfg, transport, m, log), m, log)
+	srv := newServer(cfg, elector, newMembership(cfg, transport, m, log), sec, m, log)
 
 	lis, err := net.Listen("tcp", cfg.ListenAddr)
 	if err != nil {
@@ -97,7 +101,7 @@ func run(cfg config.Coordinator, log *slog.Logger) error {
 
 // newServer builds the coordinator with the current implementation of each part.
 // To replace a stub, change only its line here (see README.md).
-func newServer(cfg config.Coordinator, elector election.Elector, members membership.Membership, m *metrics.Coordinator, log *slog.Logger) *coordinator.Server {
+func newServer(cfg config.Coordinator, elector election.Elector, members membership.Membership, sec securityParts, m *metrics.Coordinator, log *slog.Logger) *coordinator.Server {
 	return coordinator.New(coordinator.Deps{
 		Table:        tasktable.New(),
 		Elector:      elector,
@@ -106,13 +110,51 @@ func newServer(cfg config.Coordinator, elector election.Elector, members members
 		Leases:       lease.NoExpiry{Length: cfg.LeaseDuration},
 		Verifier:     verify.FirstResult{},
 		Scheduler:    scheduler.FIFO{},
-		Auth:         security.SharedToken{Token: cfg.VolunteerToken},
-		Signer:       security.NoSign{},
+		Auth:         sec.auth,
+		Signer:       sec.signer,
 		Workloads:    workload.Default(),
 		Metrics:      m,
 		VoteReplicas: cfg.VoteReplicas,
 		Log:          log,
 	})
+}
+
+type securityParts struct {
+	auth   security.Authenticator
+	signer security.Signer
+}
+
+// newSecurity picks the token check and the task signer from the settings, and logs the choice.
+// With no tokens and no key, it keeps the open defaults, so the repo runs after a clone.
+func newSecurity(cfg config.Coordinator, log *slog.Logger) (securityParts, error) {
+	var p securityParts
+	switch {
+	case len(cfg.VolunteerTokens) > 0:
+		list, err := security.NewTokenList(cfg.VolunteerTokens)
+		if err != nil {
+			return p, fmt.Errorf("SC_VOLUNTEER_TOKENS: %w", err)
+		}
+		p.auth = list
+		log.Info("volunteer tokens: per-volunteer list", "tokens", len(cfg.VolunteerTokens))
+	case cfg.VolunteerToken != "":
+		p.auth = security.SharedToken{Token: cfg.VolunteerToken}
+		log.Info("volunteer tokens: one shared token")
+	default:
+		p.auth = security.SharedToken{}
+		log.Warn("no volunteer token set: every volunteer is accepted")
+	}
+	if cfg.SigningKey == "" {
+		p.signer = security.NoSign{}
+		log.Warn("SC_SIGNING_KEY is empty: tasks are not signed")
+		return p, nil
+	}
+	signer, err := security.NewEd25519Signer(cfg.SigningKey)
+	if err != nil {
+		return p, fmt.Errorf("SC_SIGNING_KEY: %w", err)
+	}
+	p.signer = signer
+	log.Info("tasks are signed with Ed25519", "public_key", signer.PublicKeyBase64())
+	return p, nil
 }
 
 // newMembership builds the SWIM member of this coordinator. The other coordinators are the seeds.
@@ -149,9 +191,6 @@ func newHTTPServer(addr string, m *metrics.Coordinator) *http.Server {
 }
 
 func logStart(cfg config.Coordinator, elector election.Elector, log *slog.Logger) {
-	if cfg.VolunteerToken == "" {
-		log.Warn("SC_VOLUNTEER_TOKEN is empty: every volunteer is accepted")
-	}
 	leader, _ := elector.Leader()
 	log.Info("coordinator started", "grpc", cfg.ListenAddr, "metrics", cfg.MetricsAddr,
 		"peers", len(cfg.Peers), "leader", leader, "is_leader", elector.IsLeader())

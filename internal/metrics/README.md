@@ -13,6 +13,7 @@ Defines the Prometheus metrics. The coordinator serves them on `SC_METRICS_ADDR`
 | `sc_jobs_finished_total{state}` | counter | Jobs finished, by `done` or `failed` |
 | `sc_job_duration_seconds` | histogram | Time from submit to result |
 | `sc_volunteers_registered_total` | counter | Volunteer registrations |
+| `sc_registrations_rejected_total` | counter | Registrations rejected for a bad token |
 | `sc_units_assigned_total` | counter | Leases given out |
 | `sc_results_received_total` | counter | Results recorded |
 | `sc_units_accepted_total` | counter | Units accepted |

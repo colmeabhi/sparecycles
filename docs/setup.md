@@ -59,6 +59,21 @@ cp .env.example .env
 
 `.env.example` explains each variable.
 
+### Tokens and signed tasks (optional)
+
+With no tokens and no keys, every volunteer is accepted and tasks are not signed. To turn security on:
+
+1. Make a key pair. It prints 2 lines for `.env`:
+
+   ```bash
+   make keys
+   ```
+
+2. In the coordinator `.env`: set `SC_SIGNING_KEY`, and `SC_VOLUNTEER_TOKENS=alice=some-long-secret,bob=another-secret`.
+3. In each volunteer `.env`: set `SC_SIGNING_PUBLIC_KEY` and its own `SC_VOLUNTEER_TOKEN`.
+
+A volunteer with a wrong token stops at registration. A volunteer with a wrong public key stops at its first task.
+
 ## 4. Run on one machine
 
 Open 3 terminals in the repo folder.
