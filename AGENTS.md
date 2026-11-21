@@ -8,8 +8,8 @@ SpareCycles is a fault-tolerant volunteer computing platform. It is the final pr
 
 - [docs/proposal.md](docs/proposal.md) is the proposal that the team submitted to the professor. It defines the scope.
 - [docs/project-instructions.md](docs/project-instructions.md) is the assignment from the professor. It defines the requirements for the code, the report and the presentation.
-- [README.md](README.md) is a short note for the project folder. It is not the course submission README.
-
+- [README.md](README.md) is lean: a one-line pitch, quick start, doc links and the team. Do not add product detail there. It is not the course submission README.
+- [site/](site/) is the product page (GitHub Pages). Product detail goes there. Keep it true: mark unfinished features as in progress.
 - [docs/grading-checklist.md](docs/grading-checklist.md) lists each graded requirement. Check it before you plan or finish work.
 
 If this file and the proposal disagree on scope, the proposal is correct.
@@ -52,6 +52,7 @@ Each folder in the table has a `README.md`. Read it before you change the folder
 | `internal/replication/` | Copy table changes to backups | `Noop`: copies nothing | Abhishek |
 | `deploy/` | Prometheus config, later Terraform | Prometheus only | Abhishek (Terraform) |
 | `cmd/` | Binaries: coordinator, volunteer, client | Complete | All |
+| `site/` | Product page for GitHub Pages (one HTML file, pixel tile style) | Complete | All |
 
 To replace a stub, add the new type in the package and use it in `cmd/coordinator/main.go` (or `cmd/volunteer/main.go`).
 
@@ -106,6 +107,7 @@ A feature is done only when it has all of these:
 - Clear log lines that show the feature work in a demo.
 - A way to trigger its failure scenario, if it has one.
 - An updated `README.md` in each module folder it changed (state, implementations, settings, metrics).
+- An updated product page (`site/index.html`) if users can see the change, for example a finished algorithm or a new workload. Update the roadmap section too.
 - An update to `docs/grading-checklist.md` if it completes an item.
 
 ## Rules
