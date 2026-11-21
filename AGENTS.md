@@ -1,6 +1,6 @@
 # Project guide
 
-Read this file before you start work on SpareCycles.
+Read this file before you start work on SpareCycles. Then read [docs/status.md](docs/status.md): it says what is left, who does it next, and what blocks it.
 
 ## The project
 
@@ -11,6 +11,7 @@ SpareCycles is a fault-tolerant volunteer computing platform. It is the final pr
 - [README.md](README.md) is lean: a one-line pitch, quick start, doc links and the team. Do not add product detail there. It is not the course submission README.
 - [site/](site/) is the product page (GitHub Pages). Product detail goes there. Keep it true: mark unfinished features as in progress.
 - [docs/grading-checklist.md](docs/grading-checklist.md) lists each graded requirement. Check it before you plan or finish work.
+- [docs/status.md](docs/status.md) is the shared status: deadlines, next step per person, dependencies, steps to run after a merge, and a log of merged PRs.
 
 If this file and the proposal disagree on scope, the proposal is correct.
 
@@ -111,6 +112,7 @@ A feature is done only when it has all of these:
 - An updated `README.md` in each module folder it changed (state, implementations, settings, metrics).
 - An updated product page (`site/index.html`) if users can see the change, for example a finished algorithm or a new workload. Update the roadmap section too.
 - An update to `docs/grading-checklist.md` if it completes an item.
+- An update to `docs/status.md` in the same PR: a "Done" line with the date and PR link, the new next step, and any new "Waiting on" or "After merge" entry.
 
 ## Rules
 
