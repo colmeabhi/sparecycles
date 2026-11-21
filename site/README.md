@@ -49,14 +49,11 @@ Then open `http://localhost:8088`.
 
 ## Publish
 
-`.github/workflows/pages.yml` deploys `site/` on each push to `main` that changes it.
+Push to `main`. `.github/workflows/pages.yml` deploys `site/` on each push that changes it, and the page updates in about 1 minute at `https://colmeabhi.github.io/sparecycles/`.
 
-The repo owner must turn Pages on once:
+The repo owner turns Pages on once: **Settings → Pages → Source:** GitHub Actions. Until then, the Pages job fails.
 
-1. **Settings → Pages → Source:** GitHub Actions.
-2. **Settings → Secrets and variables → Actions → Variables:** add `PAGES_ENABLED` with the value `true`.
-
-A private repo on the free plan can not use Pages. The owner needs GitHub Pro (free with the GitHub Student Developer Pack), or the repo must be public. The published page is public in both cases.
+A private repo on the free plan can not use Pages. The repo must be public, or the owner needs GitHub Pro (free with the GitHub Student Developer Pack). The published page is public in both cases.
 
 ## Rules
 

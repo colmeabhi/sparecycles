@@ -1,9 +1,7 @@
-# Deploys site/ to GitHub Pages.
+# Deploys site/ to GitHub Pages on each push to main that changes it.
 #
-# It runs only after the repo owner turns Pages on:
-#   1. Settings → Pages → Source: "GitHub Actions".
-#   2. Settings → Secrets and variables → Actions → Variables: PAGES_ENABLED = true.
-# Until then, the job is skipped, so main stays green.
+# One-time setup by the repo owner: Settings → Pages → Source: "GitHub Actions".
+# Until then, this job fails at the configure step.
 
 name: Pages
 
@@ -26,7 +24,6 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || vars.PAGES_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
