@@ -14,9 +14,10 @@ make run-coordinator
 
 1. Loads `.env` and the coordinator settings (`internal/config`).
 2. Builds each part and passes it to `coordinator.New` in `Deps`. The SWIM member has the ID `coord-<SC_NODE_ID>`, uses `SC_ADVERTISE_ADDR`, and has the other coordinators in `SC_PEERS` as seeds.
-3. Serves gRPC on `SC_LISTEN_ADDR` (default `:7400`).
-4. Serves `/metrics` and `/healthz` on `SC_METRICS_ADDR` (default `:9400`).
-5. Stops cleanly on Ctrl+C or `SIGTERM`.
+3. Picks the security parts (`newSecurity`): `SC_VOLUNTEER_TOKENS`, else `SC_VOLUNTEER_TOKEN`, else open; and Ed25519 signing if `SC_SIGNING_KEY` is set. It logs the choice.
+4. Serves gRPC on `SC_LISTEN_ADDR` (default `:7400`).
+5. Serves `/metrics` and `/healthz` on `SC_METRICS_ADDR` (default `:9400`).
+6. Stops cleanly on Ctrl+C or `SIGTERM`.
 
 ## Parts in use
 
@@ -28,6 +29,6 @@ make run-coordinator
 | Leases | `lease.NoExpiry` | Timeout (#6) |
 | Verifier | `verify.FirstResult` | Majority (#7) |
 | Scheduler | `scheduler.FIFO` | Matcher (#8) |
-| Auth, Signer | `security.SharedToken`, `security.NoSign` | Tokens and Ed25519 (#11) |
+| Auth, Signer | `security.TokenList` or `SharedToken`, and `Ed25519Signer` or `NoSign`, from the settings (done, #11) | — |
 
 To replace a part, change only its line in `main.go`, and update this table.

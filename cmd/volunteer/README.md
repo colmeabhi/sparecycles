@@ -17,7 +17,8 @@ Run the command in more terminals to add more volunteers. Each one picks a free 
 1. Loads `.env` and the volunteer settings (`internal/config`).
 2. Connects to all coordinators in `SC_COORDINATORS` (`internal/leaderclient`).
 3. Unless `SC_GOSSIP_ADDR=off`: starts a gRPC gossip listener and a SWIM member (`internal/membership`), and sends its address in `Register`. After each registration, it gives the new volunteer ID to SWIM.
-4. Runs the loop in `internal/volunteer` until Ctrl+C or `SIGTERM`.
+4. Checks task signatures with `SC_SIGNING_PUBLIC_KEY` if it is set (`internal/security`).
+5. Runs the loop in `internal/volunteer` until Ctrl+C or `SIGTERM`, or until a task has a bad signature.
 
 ## Settings
 
@@ -25,6 +26,7 @@ Run the command in more terminals to add more volunteers. Each one picks a free 
 | --- | --- | --- |
 | `SC_COORDINATORS` | `localhost:7400` | Coordinator addresses |
 | `SC_VOLUNTEER_TOKEN` | empty | Registration token |
+| `SC_SIGNING_PUBLIC_KEY` | empty (no check) | Coordinators' public key, from `make keys` |
 | `SC_VOLUNTEER_NAME` | host name | Name in logs |
 | `SC_CPU_CORES`, `SC_MEMORY_MB`, `SC_SPEED_SCORE` | detected | Reported resources |
 | `SC_GOSSIP_ADDR` | `:0` (free port) | Gossip listen address, or `off` |
