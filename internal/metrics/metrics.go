@@ -12,24 +12,23 @@ import (
 
 // Coordinator holds the coordinator metrics.
 type Coordinator struct {
-	Registry          *prometheus.Registry
-	IsLeader          prometheus.Gauge
-	JobsSubmitted     prometheus.Counter
-	JobsFinished      *prometheus.CounterVec // label: state (done, failed)
-	JobDuration       prometheus.Histogram
-	VolunteersJoined  prometheus.Counter
-	UnitsAssigned     prometheus.Counter
-	ResultsReceived   prometheus.Counter
-	UnitsAccepted     prometheus.Counter
-	WrongResults      prometheus.Counter
-	LeasesExpired     prometheus.Counter
-	ReplicationErrors prometheus.Counter
+	Registry             *prometheus.Registry
+	IsLeader             prometheus.Gauge
+	JobsSubmitted        prometheus.Counter
+	JobsFinished         *prometheus.CounterVec // label: state (done, failed)
+	JobDuration          prometheus.Histogram
+	VolunteersRegistered prometheus.Counter
+	UnitsAssigned        prometheus.Counter
+	ResultsReceived      prometheus.Counter
+	UnitsAccepted        prometheus.Counter
+	WrongResults         prometheus.Counter
+	LeasesExpired        prometheus.Counter
+	ReplicationErrors    prometheus.Counter
 }
 
 // NewCoordinator creates the coordinator metrics in a new registry.
 func NewCoordinator() *Coordinator {
 	reg := prometheus.NewRegistry()
-	f := func(c prometheus.Collector) { reg.MustRegister(c) }
 	m := &Coordinator{
 		Registry: reg,
 		IsLeader: prometheus.NewGauge(prometheus.GaugeOpts{
@@ -45,7 +44,7 @@ func NewCoordinator() *Coordinator {
 			Name: "sc_job_duration_seconds", Help: "Time from job submission to the final result.",
 			Buckets: prometheus.ExponentialBuckets(1, 2, 14),
 		}),
-		VolunteersJoined: prometheus.NewCounter(prometheus.CounterOpts{
+		VolunteersRegistered: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_volunteers_registered_total", Help: "Volunteer registrations.",
 		}),
 		UnitsAssigned: prometheus.NewCounter(prometheus.CounterOpts{
@@ -67,18 +66,21 @@ func NewCoordinator() *Coordinator {
 			Name: "sc_replication_errors_total", Help: "Changes that could not be replicated.",
 		}),
 	}
-	f(m.IsLeader)
-	f(m.JobsSubmitted)
-	f(m.JobsFinished)
-	f(m.JobDuration)
-	f(m.VolunteersJoined)
-	f(m.UnitsAssigned)
-	f(m.ResultsReceived)
-	f(m.UnitsAccepted)
-	f(m.WrongResults)
-	f(m.LeasesExpired)
-	f(m.ReplicationErrors)
-	reg.MustRegister(prometheus.NewGoCollector(), prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	reg.MustRegister(
+		m.IsLeader,
+		m.JobsSubmitted,
+		m.JobsFinished,
+		m.JobDuration,
+		m.VolunteersRegistered,
+		m.UnitsAssigned,
+		m.ResultsReceived,
+		m.UnitsAccepted,
+		m.WrongResults,
+		m.LeasesExpired,
+		m.ReplicationErrors,
+		prometheus.NewGoCollector(),
+		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+	)
 	return m
 }
 

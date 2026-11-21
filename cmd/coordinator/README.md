@@ -1,0 +1,33 @@
+# coordinator (binary)
+
+Runs one coordinator node: the gRPC server, the metrics server and the leader background loop.
+
+**Owner:** all · **State:** complete with stub parts
+
+## Run
+
+```bash
+make run-coordinator
+```
+
+## What `main` does
+
+1. Loads `.env` and the coordinator settings (`internal/config`).
+2. Builds each part and passes it to `coordinator.New` in `Deps`.
+3. Serves gRPC on `SC_LISTEN_ADDR` (default `:7400`).
+4. Serves `/metrics` and `/healthz` on `SC_METRICS_ADDR` (default `:9400`).
+5. Stops cleanly on Ctrl+C or `SIGTERM`.
+
+## Parts in use
+
+| Part | Now | After |
+| --- | --- | --- |
+| Elector | `election.NewStatic` | Bully (#13) |
+| Replicator | `replication.Noop` | Quorum (#14) |
+| Membership | `membership.NewStatic` | SWIM (#10) |
+| Leases | `lease.NoExpiry` | Timeout (#6) |
+| Verifier | `verify.FirstResult` | Majority (#7) |
+| Scheduler | `scheduler.FIFO` | Matcher (#8) |
+| Auth, Signer | `security.SharedToken`, `security.NoSign` | Tokens and Ed25519 (#11) |
+
+To replace a part, change only its line in `main.go`, and update this table.

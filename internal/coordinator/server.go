@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -37,7 +36,6 @@ const noWorkRetry = time.Second
 
 // Deps are the parts that a Server uses. Each part has a base stub.
 type Deps struct {
-	NodeID       int
 	Table        *tasktable.Table
 	Elector      election.Elector
 	Replicator   replication.Replicator
@@ -238,7 +236,7 @@ func (s *Server) Register(_ context.Context, req *pb.RegisterRequest) (*pb.Regis
 	s.volunteers[v.ID] = v
 	s.mu.Unlock()
 	s.d.Membership.Join(membership.Member{ID: v.ID, Address: v.Address})
-	s.d.Metrics.VolunteersJoined.Inc()
+	s.d.Metrics.VolunteersRegistered.Inc()
 	s.d.Log.Info("volunteer registered", "volunteer", v.ID, "name", v.Name, "cpu", v.Resources.CPUCores, "speed", v.Resources.SpeedScore)
 	return &pb.RegisterResponse{VolunteerId: v.ID}, nil
 }
@@ -376,10 +374,10 @@ func (s *Server) finishJobIfDone(ctx context.Context, jobID string) error {
 	return nil
 }
 
+// newID returns a random ID such as "job-1a2b3c4d5e6f".
 func newID(prefix string) string {
 	b := make([]byte, 6)
-	if _, err := rand.Read(b); err != nil {
-		panic(errors.Join(errors.New("read random bytes"), err))
-	}
+	// Since Go 1.24, crypto/rand.Read never returns an error.
+	_, _ = rand.Read(b)
 	return prefix + "-" + hex.EncodeToString(b)
 }
