@@ -10,6 +10,7 @@ A client submits a large compute job and the platform divides it into ~60-second
 
 - [Project Proposal](./docs/proposal.md)
 - [Course Project Instructions](./docs/project-instructions.md)
+- [Setup and Run](./docs/setup.md)
 
 ## Planned Stack
 

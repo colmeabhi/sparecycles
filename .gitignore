@@ -1,0 +1,21 @@
+# Local settings and secrets
+.env
+*.pem
+*.key
+
+# Build output
+/bin/
+result.png
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
