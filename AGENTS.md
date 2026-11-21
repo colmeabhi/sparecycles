@@ -44,6 +44,21 @@ Do not change code in an area that another person owns. If a change is necessary
 - Do not change `docs/proposal.md` or `docs/project-instructions.md`. They are the submitted and assigned texts.
 - Do not commit secrets, AWS keys or Terraform state.
 
+## Design decisions
+
+The team agreed on these decisions. Follow them. If a change is necessary, discuss it with the team first.
+
+| Topic | Decision |
+| --- | --- |
+| Split brain | Each leader has a term number. A leader must reach 2 of 3 coordinators to act. A node rejects messages from an older term. |
+| Replication | The leader confirms a task-table change after 1 backup has it (2 of 3 copies). |
+| Gossip | Volunteers and coordinators gossip together, in SWIM style. |
+| No majority | If no 2 of 3 results agree, the leader sends the unit to 2 more volunteers. |
+| Lease length | 3 minutes for a 60-second unit. |
+| Work assignment | Pull. Volunteers ask the leader for work. |
+| Workloads | Fractal tiles first. Monte Carlo second. |
+| Security | Each volunteer has a token. The leader signs each task. |
+
 ## Stack
 
 Go, gRPC, Docker, Terraform, AWS EC2 and Prometheus. The team writes all distributed algorithms itself. Do not use a library for election, gossip, consensus or replication.
