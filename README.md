@@ -30,6 +30,7 @@ You need Go 1.27 or later. No `.env` file is needed to start.
 | --- | --- |
 | [Setup guide](docs/setup.md) | Install, settings, local and Docker runs |
 | [Project guide](AGENTS.md) | Rules, design decisions, code layout, definition of done |
+| [Status](docs/status.md) | What is left, who does it next, and what blocks it |
 | [Proposal](docs/proposal.md) · [Instructions](docs/project-instructions.md) | Course documents |
 | [Grading checklist](docs/grading-checklist.md) | Every graded requirement and its status |
 | [Test results](docs/test-results.md) · [Observability](docs/observability.md) | Test cases with real results; metrics queries and log lines |
