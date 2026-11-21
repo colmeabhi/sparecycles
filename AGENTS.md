@@ -10,6 +10,8 @@ SpareCycles is a fault-tolerant volunteer computing platform. It is the final pr
 - [docs/project-instructions.md](docs/project-instructions.md) is the assignment from the professor. It defines the requirements for the code, the report and the presentation.
 - [README.md](README.md) is a short note for the project folder. It is not the course submission README.
 
+- [docs/grading-checklist.md](docs/grading-checklist.md) lists each graded requirement. Check it before you plan or finish work.
+
 If this file and the proposal disagree on scope, the proposal is correct.
 
 ## Team and ownership
@@ -35,6 +37,16 @@ Do not change code in an area that another person owns. If a change is necessary
 3. Each person works on the issues assigned to them, on a separate branch.
 4. Each PR closes one issue and changes one package where possible.
 5. A teammate reviews each PR. CI must pass before the merge.
+
+### Definition of done
+
+A feature is done only when it has all of these:
+
+- Tests that pass, including a failure case where one applies.
+- Prometheus metrics for its main events, for example lease expiry or election time.
+- Clear log lines that show the feature work in a demo.
+- A way to trigger its failure scenario, if it has one.
+- An update to `docs/grading-checklist.md` if it completes an item.
 
 ## Rules
 
