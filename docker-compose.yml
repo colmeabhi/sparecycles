@@ -1,0 +1,50 @@
+# Local cluster: 1 coordinator, 3 volunteers and Prometheus.
+#
+#   make up        start
+#   make run-client   submit a fractal job from this machine
+#   make down      stop
+#
+# Values come from .env if it exists. The "environment" lines below override
+# the values that must differ inside Docker.
+
+x-env-file: &env-file
+  env_file:
+    - path: .env
+      required: false
+
+services:
+  coordinator:
+    build: .
+    image: sparecycles:local
+    command: ["coordinator"]
+    <<: *env-file
+    environment:
+      SC_NODE_ID: "1"
+      SC_LISTEN_ADDR: ":7400"
+      SC_METRICS_ADDR: ":9400"
+      SC_PEERS: ""
+    ports:
+      - "7400:7400"
+      - "9400:9400"
+
+  volunteer:
+    build: .
+    image: sparecycles:local
+    command: ["volunteer"]
+    <<: *env-file
+    environment:
+      SC_COORDINATORS: "coordinator:7400"
+      SC_VOLUNTEER_NAME: ""
+    depends_on:
+      - coordinator
+    deploy:
+      replicas: 3
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - coordinator

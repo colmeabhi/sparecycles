@@ -1,0 +1,232 @@
+syntax = "proto3";
+
+package sparecycles.v1;
+
+option go_package = "github.com/colmeabhi/sparecycles/gen/sparecycles/v1;sparecyclesv1";
+
+// All coordinator RPCs that change state work only on the leader.
+// A follower answers with the gRPC code FAILED_PRECONDITION.
+// Callers then try the next coordinator in their list.
+
+// ---------------------------------------------------------------------------
+// Client: submits jobs and reads results.
+// ---------------------------------------------------------------------------
+
+service ClientService {
+  rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+}
+
+message SubmitJobRequest {
+  // Name of a registered workload, for example "fractal".
+  string workload = 1;
+  // Workload parameters as JSON. The workload defines the fields.
+  bytes params = 2;
+}
+
+message SubmitJobResponse {
+  string job_id = 1;
+  uint32 units = 2;
+}
+
+message GetJobRequest {
+  string job_id = 1;
+}
+
+enum JobState {
+  JOB_STATE_UNSPECIFIED = 0;
+  JOB_STATE_RUNNING = 1;
+  JOB_STATE_DONE = 2;
+  JOB_STATE_FAILED = 3;
+}
+
+message GetJobResponse {
+  string job_id = 1;
+  JobState state = 2;
+  uint32 units_total = 3;
+  uint32 units_done = 4;
+  // The merged result. Set only when state is JOB_STATE_DONE.
+  bytes result = 5;
+  string error = 6;
+}
+
+// ---------------------------------------------------------------------------
+// Volunteer: registers, pulls work and sends results.
+// ---------------------------------------------------------------------------
+
+service VolunteerService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc RequestWork(RequestWorkRequest) returns (RequestWorkResponse);
+  rpc SubmitResult(SubmitResultRequest) returns (SubmitResultResponse);
+}
+
+message Resources {
+  uint32 cpu_cores = 1;
+  uint64 memory_mb = 2;
+  // Relative speed. 1.0 is the reference speed.
+  double speed_score = 3;
+}
+
+message RegisterRequest {
+  string token = 1;
+  // Address where the volunteer accepts gossip messages. Empty if none.
+  string address = 2;
+  Resources resources = 3;
+  // Optional name chosen by the volunteer, used in logs.
+  string name = 4;
+}
+
+message RegisterResponse {
+  string volunteer_id = 1;
+}
+
+message RequestWorkRequest {
+  string volunteer_id = 1;
+}
+
+message WorkUnit {
+  string unit_id = 1;
+  string job_id = 2;
+  string workload = 3;
+  bytes payload = 4;
+  int64 lease_expires_unix_ms = 5;
+  // Signature of the payload by the leader.
+  bytes signature = 6;
+}
+
+message RequestWorkResponse {
+  // Not set when no work is available.
+  WorkUnit unit = 1;
+  // When unit is not set, wait this long before the next request.
+  uint32 retry_after_ms = 2;
+}
+
+message SubmitResultRequest {
+  string volunteer_id = 1;
+  string unit_id = 2;
+  bytes output = 3;
+}
+
+message SubmitResultResponse {
+  // True if the leader recorded the result.
+  bool recorded = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Election: between coordinators (Bully algorithm with terms).
+// ---------------------------------------------------------------------------
+
+service ElectionService {
+  // A candidate asks nodes with a higher ID if they are alive.
+  rpc Election(ElectionRequest) returns (ElectionResponse);
+  // The winner announces itself as the leader.
+  rpc Coordinator(CoordinatorRequest) returns (CoordinatorResponse);
+  // The leader tells the backups that it is alive.
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+message ElectionRequest {
+  uint64 term = 1;
+  int32 candidate_id = 2;
+}
+
+message ElectionResponse {
+  bool ok = 1;
+  uint64 term = 2;
+}
+
+message CoordinatorRequest {
+  uint64 term = 1;
+  int32 leader_id = 2;
+}
+
+message CoordinatorResponse {
+  uint64 term = 1;
+}
+
+message HeartbeatRequest {
+  uint64 term = 1;
+  int32 leader_id = 2;
+}
+
+message HeartbeatResponse {
+  uint64 term = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Replication: the leader copies task-table changes to the backups.
+// ---------------------------------------------------------------------------
+
+service ReplicationService {
+  rpc Replicate(ReplicateRequest) returns (ReplicateResponse);
+  // A backup that is behind asks for the full table.
+  rpc Snapshot(SnapshotRequest) returns (SnapshotResponse);
+}
+
+message ReplicateRequest {
+  uint64 term = 1;
+  int32 leader_id = 2;
+  // Position of this change in the change log. The first change is 1.
+  uint64 index = 3;
+  // One encoded tasktable.Change.
+  bytes change = 4;
+}
+
+message ReplicateResponse {
+  bool ok = 1;
+  uint64 term = 2;
+  uint64 last_index = 3;
+}
+
+message SnapshotRequest {
+  uint64 term = 1;
+}
+
+message SnapshotResponse {
+  uint64 term = 1;
+  uint64 index = 2;
+  bytes table = 3;
+}
+
+// ---------------------------------------------------------------------------
+// Gossip: SWIM-style membership between all nodes.
+// ---------------------------------------------------------------------------
+
+service GossipService {
+  rpc Ping(PingRequest) returns (Ack);
+  // Ask this node to ping the target for the sender (indirect probe).
+  rpc PingReq(PingReqRequest) returns (Ack);
+}
+
+enum MemberState {
+  MEMBER_STATE_UNSPECIFIED = 0;
+  MEMBER_STATE_ALIVE = 1;
+  MEMBER_STATE_SUSPECT = 2;
+  MEMBER_STATE_DEAD = 3;
+}
+
+message Member {
+  string id = 1;
+  string address = 2;
+  MemberState state = 3;
+  uint64 incarnation = 4;
+  bool coordinator = 5;
+}
+
+message PingRequest {
+  string from_id = 1;
+  repeated Member updates = 2;
+}
+
+message PingReqRequest {
+  string from_id = 1;
+  string target_id = 2;
+  string target_address = 3;
+  repeated Member updates = 4;
+}
+
+message Ack {
+  string from_id = 1;
+  bool ok = 2;
+  repeated Member updates = 3;
+}

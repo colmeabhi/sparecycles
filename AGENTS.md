@@ -30,9 +30,40 @@ Resource discovery is based on VECTrust [4]. Tejas writes the code, and Abhishek
 
 Do not change code in an area that another person owns. If a change is necessary, say so in the issue or the PR.
 
+## Code layout
+
+Each part is a Go interface with a simple stub. Replace the stub with the real algorithm in the same package. Keep the interface, or agree on a change with the team first.
+
+| Path | What it does | Base stub | Owner |
+| --- | --- | --- | --- |
+| `proto/sparecycles/v1/` | gRPC contract for all services | Complete | All (discuss changes) |
+| `gen/sparecycles/v1/` | Generated code. Run `make proto` after a `.proto` change. Do not edit by hand. | Complete | All |
+| `internal/tasktable/` | Jobs and units. Changes only through `Change` and `Apply`. | Complete | All (discuss changes) |
+| `internal/coordinator/` | Client and volunteer RPCs. Connects all parts. | Complete | All (discuss changes) |
+| `internal/lease/` | Lease length and expiry | `NoExpiry`: leases never expire | Tejas |
+| `internal/verify/` | Majority voting | `FirstResult`: accepts the first result | Tejas |
+| `internal/scheduler/` | Resource discovery: which unit goes to which volunteer | `FIFO`: oldest unit first | Tejas |
+| `internal/workload/` | Workloads: split, run, merge | Fractal complete | Tejas (Monte Carlo) |
+| `internal/membership/` | SWIM gossip and failure detection | `Static`: all nodes alive | Kushagra |
+| `internal/security/` | Volunteer tokens and task signatures | `SharedToken`, `NoSign` | Kushagra |
+| `internal/election/` | Bully election with terms | `Static`: highest node ID | Abhishek |
+| `internal/replication/` | Copy table changes to backups | `Noop`: copies nothing | Abhishek |
+| `deploy/` | Prometheus config, later Terraform | Prometheus only | Abhishek (Terraform) |
+| `cmd/` | Binaries: coordinator, volunteer, client | Complete | All |
+
+To replace a stub, add the new type in the package and use it in `cmd/coordinator/main.go` (or `cmd/volunteer/main.go`).
+
+## Run and configure
+
+- [docs/setup.md](docs/setup.md) has the setup steps. The repo must build, test and run right after a clone.
+- All settings are environment variables that start with `SC_`. Defaults must work on one machine.
+- When you add a variable, add it to `.env.example` with a comment. Read it in `internal/config/`.
+- `.env` is local and is not committed. CI uses GitHub secrets or variables with the same names.
+- Before you push, run `make test` and `make vet`. Run `gofmt` on changed files.
+
 ## Workflow
 
-1. One person builds a base version first. It contains the full `.proto` file, the Go interfaces with simple stub implementations, one end-to-end run and CI.
+1. One person builds a base version first. It contains the full `.proto` file, the Go interfaces with simple stub implementations, one end-to-end run and CI. (Done.)
 2. The team creates one GitHub issue for each stub. Each issue names the owner, the package to change and the acceptance test.
 3. Each person works on the issues assigned to them, on a separate branch.
 4. Each PR closes one issue and changes one package where possible.
