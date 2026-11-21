@@ -1,7 +1,8 @@
 MODULE := github.com/colmeabhi/sparecycles
 GOBIN  := $(shell go env GOPATH)/bin
 
-.PHONY: help proto build test vet keys run-coordinator run-volunteer run-client up down logs clean
+.PHONY: help proto build test vet keys run-coordinator run-volunteer run-client up down logs clean \
+	load load-sweep fail-volunteer fail-faulty fail-leader evidence
 
 help:
 	@echo "make build            Build all binaries into ./bin"
@@ -14,6 +15,12 @@ help:
 	@echo "make run-client       Submit a fractal job and save result.png"
 	@echo "make up               Start the local cluster with Docker Compose"
 	@echo "make down             Stop the local cluster"
+	@echo "make load             One load test (2 volunteers, 8 jobs, full mode)"
+	@echo "make load-sweep       Load tests for 1, 2, 4 volunteers, baseline and full"
+	@echo "make fail-volunteer   Failure demo: kill a volunteer during a job"
+	@echo "make fail-faulty      Failure demo: a volunteer sends wrong results"
+	@echo "make fail-leader      Failure demo: kill the leader during a job"
+	@echo "make evidence         All 3 failure demos"
 
 proto:
 	protoc \
@@ -53,5 +60,22 @@ down:
 logs:
 	docker compose logs -f
 
+load:
+	bash scripts/load.sh
+
+load-sweep:
+	bash scripts/load-sweep.sh
+
+fail-volunteer:
+	bash scripts/fail-volunteer.sh
+
+fail-faulty:
+	bash scripts/fail-faulty.sh
+
+fail-leader:
+	bash scripts/fail-leader.sh
+
+evidence: fail-volunteer fail-faulty fail-leader
+
 clean:
-	rm -rf bin result.png
+	rm -rf bin result.png runs

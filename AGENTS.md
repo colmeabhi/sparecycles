@@ -51,7 +51,9 @@ Each folder in the table has a `README.md`. Read it before you change the folder
 | `internal/election/` | Bully election with terms | `Static`: highest node ID | Abhishek |
 | `internal/replication/` | Copy table changes to backups | `Noop`: copies nothing | Abhishek |
 | `deploy/` | Prometheus config, later Terraform | Prometheus only | Abhishek (Terraform) |
-| `cmd/` | Binaries: coordinator, volunteer, client | Complete | All |
+| `cmd/` | Binaries: coordinator, volunteer, client, keygen, loadgen | Complete | All |
+| `scripts/` | One-command failure demos and load tests | Complete | Kushagra |
+| `results/` | Load test results (`load.csv`), kept in git for the report | Data | All |
 | `site/` | Product page for GitHub Pages (one HTML file, pixel tile style) | Complete | All |
 
 To replace a stub, add the new type in the package and use it in `cmd/coordinator/main.go` (or `cmd/volunteer/main.go`).

@@ -32,6 +32,7 @@ You need Go 1.27 or later. No `.env` file is needed to start.
 | [Project guide](AGENTS.md) | Rules, design decisions, code layout, definition of done |
 | [Proposal](docs/proposal.md) · [Instructions](docs/project-instructions.md) | Course documents |
 | [Grading checklist](docs/grading-checklist.md) | Every graded requirement and its status |
+| [Test results](docs/test-results.md) · [Observability](docs/observability.md) | Test cases with real results; metrics queries and log lines |
 
 Each folder has a `README.md` that explains what it does.
 
