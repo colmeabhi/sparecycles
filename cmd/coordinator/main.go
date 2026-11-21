@@ -4,6 +4,8 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -28,6 +30,9 @@ import (
 	"github.com/colmeabhi/sparecycles/internal/workload"
 )
 
+// shutdownTimeout is how long the HTTP server has to finish open requests.
+const shutdownTimeout = 5 * time.Second
+
 func main() {
 	config.LoadDotEnv()
 	log := logging.New("coordinator")
@@ -39,10 +44,59 @@ func main() {
 	}
 	log = log.With("node", cfg.NodeID)
 
+	if err := run(cfg, log); err != nil {
+		log.Error("coordinator stopped", "err", err)
+		os.Exit(1)
+	}
+}
+
+// run starts all servers and blocks until a signal or a server error.
+func run(cfg config.Coordinator, log *slog.Logger) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	m := metrics.NewCoordinator()
 	elector := election.NewStatic(cfg.NodeID, cfg.Peers)
-	srv := coordinator.New(coordinator.Deps{
-		NodeID:       cfg.NodeID,
+	srv := newServer(cfg, elector, m, log)
+
+	lis, err := net.Listen("tcp", cfg.ListenAddr)
+	if err != nil {
+		return fmt.Errorf("listen on %s: %w", cfg.ListenAddr, err)
+	}
+	grpcSrv := grpc.NewServer()
+	srv.RegisterServices(grpcSrv)
+	httpSrv := newHTTPServer(cfg.MetricsAddr, m)
+
+	errc := make(chan error, 3)
+	go func() { errc <- grpcSrv.Serve(lis) }()
+	go func() {
+		if err := httpSrv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			errc <- err
+		}
+	}()
+	go func() { errc <- srv.Run(ctx) }()
+
+	logStart(cfg, elector, log)
+
+	var runErr error
+	select {
+	case <-ctx.Done():
+		log.Info("shutting down")
+	case runErr = <-errc:
+	}
+
+	stop()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+	_ = httpSrv.Shutdown(shutdownCtx) // best effort; the process exits next
+	grpcSrv.GracefulStop()
+	return runErr
+}
+
+// newServer builds the coordinator with the current implementation of each part.
+// To replace a stub, change only its line here (see README.md).
+func newServer(cfg config.Coordinator, elector election.Elector, m *metrics.Coordinator, log *slog.Logger) *coordinator.Server {
+	return coordinator.New(coordinator.Deps{
 		Table:        tasktable.New(),
 		Elector:      elector,
 		Replicator:   replication.Noop{},
@@ -57,50 +111,23 @@ func main() {
 		VoteReplicas: cfg.VoteReplicas,
 		Log:          log,
 	})
+}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	lis, err := net.Listen("tcp", cfg.ListenAddr)
-	if err != nil {
-		log.Error("listen", "addr", cfg.ListenAddr, "err", err)
-		os.Exit(1)
-	}
-	g := grpc.NewServer()
-	srv.RegisterServices(g)
-
+// newHTTPServer serves /metrics for Prometheus and /healthz for health checks.
+func newHTTPServer(addr string, m *metrics.Coordinator) *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", metrics.Handler(m.Registry))
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte("ok\n")) })
-	httpSrv := &http.Server{Addr: cfg.MetricsAddr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("ok\n"))
+	})
+	return &http.Server{Addr: addr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+}
 
-	errc := make(chan error, 3)
-	go func() { errc <- g.Serve(lis) }()
-	go func() {
-		if err := httpSrv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			errc <- err
-		}
-	}()
-	go func() { errc <- srv.Run(ctx) }()
-
-	if len(cfg.VolunteerToken) == 0 {
+func logStart(cfg config.Coordinator, elector election.Elector, log *slog.Logger) {
+	if cfg.VolunteerToken == "" {
 		log.Warn("SC_VOLUNTEER_TOKEN is empty: every volunteer is accepted")
 	}
 	leader, _ := elector.Leader()
 	log.Info("coordinator started", "grpc", cfg.ListenAddr, "metrics", cfg.MetricsAddr,
 		"peers", len(cfg.Peers), "leader", leader, "is_leader", elector.IsLeader())
-
-	select {
-	case <-ctx.Done():
-		log.Info("shutting down")
-	case err := <-errc:
-		if err != nil {
-			log.Error("server stopped", "err", err)
-		}
-	}
-	stop()
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	_ = httpSrv.Shutdown(shutdownCtx)
-	g.GracefulStop()
 }

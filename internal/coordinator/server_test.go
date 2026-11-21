@@ -39,7 +39,6 @@ var quiet = slog.New(slog.NewTextHandler(io.Discard, nil))
 func startNode(t *testing.T, ctx context.Context, nodeID int, peers map[int]string, replicas int) *grpc.ClientConn {
 	t.Helper()
 	srv := New(Deps{
-		NodeID:       nodeID,
 		Table:        tasktable.New(),
 		Elector:      election.NewStatic(nodeID, peers),
 		Replicator:   replication.Noop{},

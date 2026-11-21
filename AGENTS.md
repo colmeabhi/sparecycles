@@ -34,6 +34,8 @@ Do not change code in an area that another person owns. If a change is necessary
 
 Each part is a Go interface with a simple stub. Replace the stub with the real algorithm in the same package. Keep the interface, or agree on a change with the team first.
 
+Each folder in the table has a `README.md`. Read it before you change the folder. It explains what the module is for, how other code uses it, its settings, its metrics and its rules.
+
 | Path | What it does | Base stub | Owner |
 | --- | --- | --- | --- |
 | `proto/sparecycles/v1/` | gRPC contract for all services | Complete | All (discuss changes) |
@@ -61,6 +63,32 @@ To replace a stub, add the new type in the package and use it in `cmd/coordinato
 - `.env` is local and is not committed. CI uses GitHub secrets or variables with the same names.
 - Before you push, run `make test` and `make vet`. Run `gofmt` on changed files.
 
+## Code quality
+
+Follow these principles in all code:
+
+- **One job per package, type and function.** If a function does two things, split it.
+- **Small, clear interfaces.** Depend on interfaces, not on concrete types, between packages (see `coordinator.Deps`).
+- **Clear names.** Use full words. A name says what the thing is or does. Avoid abbreviations except common ones (`ctx`, `err`, `id`).
+- **Short functions.** If a function does not fit on one screen, split it.
+- **No duplicate logic.** Put shared logic in one place and call it.
+- **Handle every error.** Return it with context (`fmt.Errorf("replicate %s: %w", kind, err)`) or log it. Never ignore an error without a comment that says why.
+- **No global state.** Pass dependencies in. This keeps code testable.
+- **Safe for concurrency.** Protect shared state with a mutex, and run `go test -race`.
+- **Comments explain why, not what.** Every exported name has a doc comment.
+- **Simple language** in comments, logs, docs and READMEs.
+- **Tests for each behavior,** including failure cases. Tests must not depend on timing luck: use short timeouts with a clear deadline, or a fake clock.
+- **No dead code.** Delete unused code. Git keeps the history.
+
+## Module READMEs
+
+Each module folder (each package in `internal/`, each binary in `cmd/`, and `proto/`, `gen/`, `deploy/`) has a `README.md`.
+
+- Keep it up to date in the same PR as the code change. A reviewer must reject a PR that changes a module but not its README when the README is now wrong.
+- Use this order: one-line purpose; owner, state and issue; how it fits (who calls it); interface or main types; implementations; settings; metrics; rules; how to test.
+- Use simple language and short sentences. Show tables and small code blocks, not long text.
+- A new folder needs a `README.md` in the same PR.
+
 ## Workflow
 
 1. One person builds a base version first. It contains the full `.proto` file, the Go interfaces with simple stub implementations, one end-to-end run and CI. (Done.)
@@ -77,6 +105,7 @@ A feature is done only when it has all of these:
 - Prometheus metrics for its main events, for example lease expiry or election time.
 - Clear log lines that show the feature work in a demo.
 - A way to trigger its failure scenario, if it has one.
+- An updated `README.md` in each module folder it changed (state, implementations, settings, metrics).
 - An update to `docs/grading-checklist.md` if it completes an item.
 
 ## Rules
