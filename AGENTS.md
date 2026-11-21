@@ -14,13 +14,17 @@ If this file and the proposal disagree on scope, the proposal is correct.
 
 ## Team and ownership
 
-Each person owns the algorithms from the papers that they study in the proposal.
+The team divides the work evenly across all 3 people. When you create or assign issues, keep the amount of work for each person approximately equal.
 
-| Person | Papers | Areas |
-| --- | --- | --- |
-| Tejas Chakkarwar | BOINC [1], [5] | Work units, leases and reassignment, majority voting |
-| Kushagra Bainsla | SWIM [2], VECA [6] | Gossip membership, failure detection, volunteer churn |
-| Abhishek Ahirrao | Bully [3], VECTrust [4] | Leader election, task-table replication, resource discovery |
+| Person | Papers | Algorithms | Other work |
+| --- | --- | --- | --- |
+| Kushagra Bainsla | SWIM [2], VECA [6] | Gossip membership, failure detection | Base version, security |
+| Tejas Chakkarwar | BOINC [1], [5] | Leases and reassignment, majority voting, resource discovery | Second workload |
+| Abhishek Ahirrao | Bully [3], VECTrust [4] | Leader election, task-table replication | AWS and Terraform setup |
+
+All 3 people share the report, the presentation and the testing.
+
+Resource discovery is based on VECTrust [4]. Tejas writes the code, and Abhishek reviews those PRs.
 
 Do not change code in an area that another person owns. If a change is necessary, say so in the issue or the PR.
 
