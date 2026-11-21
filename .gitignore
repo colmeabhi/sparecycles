@@ -7,6 +7,9 @@
 /bin/
 result.png
 
+# Script run folders (logs and images); results/ is kept
+/runs/
+
 # Terraform
 .terraform/
 *.tfstate
