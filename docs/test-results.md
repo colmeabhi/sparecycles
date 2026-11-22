@@ -2,7 +2,7 @@
 
 Test cases for the report (section 10). Each case lists how to run it and the real result.
 
-**Machine:** Apple silicon laptop, 10 CPU cores, arm64, macOS. All nodes run as local processes.
+**Machine:** Apple silicon laptop, 10 CPU cores, arm64, macOS. All nodes run as local processes, started from a terminal in the foreground.
 
 | ID | Test | How to run | Result |
 | --- | --- | --- | --- |
@@ -13,7 +13,8 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-05 | Unknown token is rejected | Manual run; `TestUnknownTokenIsRejectedAndCounted` | Pass |
 | TC-06 | Wrong signing key | Manual run; `TestVolunteerWithWrongKeyStopsAndSendsNothing` | Pass |
 | TC-07 | Throughput grows with volunteers (baseline) | `make load-sweep` | Pass |
-| TC-08 | Cost of fault tolerance (full vs baseline) | `make load-sweep` | Pass (as the model predicts) |
+| TC-08 | Cost of fault tolerance (full vs baseline) | `make load-sweep` | Pass (measured) |
+| TC-11 | Performance as clients (users) increase | `scripts/load.sh 4 8 C full` for C = 1, 2, 4, 8 | Pass |
 | TC-09 | Gossip load does not grow with group size | `TestLoadPerPeriodDoesNotGrowWithGroupSize` | Pass |
 | TC-10 | Gossip finds a failed node over a real network | `TestGRPCClusterDetectsFailure` | Pass |
 
@@ -73,24 +74,45 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 ## TC-07 and TC-08 Load tests
 
 - **Goal:** measure throughput and job time as volunteers grow, with and without fault tolerance.
-- **Steps:** `make load-sweep`. 8 jobs of 64 units each (1024×1024 fractal, tile 128, 2000 iterations), 2 clients at the same time, 1 coordinator.
+- **Steps:** `make load-sweep`, from a terminal in the foreground. 8 jobs of 64 units each (1024×1024 fractal, tile 128, 2000 iterations), 2 clients at the same time, 1 coordinator.
   - `baseline`: 1 copy per unit (no fault tolerance).
   - `full`: 3 copies per unit (for majority voting). Until #7, the leader accepts the first result.
-- **Actual (2026-11-20, `results/load.csv`):**
+- **Actual (2026-11-21, `results/load.csv`):**
 
   | Mode | Volunteers | Total time | Units/s | Jobs/min | Mean job | p95 job |
   | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-  | baseline | 1 | 16.9 s | 30.4 | 28.5 | 3.95 s | 4.59 s |
-  | baseline | 2 | 10.0 s | 51.2 | 48.0 | 2.31 s | 2.77 s |
-  | baseline | 4 | 5.9 s | 86.1 | 80.8 | 1.40 s | 1.85 s |
-  | full | 1 | 17.5 s | 29.2 | 27.4 | 4.13 s | 4.79 s |
-  | full | 2 | 16.4 s | 31.3 | 29.3 | 3.84 s | 4.59 s |
-  | full | 4 | 13.9 s | 36.8 | 34.5 | 3.30 s | 4.27 s |
+  | baseline | 1 | 7.4 s | 69.1 | 64.8 | 1.75 s | 2.55 s |
+  | baseline | 2 | 4.7 s | 109.6 | 102.8 | 1.12 s | 2.14 s |
+  | baseline | 4 | 3.7 s | 139.6 | 130.8 | 0.89 s | 1.64 s |
+  | full | 1 | 7.5 s | 68.2 | 63.9 | 1.76 s | 2.45 s |
+  | full | 2 | 7.4 s | 69.2 | 64.9 | 1.75 s | 2.55 s |
+  | full | 4 | 6.9 s | 74.1 | 69.5 | 1.63 s | 2.15 s |
 
 - **Analysis:**
-  - Baseline throughput grows 2.8× from 1 to 4 volunteers. It is not quite 4×, because 2 clients and one coordinator share the same laptop.
-  - In full mode, each unit runs on up to 3 different volunteers, so most of the work is repeated. With N volunteers, the useful throughput is about N / min(N, 3) times one volunteer: 1×, 1×, 1.33× for N = 1, 2, 4. The measurements follow this: 29.2, 31.3, 36.8 units/s.
-  - So with 4 volunteers, fault tolerance costs about 57% of the baseline throughput (36.8 vs 86.1 units/s). This is the price of 3 copies per unit, and the report can compare it with BOINC's replication.
+  - Baseline throughput grows 1.6× with 2 volunteers and 2.0× with 4. In this test job one unit takes only about 15 ms, instead of the planned 60 s. So the per-unit messages to the coordinator (request, result, table change) are a large part of the cost, and adding volunteers helps less. With real 60-second units, this overhead would be negligible.
+  - In full mode, each unit runs on up to 3 different volunteers. With 1 or 2 volunteers, full mode equals one volunteer's throughput (68.2 and 69.2 units/s), as the model N / min(N, 3) predicts.
+  - With 4 volunteers, full mode reaches 74.1 units/s: 53% of the baseline, so fault tolerance costs 47% here. The model predicts one third for N ≥ 3; the measured share is higher because the baseline itself scales sublinearly in this test.
+  - A repeat of the baseline run with 1 volunteer gave 69.0 units/s, against 69.1, so the runs are stable.
+  - **Note:** an earlier sweep (2026-11-20) gave about half of these numbers. It ran as a background task, which macOS can schedule on its slower efficiency cores. Its rows were removed. Run load tests from a terminal in the foreground.
+
+## TC-11 Performance as clients increase
+
+- **Goal:** show how throughput and job time change as more users submit jobs at the same time. The course demo asks for this.
+- **Steps:** `scripts/load.sh 4 8 C full` for C = 1, 2, 4 and 8 clients. 4 volunteers, full mode, 8 jobs of 64 units.
+- **Actual (2026-11-21, `results/load.csv`):**
+
+  | Clients | Total time | Units/s | Jobs/min | Mean job | p95 job |
+  | ---: | ---: | ---: | ---: | ---: | ---: |
+  | 1 | 12.1 s | 42.5 | 39.8 | 1.51 s | 2.03 s |
+  | 2 | 7.0 s | 73.1 | 68.5 | 1.64 s | 2.25 s |
+  | 4 | 6.6 s | 77.4 | 72.6 | 2.75 s | 3.57 s |
+  | 8 | 7.5 s | 68.1 | 63.9 | 4.66 s | 7.52 s |
+
+- **Analysis:**
+  - With 1 client, the volunteers wait between jobs (submit, split, poll), so throughput is low.
+  - With 2 clients, the volunteers are busy, and throughput rises to 73 units/s. More clients add almost nothing: the volunteers are the limit (about 75 units/s in full mode).
+  - Job time grows with the number of clients, because more jobs share the same volunteers: the mean is 1.5 s with 1 client and 4.7 s with 8. This is the expected queueing behavior.
+  - With 8 clients, throughput drops a little (68 units/s), because more jobs and more polling compete for the single coordinator.
 
 ## TC-09 Gossip load
 

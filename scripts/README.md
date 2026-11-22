@@ -11,6 +11,7 @@ One-command demos and load tests. They produce the evidence for the report and t
 - Each script ends with `PASS`, `FAIL` or `SKIP` and the log folder.
 - A script that needs another issue checks `.env.example` for that issue's setting and prints `SKIP` until it is merged.
 - No Docker is needed. Port 7400 (or 7401 to 7403) must be free.
+- **Run load tests from a terminal in the foreground**, with no other heavy work on the machine. macOS can run background tasks on its slower efficiency cores: a background sweep on 2026-11-20 measured about half the throughput of a foreground sweep. Compare only numbers from the same kind of run.
 
 ## Scripts
 

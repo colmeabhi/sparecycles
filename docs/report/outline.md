@@ -52,7 +52,7 @@ State: ☐ not started · ◐ draft · ☑ done. Pages are a budget, without fig
 | 8.2c | Failure: leader crash | Abhishek | 0.25 | `make fail-leader`, TC-04 (after #13, #14) | ☐ |
 | 9 | Growth rate of the major algorithms | Each person: own algorithms | 0.6 | 6.1 | ◐ Kushagra part done (in 6.1) |
 | 9.1 | Overall result and reflection on design decisions | Abhishek | 0.3 | All | ☐ |
-| 9.2–9.3 | Metrics, comparison with the baseline, throughput and latency | Kushagra | 0.7 | `results/load.csv`, TC-07, TC-08, `docs/observability.md` | ◐ (rerun after #7) |
+| 9.2–9.3 | Metrics, comparison with the baseline, throughput and latency | Kushagra | 0.7 | `results/load.csv`, TC-07, TC-08, `docs/observability.md` | ◐ volunteer and client sweeps done (rerun after #7) |
 | 10 | Test cases and results (at least 5) | Tejas (each adds own cases) | 0.6 | `docs/test-results.md` | ◐ 8 of 10 have results |
 | 11 | Conclusions, lessons learned, improvements | Abhishek | 0.4 | All | ☐ |
 | — | References (IEEE style) | Kushagra | — | Proposal §7 | ◐ (`references.bib`) |
