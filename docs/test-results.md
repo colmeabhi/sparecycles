@@ -17,6 +17,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-11 | Performance as clients (users) increase | `scripts/load.sh 4 8 C full` for C = 1, 2, 4, 8 | Pass |
 | TC-09 | Gossip load does not grow with group size | `TestLoadPerPeriodDoesNotGrowWithGroupSize` | Pass |
 | TC-10 | Gossip finds a failed node over a real network | `TestGRPCClusterDetectsFailure` | Pass |
+| TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed container | `make up`, `make run-client`, `docker kill` | Pass |
 
 ## TC-01 Success scenario
 
@@ -124,6 +125,25 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 - **Goal:** all nodes find a failed node, and no live node is marked dead.
 - **Steps:** 5 SWIM nodes over gRPC on localhost (100 ms interval, 600 ms suspect timeout); stop one.
 - **Actual (2026-11-20):** all 4 other nodes marked it dead, and none marked a live node dead. `TestGRPCClusterDetectsFailure` passed 5 runs in a row with the race detector.
+
+## TC-12 Docker Compose cluster
+
+- **Goal:** the local cluster in containers runs a job, gossips across the Docker network, and Prometheus scrapes the coordinator.
+- **Steps:** `make up` (1 coordinator, 3 volunteers, Prometheus; default gossip settings: 1 s interval, 5 s suspect timeout). `make run-client`. Then `docker kill sparecycles-volunteer-1` and `make run-client` again. `make down`.
+- **Expected:** the job finishes on 3 volunteers; gossip marks the killed volunteer dead; the second job still finishes.
+- **Actual (2026-11-21):**
+  - All 3 volunteers registered and joined gossip with their container host names. The first job (16 units, 3 copies) finished in 1.0 s; all 3 volunteers sent results.
+  - Prometheus at `localhost:9090` reported `up{job="coordinator"} = 1`. The coordinator metrics showed `sc_gossip_members{state="alive"} 3`, 18 pings and 0 ping failures.
+  - After the kill (times in UTC):
+
+    ```text
+    03:08:19 member suspect                  member=vol-6c89bf47adbb
+    03:08:21 job finished                    job=job-7013d3ae1e90 state=done
+    03:08:25 member dead                     member=vol-6c89bf47adbb silent_for=6.771s
+    03:08:26 volunteer removed: dead         volunteer=vol-6c89bf47adbb
+    ```
+
+    The second job finished on the 2 other volunteers in 2.0 s. Detection takes longer than in TC-02 (6.8 s against 2.9 s) because TC-02 uses fast demo gossip settings.
 
 ## How to add a case
 
