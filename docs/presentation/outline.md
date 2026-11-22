@@ -10,7 +10,7 @@ The slides must be clear to anyone who took the course. Use one idea per slide, 
 | Date | Step |
 | --- | --- |
 | 2026-11-24 | Agree on this plan, the speakers and the slide tool |
-| 2026-11-30 | Slides drafted; each speaker writes their own slides |
+| 2026-11-30 | Slides drafted; each speaker writes their own slides in [slides.md](slides.md) (text, speaker notes, images in `visuals/`) |
 | 2026-12-01 | First full run-through with a timer; record the demo clips as a backup |
 | 2026-12-02 | Final run-through; record the presentation |
 | 2026-12-03 | Upload the recording and the slides |

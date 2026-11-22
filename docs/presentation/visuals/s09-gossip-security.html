@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Slide 9 visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #f3f2ed; }
+  .page { width: 1600px; height: 900px; box-sizing: border-box; padding: 40px; display: flex; gap: 40px; }
+  .panel { flex: 1; border: 3px solid #161616; background: #f3f2ed; }
+  svg { display: block; width: 100%; height: 100%; }
+  .px { font-family: "Silkscreen", monospace; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+  .sans { font-family: "Space Grotesk", sans-serif; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="panel">
+<svg viewBox="0 0 740 814">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f5bff"/></marker>
+    <marker id="arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#161616"/></marker>
+    <marker id="arrow-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff5a1f"/></marker>
+  </defs>
+  <text x="36" y="58" class="px" font-size="30" fill="#161616">SWIM gossip</text>
+  <text x="36" y="92" class="mono" font-size="17" fill="#55544f">finds a dead volunteer in seconds, not minutes</text>
+
+  <!-- direct ping fails -->
+  <path d="M 120 300 Q 370 120 620 300" fill="none" stroke="#ff5a1f" stroke-width="3" stroke-dasharray="10 8" marker-end="url(#arrow-bad)"/>
+  <text x="370" y="180" class="mono" font-size="18" fill="#ff5a1f" text-anchor="middle">1  ping · no ack in 400 ms</text>
+
+  <!-- indirect pings -->
+  <g stroke="#2f5bff" stroke-width="3" fill="none">
+    <line x1="128" y1="318" x2="336" y2="262" marker-end="url(#arrow-blue)"/>
+    <line x1="128" y1="330" x2="336" y2="340" marker-end="url(#arrow-blue)"/>
+    <line x1="128" y1="342" x2="336" y2="418" marker-end="url(#arrow-blue)"/>
+    <line x1="404" y1="262" x2="606" y2="314" stroke-dasharray="10 8" marker-end="url(#arrow-blue)"/>
+    <line x1="404" y1="340" x2="606" y2="330" stroke-dasharray="10 8" marker-end="url(#arrow-blue)"/>
+    <line x1="404" y1="418" x2="606" y2="346" stroke-dasharray="10 8" marker-end="url(#arrow-blue)"/>
+  </g>
+  <text x="370" y="478" class="mono" font-size="18" fill="#2f5bff" text-anchor="middle">2  ping-req via 3 others · no ack</text>
+
+  <!-- nodes -->
+  <g class="px" font-size="22" text-anchor="middle">
+    <rect x="64" y="294" width="64" height="64" fill="#161616"/>
+    <text x="96" y="334" fill="#f3f2ed">M</text>
+    <rect x="608" y="294" width="64" height="64" fill="#f3f2ed" stroke="#161616" stroke-width="3"/>
+    <text x="640" y="334" fill="#161616">T</text>
+    <rect x="340" y="234" width="60" height="56" fill="#dcdad2" stroke="#161616" stroke-width="2"/>
+    <rect x="340" y="312" width="60" height="56" fill="#dcdad2" stroke="#161616" stroke-width="2"/>
+    <rect x="340" y="390" width="60" height="56" fill="#dcdad2" stroke="#161616" stroke-width="2"/>
+  </g>
+  <text x="96" y="390" class="mono" font-size="15" fill="#55544f" text-anchor="middle">member</text>
+  <text x="640" y="390" class="mono" font-size="15" fill="#55544f" text-anchor="middle">target</text>
+
+  <!-- state strip -->
+  <text x="36" y="560" class="mono" font-size="18" fill="#161616">3  state of T, as gossip spreads it</text>
+  <g class="px" font-size="20" text-anchor="middle">
+    <rect x="36" y="586" width="170" height="70" fill="#161616"/>
+    <text x="121" y="628" fill="#f3f2ed">alive</text>
+    <rect x="285" y="586" width="170" height="70" fill="#f3f2ed" stroke="#161616" stroke-width="3"/>
+    <text x="370" y="628" fill="#161616">suspect</text>
+    <rect x="534" y="586" width="170" height="70" fill="#ff5a1f"/>
+    <text x="619" y="628" fill="#161616">dead</text>
+  </g>
+  <line x1="210" y1="621" x2="280" y2="621" stroke="#161616" stroke-width="3" marker-end="url(#arrow-ink)"/>
+  <line x1="459" y1="621" x2="529" y2="621" stroke="#161616" stroke-width="3" marker-end="url(#arrow-ink)"/>
+  <text x="370" y="686" class="mono" font-size="15" fill="#55544f" text-anchor="middle">T can still answer and refute</text>
+  <text x="619" y="686" class="mono" font-size="15" fill="#55544f" text-anchor="middle">leader frees its units</text>
+
+  <text x="36" y="760" class="sans" font-size="19" fill="#161616">1 ping per member per second · news rides on pings ·</text>
+  <text x="36" y="788" class="sans" font-size="19" fill="#161616">same cost per member as the group grows</text>
+</svg>
+</div>
+
+<div class="panel">
+<svg viewBox="0 0 740 814">
+  <defs>
+    <marker id="arrow-ink2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#161616"/></marker>
+    <marker id="arrow-blue2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f5bff"/></marker>
+  </defs>
+  <text x="36" y="58" class="px" font-size="30" fill="#161616">Tokens + signed tasks</text>
+  <text x="36" y="92" class="mono" font-size="17" fill="#55544f">no unknown volunteers, no fake work</text>
+
+  <!-- boxes -->
+  <rect x="36" y="170" width="230" height="250" fill="#161616"/>
+  <text x="151" y="214" class="px" font-size="24" fill="#f3f2ed" text-anchor="middle">leader</text>
+  <text x="151" y="262" class="mono" font-size="15" fill="#dcdad2" text-anchor="middle">token list</text>
+  <text x="151" y="286" class="mono" font-size="15" fill="#dcdad2" text-anchor="middle">alice=… bob=…</text>
+  <text x="151" y="346" class="mono" font-size="15" fill="#dcdad2" text-anchor="middle">private key</text>
+  <text x="151" y="370" class="mono" font-size="15" fill="#dcdad2" text-anchor="middle">(Ed25519)</text>
+
+  <rect x="474" y="170" width="230" height="250" fill="#f3f2ed" stroke="#161616" stroke-width="3"/>
+  <text x="589" y="214" class="px" font-size="24" fill="#161616" text-anchor="middle">volunteer</text>
+  <text x="589" y="262" class="mono" font-size="15" fill="#55544f" text-anchor="middle">own token</text>
+  <text x="589" y="346" class="mono" font-size="15" fill="#55544f" text-anchor="middle">leader's</text>
+  <text x="589" y="370" class="mono" font-size="15" fill="#55544f" text-anchor="middle">public key</text>
+
+  <!-- arrows -->
+  <line x1="470" y1="262" x2="272" y2="262" stroke="#161616" stroke-width="3" marker-end="url(#arrow-ink2)"/>
+  <text x="370" y="246" class="mono" font-size="17" fill="#161616" text-anchor="middle">1  register(token)</text>
+  <line x1="270" y1="358" x2="468" y2="358" stroke="#2f5bff" stroke-width="3" marker-end="url(#arrow-blue2)"/>
+  <text x="370" y="342" class="mono" font-size="17" fill="#2f5bff" text-anchor="middle">2  task + signature</text>
+
+  <!-- outcomes -->
+  <rect x="36" y="450" width="230" height="64" fill="#ff5a1f"/>
+  <text x="151" y="478" class="mono" font-size="16" fill="#161616" text-anchor="middle">unknown token</text>
+  <text x="151" y="500" class="px" font-size="18" fill="#161616" text-anchor="middle">rejected</text>
+  <rect x="474" y="450" width="230" height="64" fill="#ff5a1f"/>
+  <text x="589" y="478" class="mono" font-size="16" fill="#161616" text-anchor="middle">3  bad signature</text>
+  <text x="589" y="500" class="px" font-size="18" fill="#161616" text-anchor="middle">stop, run nothing</text>
+
+  <!-- signed fields -->
+  <text x="36" y="580" class="mono" font-size="18" fill="#161616">the signature covers</text>
+  <g class="mono" font-size="16" text-anchor="middle">
+    <rect x="36" y="600" width="150" height="52" fill="#dcdad2" stroke="#161616" stroke-width="2"/>
+    <text x="111" y="632" fill="#161616">unit id</text>
+    <rect x="200" y="600" width="150" height="52" fill="#dcdad2" stroke="#161616" stroke-width="2"/>
+    <text x="275" y="632" fill="#161616">workload</text>
+    <rect x="364" y="600" width="170" height="52" fill="#dcdad2" stroke="#161616" stroke-width="2"/>
+    <text x="449" y="632" fill="#161616">lease expiry</text>
+    <rect x="548" y="600" width="156" height="52" fill="#dcdad2" stroke="#161616" stroke-width="2"/>
+    <text x="626" y="632" fill="#161616">input</text>
+  </g>
+
+  <text x="36" y="760" class="sans" font-size="19" fill="#161616">a changed task or a fake leader</text>
+  <text x="36" y="788" class="sans" font-size="19" fill="#161616">fails the check on the volunteer</text>
+</svg>
+</div>
+
+</div>
+</body>
+</html>

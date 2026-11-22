@@ -32,7 +32,7 @@ You need Go 1.27 or later. No `.env` file is needed to start.
 | [Project guide](AGENTS.md) | Rules, design decisions, code layout, definition of done |
 | [Status](docs/status.md) | What is left, who does it next, and what blocks it |
 | [Report outline](docs/report/outline.md) | Report sections, owners, page budget and UML plan |
-| [Presentation plan](docs/presentation/outline.md) · [Demo script](docs/presentation/demo-script.md) | Slides, speakers, timing, and the live demo steps |
+| [Presentation plan](docs/presentation/outline.md) · [Slide text](docs/presentation/slides.md) · [Demo script](docs/presentation/demo-script.md) | Slides, speakers, timing, speaker notes, and the live demo steps |
 | [Proposal](docs/proposal.md) · [Instructions](docs/project-instructions.md) | Course documents |
 | [Grading checklist](docs/grading-checklist.md) | Every graded requirement and its status |
 | [Submission README](docs/submission.md) | Course submission: setup steps and division of work |
