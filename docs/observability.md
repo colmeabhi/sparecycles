@@ -25,6 +25,9 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Units moved after a lease expired | `increase(sc_leases_expired_total[5m])` |
 | Wrong results caught | `increase(sc_wrong_results_total[5m])` |
 | Votes with no majority | `increase(sc_votes_no_majority_total[5m])` |
+| Units by volunteer speed | `sum by (speed) (increase(sc_scheduler_picks_total[5m]))` |
+| Requests refused, by reason | `sum by (reason) (increase(sc_scheduler_refusals_total[5m]))` |
+| Volunteers blocked for low trust | `sc_volunteers_blocked_total` |
 | Rejected registrations | `increase(sc_registrations_rejected_total[5m])` |
 | Which node leads | `sc_coordinator_is_leader` |
 | Wasted copies (assigned but not needed) | `rate(sc_units_assigned_total[1m]) - rate(sc_results_received_total[1m])` |
@@ -40,6 +43,7 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Lost work | `lease released: volunteer dead`, `lease expired` |
 | Security | `registration rejected` (coordinator), `bad signature` (volunteer) |
 | Voting | `wrong result` (`late=true` for a late copy), `no majority, more copies` |
+| Trust | `volunteer blocked: low trust` |
 | Election (after #13) | `election started`, `became leader` |
 
 ## Quick view without Prometheus

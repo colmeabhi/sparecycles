@@ -36,6 +36,16 @@ Defines the Prometheus metrics. The coordinator serves them on `SC_METRICS_ADDR`
 
 `NewGossip(reg)` creates them in any registry. Volunteers create them in a private registry, because they serve no metrics endpoint.
 
+## Scheduler metrics (`Scheduler`, part of `Coordinator`)
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `sc_scheduler_picks_total{speed}` | counter | Units picked for a volunteer, by speed class (`slow`, `fast`) |
+| `sc_scheduler_refusals_total{reason}` | counter | Work requests that got no unit on purpose: `low_trust`, `low_memory`, `slow_endgame` |
+| `sc_volunteers_blocked_total` | counter | Volunteers blocked because their trust fell below `SC_TRUST_MIN` |
+
+`NewScheduler(reg)` creates them in any registry.
+
 ## Add a metric
 
 1. Add a field to `Coordinator` and create it in `NewCoordinator` with a name that starts with `sc_` and a clear `Help` text.

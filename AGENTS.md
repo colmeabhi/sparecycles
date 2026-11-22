@@ -45,7 +45,7 @@ Each folder in the table has a `README.md`. Read it before you change the folder
 | `internal/coordinator/` | Client and volunteer RPCs. Connects all parts. | Complete | All (discuss changes) |
 | `internal/lease/` | Lease length and expiry | `NoExpiry`: leases never expire | Tejas |
 | `internal/verify/` | Majority voting | Done: `Majority` (`FirstResult` kept for tests) | Tejas |
-| `internal/scheduler/` | Resource discovery: which unit goes to which volunteer | `FIFO`: oldest unit first | Tejas |
+| `internal/scheduler/` | Resource discovery: which unit goes to which volunteer | Done: `Matcher` with trust (`FIFO` kept for tests) | Tejas |
 | `internal/workload/` | Workloads: split, run, merge | Fractal complete | Tejas (Monte Carlo) |
 | `internal/membership/` | SWIM gossip and failure detection | Done: `SWIM` (`Static` kept for tests) | Kushagra |
 | `internal/security/` | Volunteer tokens and task signatures | Done: `TokenList`, Ed25519 (`NoSign` when no key) | Kushagra |

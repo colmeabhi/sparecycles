@@ -59,6 +59,12 @@ func newVotingServer(copies int) (*Server, *tasktable.Table, *metrics.Coordinato
 func startVotingNode(t *testing.T, ctx context.Context) (*grpc.ClientConn, *tasktable.Table, *metrics.Coordinator) {
 	t.Helper()
 	srv, table, m := newVotingServer(3)
+	return serveNode(t, ctx, srv), table, m
+}
+
+// serveNode runs srv on an in-memory listener until the test ends, and returns a connection to it.
+func serveNode(t *testing.T, ctx context.Context, srv *Server) *grpc.ClientConn {
+	t.Helper()
 	lis := bufconn.Listen(1 << 20)
 	g := grpc.NewServer()
 	srv.RegisterServices(g)
@@ -72,7 +78,7 @@ func startVotingNode(t *testing.T, ctx context.Context) (*grpc.ClientConn, *task
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = conn.Close() })
-	return conn, table, m
+	return conn
 }
 
 func startFaultyVolunteers(ctx context.Context, pool *leaderclient.Pool, n int) {

@@ -15,7 +15,7 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 | `Membership` | `membership` | `Register`, `Run` |
 | `Leases` | `lease` | `RequestWork` (lease length), `tick` (expired leases) |
 | `Verifier` | `verify` | `decide` |
-| `Scheduler` | `scheduler` | `RequestWork` |
+| `Scheduler` | `scheduler` | `RequestWork`; `decide` and `checkLateResult` (trust hook) |
 | `Auth`, `Signer` | `security` | `Register`, `RequestWork` |
 | `Workloads` | `workload` | `SubmitJob`, `finishJobIfDone` |
 
@@ -29,11 +29,12 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 - `SubmitResult` holds `decideMu` from recording the result to the end of the vote, so each result is recorded and voted on in one step. Two results that arrive together give one decision (one accept or one raise, each wrong result counted once, no error for a volunteer whose result was recorded), and no result is recorded unseen while another vote is halfway. The job merge also runs under this lock, so a large merge pauses other votes for that time.
 - **Late copies** (`latecopies.go`): when a unit is accepted, the volunteers that still hold a lease on it are remembered until their lease ends. If one of them sends its result later, the result is not recorded, but it is compared with the accepted output and counted as a wrong result if it differs (BOINC checks late results the same way). Results from any other volunteer are ignored, so nobody can make another volunteer look faulty. This is leader-local and is lost after a failover.
+- **Trust hook:** after a unit is accepted, `recordVotes` reports each result in the vote as right or wrong, and `checkLateResult` reports each checked late copy. Both go to `Scheduler.RecordResult` if the scheduler is a `scheduler.TrustRecorder` (type assertion). `FIFO` is not, so it ignores trust.
 
 **Every tick (leader only, `Deps.TickInterval`, default 1 second):**
 
 - `releaseExpiredLeases`: `Leases.Expired` → commit `LeaseReleased`.
-- `releaseDeadVolunteers`: for each lease held by a volunteer that `Membership.Dead` reports → commit `LeaseReleased`, count `sc_leases_dead_volunteer_total`, and forget the volunteer. If gossip was wrong, the volunteer gets `NotFound` on its next request and registers again.
+- `releaseDeadVolunteers`: for each lease held by a volunteer that `Membership.Dead` reports → commit `LeaseReleased`, count `sc_leases_dead_volunteer_total`, and forget the volunteer (also in the Scheduler, if it is a `scheduler.Forgetter`). If gossip was wrong, the volunteer gets `NotFound` on its next request and registers again.
 
 **Every change:** `commit` → `Table.Validate` → `Replicator.Send` → `Table.Apply`. One mutex keeps the changes in order.
 

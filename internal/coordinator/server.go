@@ -160,6 +160,7 @@ func (s *Server) releaseDeadVolunteers(ctx context.Context) {
 	for id := range s.volunteers {
 		if s.d.Membership.Dead(id) {
 			delete(s.volunteers, id)
+			s.forgetVolunteer(id)
 			s.d.Log.Info("volunteer removed: dead", "volunteer", id)
 		}
 	}
@@ -403,8 +404,34 @@ func (s *Server) decide(ctx context.Context, unitID string) error {
 		return err
 	}
 	s.lateCopies.add(unitID, u.Assignments, s.d.Now())
+	s.recordVotes(u.Results, d.Output)
 	s.d.Metrics.UnitsAccepted.Inc()
 	return s.finishJobIfDone(ctx, u.JobID)
+}
+
+// recordVotes tells the Scheduler, if it learns trust, which results of an
+// accepted unit agreed with the accepted output and which did not.
+func (s *Server) recordVotes(results []tasktable.Result, accepted []byte) {
+	hash := tasktable.Hash(accepted)
+	for _, r := range results {
+		s.recordTrust(r.VolunteerID, r.Hash == hash)
+	}
+}
+
+// recordTrust passes one checked result to the Scheduler, if it is a
+// scheduler.TrustRecorder. Other schedulers ignore trust.
+func (s *Server) recordTrust(volunteerID string, correct bool) {
+	if tr, ok := s.d.Scheduler.(scheduler.TrustRecorder); ok {
+		tr.RecordResult(volunteerID, correct)
+	}
+}
+
+// forgetVolunteer tells the Scheduler that a volunteer is gone, if it keeps
+// state per volunteer (scheduler.Forgetter).
+func (s *Server) forgetVolunteer(volunteerID string) {
+	if f, ok := s.d.Scheduler.(scheduler.Forgetter); ok {
+		f.Forget(volunteerID)
+	}
 }
 
 func (s *Server) finishJobIfDone(ctx context.Context, jobID string) error {

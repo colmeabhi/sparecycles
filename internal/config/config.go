@@ -43,6 +43,15 @@ type Coordinator struct {
 	VoteReplicas    int // volunteers that run each unit
 	VoteQuorum      int // equal results needed to accept a unit
 	Gossip          Gossip
+	Discovery       Discovery
+}
+
+// Discovery holds the resource discovery rules (internal/scheduler, Matcher).
+type Discovery struct {
+	MinTrust      float64 // below this trust, a volunteer gets no unit
+	LastCopyTrust float64 // below this trust, a volunteer avoids the last copy of a unit
+	SlowSpeed     float64 // a speed score below this is slow
+	MinMemoryMB   int     // 0 means no memory limit
 }
 
 // LoadCoordinator reads the coordinator settings.
@@ -70,7 +79,46 @@ func LoadCoordinator() (Coordinator, error) {
 	if c.Gossip, err = loadGossip(); err != nil {
 		return c, err
 	}
+	if c.Discovery, err = loadDiscovery(); err != nil {
+		return c, err
+	}
 	return c, nil
+}
+
+func loadDiscovery() (Discovery, error) {
+	var d Discovery
+	var err error
+	if d.MinTrust, err = unitIntervalVar("SC_TRUST_MIN", 0.3); err != nil {
+		return d, err
+	}
+	if d.LastCopyTrust, err = unitIntervalVar("SC_TRUST_LAST_COPY", 0.6); err != nil {
+		return d, err
+	}
+	if d.SlowSpeed, err = floatVar("SC_SLOW_SPEED", 0.5); err != nil {
+		return d, err
+	}
+	if !(d.SlowSpeed >= 0) { // also rejects NaN
+		return d, fmt.Errorf("SC_SLOW_SPEED must be 0 or more, got %v", d.SlowSpeed)
+	}
+	if d.MinMemoryMB, err = intVar("SC_MIN_MEMORY_MB", 0); err != nil {
+		return d, err
+	}
+	if d.MinMemoryMB < 0 {
+		return d, fmt.Errorf("SC_MIN_MEMORY_MB must be 0 or more, got %d", d.MinMemoryMB)
+	}
+	return d, nil
+}
+
+// unitIntervalVar reads a number from 0 to 1.
+func unitIntervalVar(key string, def float64) (float64, error) {
+	f, err := floatVar(key, def)
+	if err != nil {
+		return 0, err
+	}
+	if !(f >= 0 && f <= 1) { // also rejects NaN
+		return 0, fmt.Errorf("%s must be from 0 to 1, got %v", key, f)
+	}
+	return f, nil
 }
 
 // loadVote reads the copies per unit and the quorum. The default quorum is a
@@ -129,11 +177,8 @@ func LoadVolunteer() (Volunteer, error) {
 	if v.SpeedScore, err = floatVar("SC_SPEED_SCORE", 1.0); err != nil {
 		return v, err
 	}
-	if v.FaultyRate, err = floatVar("SC_FAULTY_RATE", 0); err != nil {
+	if v.FaultyRate, err = unitIntervalVar("SC_FAULTY_RATE", 0); err != nil {
 		return v, err
-	}
-	if !(v.FaultyRate >= 0 && v.FaultyRate <= 1) { // also rejects NaN
-		return v, fmt.Errorf("SC_FAULTY_RATE must be from 0 to 1, got %v", v.FaultyRate)
 	}
 	v.SigningPublicKey = stringVar("SC_SIGNING_PUBLIC_KEY", "")
 	v.GossipAddr = stringVar("SC_GOSSIP_ADDR", ":0")

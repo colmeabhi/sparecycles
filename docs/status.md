@@ -10,12 +10,12 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Deadline | Date | Days left |
 | --- | --- | ---: |
 | Issues #6, #13 | 2026-11-27 | 5 |
-| Issues #8, #14 | 2026-11-28 | 6 |
+| Issue #14 | 2026-11-28 | 6 |
 | Issues #9, #15 | 2026-11-29 | 7 |
 | Code and recorded presentation | 2026-12-03 | 11 |
 | Final report | 2026-12-04 | 12 |
 
-**State:** the base platform, gossip, majority voting, security, scripts and the product page are done. Leases (#6) is in review. 6 of 10 issues are open.
+**State:** the base platform, gossip, majority voting, resource discovery, security, scripts and the product page are done. Leases (#6) is in review. 5 of 10 issues are open.
 
 ## Per person
 
@@ -24,10 +24,9 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
 | [#6 Lease expiry](https://github.com/colmeabhi/sparecycles/issues/6) | 11-27 | Add `lease.Timeout` and its tests | — |
-| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | Add `scheduler.Matcher` with trust scores | — (`Decision.Wrong` and late copies from #7 are the trust input) |
 | [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | Add the `montecarlo` workload | — |
 
-#7 is done. Suggested order: #6 (in review), #8, #9.
+#7 and #8 are done. Next: #9. #6 is in review.
 
 ### Abhishek (`colmeabhi`)
 
@@ -74,12 +73,14 @@ Do these right after the named PR merges, in the same day:
 | #13 and #14 merge | Run `make fail-leader`. Record TC-04. Check the "failure scripts" and "metrics" items in `docs/grading-checklist.md`. |
 | #7 merges | Kushagra: in `scripts/load-sweep.sh`, run "full" mode with 2 or more volunteers. With 1 volunteer it never finishes now: a unit needs 2 equal results from 2 different volunteers. Then run `make load-sweep` again, and update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
 | #6 and #7 both merge | Check "At least 3 algorithms" in `docs/grading-checklist.md` (gossip, leases, voting). |
+| #7 merges | Tejas: change the base of #33 (#8) from `feat/majority-voting` to `main`, and merge `main` into its branch. |
 | Any algorithm issue merges | Update its card and the roadmap on the product page (`site/index.html`). |
 
 ## Done
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-22 | [#33](https://github.com/colmeabhi/sparecycles/pull/33) | Resource discovery: `scheduler.Matcher` with VECTrust-style trust, speed and memory rules; faulty volunteer blocked after 2 wrong results (TC-14; closes #8; stacked on #32) |
 | 2026-11-22 | [#32](https://github.com/colmeabhi/sparecycles/pull/32) | Majority voting: `verify.Majority`, `SC_VOTE_QUORUM`, faulty mode `SC_FAULTY_RATE`, late copies checked, `make fail-faulty` passes (TC-03; closes #7) |
 | 2026-11-21 | [#30](https://github.com/colmeabhi/sparecycles/pull/30) | Docker Compose cluster tested with gossip and Prometheus (TC-12); Kushagra's ID and email in the report |
 | 2026-11-21 | [#29](https://github.com/colmeabhi/sparecycles/pull/29) | Slide text and speaker notes (`slides.md`); Kushagra's slides 4, 9, 11, 12 with 2 images |
