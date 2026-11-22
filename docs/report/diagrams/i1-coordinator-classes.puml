@@ -1,0 +1,86 @@
+@startuml i1-coordinator-classes
+' I1 (implementation, class): the coordinator and the interfaces of its parts. Owner: Kushagra.
+' Update the implementation classes when a stub is replaced.
+' Link length places the interfaces in 2 rows: "--" is row 1, "---" is row 2.
+skinparam dpi 220
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam classAttributeIconSize 0
+hide empty members
+
+class "coordinator.Server" as Server {
+  - volunteers : map
+  + SubmitJob() / GetJob()
+  + Register() / RequestWork() / SubmitResult()
+  - commit(Change)
+  - tick()
+}
+class "tasktable.Table" as Table {
+  + Validate(Change)
+  + Apply(Change)
+  + Snapshot() / Restore()
+}
+
+interface "election.Elector" as Elector {
+  + IsLeader() / Leader()
+}
+interface "replication.Replicator" as Replicator {
+  + Send(index, change)
+}
+interface "membership.Membership" as Membership {
+  + Join() / Alive() / Dead()
+}
+interface "lease.Policy" as Policy {
+  + Duration() / Expired()
+}
+interface "verify.Verifier" as Verifier {
+  + Decide(unit)
+}
+interface "scheduler.Scheduler" as Scheduler {
+  + Pick(units, volunteer)
+}
+interface "security.Authenticator" as Auth {
+  + Authenticate(token)
+}
+interface "security.Signer" as Signer {
+  + Sign(message)
+}
+interface "workload.Workload" as Workload {
+  + Split() / Run() / Merge()
+}
+
+' Row 1
+Server *-- Table
+Server o-- Elector
+Server o-- Replicator
+Server o-- Membership
+Server o-- Policy
+' Row 2
+Server o--- Verifier
+Server o--- Scheduler
+Server o--- Auth
+Server o--- Signer
+Server o--- Workload
+
+class "Static <<stub>>" as ElStatic
+class "Noop <<stub>>" as Noop
+class SWIM
+class "NoExpiry <<stub>>" as NoExpiry
+class "FirstResult <<stub>>" as FirstResult
+class "FIFO <<stub>>" as FIFO
+class TokenList
+class "Ed25519Signer" as Ed
+class Fractal
+
+Elector <|.. ElStatic
+Replicator <|.. Noop
+Membership <|.. SWIM
+Policy <|.. NoExpiry
+Verifier <|.. FirstResult
+Scheduler <|.. FIFO
+Auth <|.. TokenList
+Signer <|.. Ed
+Workload <|.. Fractal
+@enduml

@@ -1,0 +1,56 @@
+% Section 9. Owners: growth rates each person for own algorithms; 9.1 Abhishek; 9.2-9.3 Kushagra.
+\section{Performance Analysis}
+\label{sec:performance}
+
+\subsection{Growth Rate of the Major Algorithms}
+\todo{Tejas (leases, voting, resource discovery) and Abhishek (election, replication): one or two sentences each. Gossip and signatures are analyzed in Section~\ref{sec:evaluation}: $O(1)$ messages per member per period, $O(\log n)$ periods to spread an update, and $O(|p|)$ to sign or verify a task.}
+
+\subsection{Overall Result and Reflection}
+\todo{Abhishek.}
+
+\subsection{Metrics and Comparison with a Baseline}
+We measure throughput as accepted units per second and jobs per minute, and latency as the time from submitting a job to its result (mean and 95th percentile). To isolate the cost of fault tolerance, we compare two configurations of the same system on the same hardware: \emph{baseline}, in which each unit runs on one volunteer with no redundancy, and \emph{full}, in which each unit is sent to three different volunteers as majority voting requires. The baseline corresponds to a classic master--worker system without replication; the full configuration corresponds to BOINC-style redundant computing~\cite{anderson2004boinc}.
+
+\subsection{Simulated Workloads}
+A load generator submits eight fractal jobs of 64 units each (a $1024\times1024$ image in $128\times128$ tiles, 2000 iterations), two at a time, against one coordinator and one, two or four volunteers. All processes run on one laptop with 10 cores (Apple silicon). At the time of measurement, the full configuration accepted the first returned result instead of waiting for a two-of-three majority; it therefore measures the cost of running three copies, which dominates the cost of voting. Table~\ref{tab:load} and Fig.~\ref{fig:load} show the results.
+
+\begin{table}[t]
+\centering
+\caption{Throughput and job time (8 jobs, 512 units, 2 clients)}
+\label{tab:load}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Mode & Vol. & Units/s & Jobs/min & Mean (s) & p95 (s) \\
+\midrule
+baseline & 1 & 30.4 & 28.5 & 3.95 & 4.59 \\
+baseline & 2 & 51.2 & 48.0 & 2.31 & 2.77 \\
+baseline & 4 & 86.1 & 80.8 & 1.40 & 1.85 \\
+full & 1 & 29.2 & 27.4 & 4.13 & 4.79 \\
+full & 2 & 31.3 & 29.3 & 3.84 & 4.59 \\
+full & 4 & 36.8 & 34.5 & 3.30 & 4.27 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=0.62\columnwidth,
+  xlabel={Volunteers}, ylabel={Accepted units per second},
+  xtick={1,2,4}, ymin=0, ymax=100,
+  legend pos=north west, legend cell align=left,
+  grid=major, grid style={gray!25}]
+\addplot[mark=*, thick] coordinates {(1,30.355) (2,51.209) (4,86.142)};
+\addlegendentry{baseline (1 copy)}
+\addplot[mark=square*, thick, dashed] coordinates {(1,29.215) (2,31.288) (4,36.797)};
+\addlegendentry{full (3 copies)}
+\end{axis}
+\end{tikzpicture}
+\caption{Throughput as volunteers are added. Data: \texttt{results/load.csv}.}
+\label{fig:load}
+\end{figure}
+
+The baseline scales well: four volunteers deliver 2.8 times the throughput of one, and the 95th-percentile job time falls from 4.6\,s to 1.8\,s. The shortfall from a perfect factor of four comes from the clients, the coordinator and the volunteers sharing the same machine.
+
+The full configuration behaves as a simple model predicts. With $N$ volunteers and three copies per unit, each unit occupies $\min(N,3)$ volunteers, so the useful throughput is about $N/\min(N,3)$ times that of a single volunteer: $1\times$, $1\times$ and $1.33\times$ for $N=1,2,4$. The measured values, 29.2, 31.3 and 36.8 units per second, follow this pattern. With four volunteers the full configuration delivers 43\% of the baseline throughput, so fault tolerance costs 57\%. For $N \ge 3$ the model predicts a constant ratio of one third, because every unit costs three executions however large the pool is; our measured ratio is higher only because the baseline itself scales sublinearly on a single machine. This is the price of tolerating a malicious volunteer with replication. Two refinements could reduce it: adaptive replication, which BOINC applies to hosts with a good history, and early cancellation of the remaining copies once a majority agrees.

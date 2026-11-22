@@ -1,0 +1,16 @@
+@startuml d6-swim-state
+' D6 (design, state): what one member believes about another member in SWIM. Owner: Kushagra.
+skinparam dpi 300
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+
+[*] --> Alive : seed, Join, or\nupdate from gossip
+Alive --> Suspect : no ack to direct ping\nand k indirect pings,\nor suspect(i >= inc) heard
+Suspect --> Alive : alive(i > inc) heard\n(member refuted)
+Suspect --> Dead : suspect timeout,\nor dead(i >= inc) heard
+Alive --> Dead : dead(i >= inc) heard
+Dead --> Alive : alive(i > inc) heard\n(member restarted)
+Dead : leader releases its leases
+@enduml

@@ -1,0 +1,63 @@
+% Section 5. Owners: 5.1 split; 5.2 each person for own algorithms; 5.3 text Abhishek; diagrams per docs/report/outline.md.
+\section{Project Design}
+\label{sec:design}
+
+\subsection{Design Goals}
+\label{sec:design-goals}
+
+\paragraph{Heterogeneity, quality of service, scalability}
+\todo{Tejas: volunteers differ in CPU, memory and speed (resource discovery, trust); quality of service through leases and copies; scalability through pull-based work assignment and constant gossip load.}
+
+\paragraph{Openness}
+All interaction happens through a single, versioned gRPC contract (Section~\ref{sec:components}). Any program that speaks this protocol can act as a client or a volunteer, and new workloads are added by implementing three functions (split, run, merge) without changing the coordinator. Every internal mechanism is a small Go interface with interchangeable implementations, so a team member can replace an algorithm without touching the rest of the system.
+
+\paragraph{Security}
+Volunteer computing gives work to machines that the operator does not control, so the coordinator must decide who may join and each volunteer must be able to tell a genuine task from a forged one. SpareCycles authenticates volunteers with per-volunteer tokens at registration and signs every task it hands out. A signature binds the task's payload to its unit, workload and lease expiry, so a captured task cannot be replayed for another unit or after its lease. Integrity of results, which a volunteer can still falsify, is protected separately by majority voting. Confidentiality of task data is out of scope (Section~\ref{sec:literature}).
+
+\paragraph{Failure handling}
+We treat failure as the normal case. A volunteer may stop at any moment; SWIM gossip declares it dead within seconds and the leader immediately releases its leases, while lease expiry remains as a slower safety net for volunteers that cannot take part in gossip. Every change to the task table is replicated before it takes effect, so a new leader can continue a job after the old one crashes. Faults are also contained: a volunteer that receives a task with a bad signature stops at once rather than taking more units it will never complete.
+
+\paragraph{Concurrency, transparency}
+\todo{Abhishek: the single-writer commit path (one mutex orders all task-table changes), safe concurrent RPC handling, and the race detector in CI; transparency of failover (clients and volunteers follow the leader automatically through \texttt{leaderclient}) and of replication.}
+
+\subsection{Key Components and Algorithms}
+\label{sec:algorithms}
+
+The system has three roles. \emph{Clients} submit jobs and fetch results. \emph{Coordinators}, three in total, hold the task table; one is the leader and the others are backups. \emph{Volunteers} pull work from the leader, run it and return results. Six algorithms from the course list work together:
+
+\paragraph{Leases and reassignment (resource allocation)} \todo{Tejas.}
+
+\paragraph{Majority voting (agreement)} \todo{Tejas.}
+
+\paragraph{Resource discovery} \todo{Tejas.}
+
+\paragraph{Leader election} \todo{Abhishek.}
+
+\paragraph{Replication and consistency} \todo{Abhishek.}
+
+\paragraph{Gossip-based failure detection}
+Coordinators and volunteers form a single SWIM group. Each member probes one other member per period in shuffled round-robin order, falls back to $k$ indirect probes when a direct probe fails, and marks an unresponsive member suspect and later dead (Fig.~\ref{fig:swim-state}). Every message carries the sender's own record and up to eight recent updates, each of which is forwarded about $3\lceil\log_2 n\rceil$ times. The coordinators seed the group with each other, and the leader adds each volunteer when it registers; the volunteer then learns the rest of the group from the leader's first probe. Once a volunteer is declared dead, the leader releases its leases and forgets it, so its units move on before their leases expire.
+
+\paragraph{Authentication and signed tasks}
+At registration the leader compares the volunteer's token with a list of named tokens, in constant time over all entries so that response time reveals nothing about near matches. For each task, the leader signs a message with Ed25519~\cite{bernstein2012ed25519} that encodes, with a length prefix on every field, a domain tag, the unit identifier, the workload name, the lease expiry and the payload. The volunteer rebuilds the same message and verifies the signature before it runs any code.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\columnwidth]{d6-swim-state.png}
+\caption{What one SWIM member believes about another (design diagram D6). Updates carry an incarnation number $i$; \textit{inc} is the incarnation currently known for the member.}
+\label{fig:swim-state}
+\end{figure}
+
+\subsection{Architecture}
+\label{sec:architecture}
+
+\todo{Abhishek: describe the architecture and how the components interact, referring to the design diagrams. Diagrams still to add: D1 use case (Tejas), D2 deployment (Abhishek), D4 unit state (Tejas), D5 leader failover sequence (Abhishek).}
+
+Figure~\ref{fig:job-sequence} shows the life of one job. The leader splits the job into units and replicates the change before it confirms the job to the client. Volunteers pull units; each unit is given to three different volunteers, each with a lease and a signature. When two results agree, the leader accepts the unit, and when every unit is accepted it merges the outputs and records the final result.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{d3-job-sequence.png}
+\caption{One job from submission to result (design diagram D3). Every change to the task table is replicated to a backup before it is applied.}
+\label{fig:job-sequence}
+\end{figure*}

@@ -1,0 +1,47 @@
+@startuml d3-job-sequence
+' D3 (design, sequence): one job from submission to result. Owner: Kushagra.
+skinparam dpi 300
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam sequenceMessageAlign center
+hide footbox
+
+actor Client
+participant "Leader" as L
+participant "Backup" as B
+participant "Volunteer 1" as V1
+participant "Volunteer 2" as V2
+participant "Volunteer 3" as V3
+
+Client -> L : SubmitJob(workload, params)
+L -> L : Split into units
+L -> B : Replicate(JobAdded)
+B --> L : ok
+L --> Client : job id
+
+group for each unit, 3 copies
+  V1 -> L : RequestWork
+  L -> B : Replicate(UnitAssigned)
+  L --> V1 : unit, lease, signature
+  V2 -> L : RequestWork
+  L --> V2 : unit, lease, signature
+  V3 -> L : RequestWork
+  L --> V3 : unit, lease, signature
+end
+
+V1 -> V1 : verify signature, run
+V1 -> L : SubmitResult(output)
+L -> B : Replicate(ResultRecorded)
+V2 -> L : SubmitResult(output)
+L -> L : Decide: 2 of 3 agree
+L -> B : Replicate(UnitAccepted)
+
+== all units accepted ==
+
+L -> L : Merge outputs
+L -> B : Replicate(JobFinished)
+Client -> L : GetJob(job id)
+L --> Client : result
+@enduml
