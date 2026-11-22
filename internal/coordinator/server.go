@@ -61,6 +61,9 @@ type Server struct {
 
 	commitMu sync.Mutex // orders all changes
 
+	decideMu   sync.Mutex // one result at a time, from record to vote; guards lateCopies
+	lateCopies lateCopies // leader-local; copies still running when their unit was accepted
+
 	mu         sync.Mutex
 	volunteers map[string]scheduler.Volunteer // leader-local; volunteers register again after a failover
 	submitted  map[string]time.Time           // leader-local; for the job duration metric
@@ -77,7 +80,9 @@ func New(d Deps) *Server {
 	if d.TickInterval <= 0 {
 		d.TickInterval = time.Second
 	}
-	return &Server{d: d, volunteers: map[string]scheduler.Volunteer{}, submitted: map[string]time.Time{}}
+	return &Server{
+		d: d, volunteers: map[string]scheduler.Volunteer{}, submitted: map[string]time.Time{}, lateCopies: lateCopies{},
+	}
 }
 
 // RegisterServices adds the coordinator services, and the services of its parts, to a gRPC server.
@@ -333,6 +338,13 @@ func (s *Server) RequestWork(ctx context.Context, req *pb.RequestWorkRequest) (*
 }
 
 // SubmitResult records a result and accepts the unit when the Verifier agrees.
+//
+// It holds decideMu from recording the result to the end of the vote, so each
+// result is recorded and voted on in one step. Without it, a result recorded
+// while another call is between reading the unit and accepting it would never be
+// compared, and two results that arrive together could both accept the unit (or
+// both raise its copies): the second commit would then fail and return an error
+// to a volunteer whose result was already recorded.
 func (s *Server) SubmitResult(ctx context.Context, req *pb.SubmitResultRequest) (*pb.SubmitResultResponse, error) {
 	if err := s.requireLeader(); err != nil {
 		return nil, err
@@ -341,13 +353,17 @@ func (s *Server) SubmitResult(ctx context.Context, req *pb.SubmitResultRequest) 
 	if err != nil {
 		return nil, err
 	}
+	s.decideMu.Lock()
+	defer s.decideMu.Unlock()
 	err = s.commit(ctx, tasktable.Change{
 		Kind: tasktable.ResultRecorded, UnitID: req.GetUnitId(), VolunteerID: v.ID, Output: req.GetOutput(),
 	})
 	if err != nil {
-		// The lease expired, or the unit is already done. The result is not needed.
+		// The lease expired, or the unit is already done. The result is not needed,
+		// but a copy that was still running at the accept is still checked.
 		if status.Code(err) == codes.FailedPrecondition {
 			s.d.Log.Debug("result not recorded", "unit", req.GetUnitId(), "volunteer", v.ID, "reason", err)
+			s.checkLateResult(req.GetUnitId(), v.ID, req.GetOutput())
 			return &pb.SubmitResultResponse{Recorded: false}, nil
 		}
 		return nil, err
@@ -360,6 +376,8 @@ func (s *Server) SubmitResult(ctx context.Context, req *pb.SubmitResultRequest) 
 }
 
 // decide asks the Verifier about a unit and commits the outcome.
+// The caller holds decideMu. It also runs the job merge when the last unit is
+// accepted, so a large merge pauses other votes for that time.
 func (s *Server) decide(ctx context.Context, unitID string) error {
 	u, ok := s.d.Table.Unit(unitID)
 	if !ok || u.State != tasktable.UnitOpen {
@@ -375,6 +393,7 @@ func (s *Server) decide(ctx context.Context, unitID string) error {
 		if err != nil {
 			return err
 		}
+		s.d.Metrics.NoMajority.Inc()
 		s.d.Log.Info("no majority, more copies", "unit", unitID, "copies", u.Copies+d.ExtraCopies)
 	}
 	if !d.Accept {
@@ -383,6 +402,7 @@ func (s *Server) decide(ctx context.Context, unitID string) error {
 	if err := s.commit(ctx, tasktable.Change{Kind: tasktable.UnitAccepted, UnitID: unitID, Output: d.Output}); err != nil {
 		return err
 	}
+	s.lateCopies.add(unitID, u.Assignments, s.d.Now())
 	s.d.Metrics.UnitsAccepted.Inc()
 	return s.finishJobIfDone(ctx, u.JobID)
 }

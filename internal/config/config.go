@@ -40,7 +40,8 @@ type Coordinator struct {
 	VolunteerTokens []string // per-volunteer tokens, "name=token" or "token"
 	SigningKey      string   // base64 Ed25519 seed; empty means tasks are not signed
 	LeaseDuration   time.Duration
-	VoteReplicas    int
+	VoteReplicas    int // volunteers that run each unit
+	VoteQuorum      int // equal results needed to accept a unit
 	Gossip          Gossip
 }
 
@@ -63,16 +64,31 @@ func LoadCoordinator() (Coordinator, error) {
 	if c.LeaseDuration, err = durationVar("SC_LEASE_DURATION", 3*time.Minute); err != nil {
 		return c, err
 	}
-	if c.VoteReplicas, err = intVar("SC_VOTE_REPLICAS", 3); err != nil {
+	if c.VoteReplicas, c.VoteQuorum, err = loadVote(); err != nil {
 		return c, err
-	}
-	if c.VoteReplicas < 1 {
-		return c, fmt.Errorf("SC_VOTE_REPLICAS must be 1 or more, got %d", c.VoteReplicas)
 	}
 	if c.Gossip, err = loadGossip(); err != nil {
 		return c, err
 	}
 	return c, nil
+}
+
+// loadVote reads the copies per unit and the quorum. The default quorum is a
+// majority of the copies (2 of 3), so baseline mode with 1 copy needs no extra setting.
+func loadVote() (replicas, quorum int, err error) {
+	if replicas, err = intVar("SC_VOTE_REPLICAS", 3); err != nil {
+		return 0, 0, err
+	}
+	if replicas < 1 {
+		return 0, 0, fmt.Errorf("SC_VOTE_REPLICAS must be 1 or more, got %d", replicas)
+	}
+	if quorum, err = intVar("SC_VOTE_QUORUM", replicas/2+1); err != nil {
+		return 0, 0, err
+	}
+	if quorum < 1 || quorum > replicas {
+		return 0, 0, fmt.Errorf("SC_VOTE_QUORUM must be from 1 to SC_VOTE_REPLICAS (%d), got %d", replicas, quorum)
+	}
+	return replicas, quorum, nil
 }
 
 // GossipOff is the SC_GOSSIP_ADDR value that turns the volunteer gossip listener off.
@@ -91,6 +107,9 @@ type Volunteer struct {
 	Gossip       Gossip
 	// SigningPublicKey is the base64 Ed25519 public key of the coordinators. Empty means no check.
 	SigningPublicKey string
+	// FaultyRate is the share of units (0 to 1) for which the volunteer sends a wrong
+	// output on purpose. It is for failure demos and tests only.
+	FaultyRate float64
 }
 
 // LoadVolunteer reads the volunteer settings.
@@ -109,6 +128,12 @@ func LoadVolunteer() (Volunteer, error) {
 	}
 	if v.SpeedScore, err = floatVar("SC_SPEED_SCORE", 1.0); err != nil {
 		return v, err
+	}
+	if v.FaultyRate, err = floatVar("SC_FAULTY_RATE", 0); err != nil {
+		return v, err
+	}
+	if !(v.FaultyRate >= 0 && v.FaultyRate <= 1) { // also rejects NaN
+		return v, fmt.Errorf("SC_FAULTY_RATE must be from 0 to 1, got %v", v.FaultyRate)
 	}
 	v.SigningPublicKey = stringVar("SC_SIGNING_PUBLIC_KEY", "")
 	v.GossipAddr = stringVar("SC_GOSSIP_ADDR", ":0")

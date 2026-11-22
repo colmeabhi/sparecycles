@@ -10,7 +10,7 @@ Mark an item `[x]` only when the evidence exists in the repo or in the submissio
 - [ ] Each algorithm is written by the team, not taken from a library.
 - [ ] The code handles fault tolerance, performance, scalability, availability, consistency and concurrency.
 - [ ] The system runs on AWS EC2 with 3 coordinators and many volunteers.
-- [x] At least 5 test cases, with recorded results. *(`docs/test-results.md`: 10 of 12 cases have results; TC-03 and TC-04 wait for #7, #13 and #14.)*
+- [x] At least 5 test cases, with recorded results. *(`docs/test-results.md`: 11 of 12 cases have results; TC-04 waits for #13 and #14.)*
 
 ## 2. Evidence that the code must produce
 
@@ -19,7 +19,7 @@ The report and the presentation need this evidence. Build it together with the f
 - [ ] **Metrics** in Prometheus: jobs per minute, unit latency, lease expiries, reassignments, wrong results caught, election time. *(All but election time, which comes with #13.)*
 - [x] **Baseline mode** for comparison, for example 1 coordinator and no voting. The report must compare the system "ideally" to another system. *(`scripts/load.sh ... baseline`)*
 - [x] **Load scripts** that increase the number of volunteers and the number of clients. The report needs throughput and latency as load grows. *(`scripts/load.sh`, `scripts/load-sweep.sh`, `results/load.csv`)*
-- [ ] **Failure scripts** for 3 failure scenarios: kill a volunteer, run a malicious volunteer, kill the leader. *(All 3 are written. `fail-volunteer.sh` passes; the other 2 skip until #7, #13 and #14 merge.)*
+- [ ] **Failure scripts** for 3 failure scenarios: kill a volunteer, run a malicious volunteer, kill the leader. *(All 3 are written. `fail-volunteer.sh` and `fail-faulty.sh` pass; `fail-leader.sh` skips until #13 and #14 merge.)*
 - [x] **Clear logs or a dashboard** for screenshots of 1 success scenario and the 3 failure scenarios. *(`docs/observability.md`: Prometheus queries and log lines)*
 
 ## 3. Final report (IEEE double column, 10 to 15 pages without images)

@@ -18,8 +18,8 @@ Fault-tolerant volunteer computing: big jobs split into small units, run on volu
 ```bash
 make test              # run all tests
 make run-coordinator   # terminal 1
-make run-volunteer     # terminal 2
-make run-client        # terminal 3: saves result.png
+make run-volunteer     # terminals 2 and 3: voting needs 2 volunteers or more
+make run-client        # terminal 4: saves result.png
 ```
 
 You need Go 1.27 or later. No `.env` file is needed to start.

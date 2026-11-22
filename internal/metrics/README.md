@@ -17,7 +17,8 @@ Defines the Prometheus metrics. The coordinator serves them on `SC_METRICS_ADDR`
 | `sc_units_assigned_total` | counter | Leases given out |
 | `sc_results_received_total` | counter | Results recorded |
 | `sc_units_accepted_total` | counter | Units accepted |
-| `sc_wrong_results_total` | counter | Results that lost the vote |
+| `sc_wrong_results_total` | counter | Results that lost the vote, including late copies that differ from the accepted output |
+| `sc_votes_no_majority_total` | counter | Voting rounds with no majority, after which a unit got more copies |
 | `sc_leases_expired_total` | counter | Leases released after expiry |
 | `sc_leases_dead_volunteer_total` | counter | Leases released because gossip marked the volunteer dead |
 | `sc_replication_errors_total` | counter | Changes that could not be replicated |

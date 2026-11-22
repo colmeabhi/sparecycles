@@ -3,19 +3,19 @@
 Read this file right after `AGENTS.md`. It says what is left, who does it next, and what blocks it.
 GitHub issues hold the task details. This file only summarizes and links.
 
-**Updated:** 2026-11-21 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
+**Updated:** 2026-11-22 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
 
 ## Now
 
 | Deadline | Date | Days left |
 | --- | --- | ---: |
-| Issues #6, #7, #13 | 2026-11-27 | 6 |
-| Issues #8, #14 | 2026-11-28 | 7 |
-| Issues #9, #15 | 2026-11-29 | 8 |
-| Code and recorded presentation | 2026-12-03 | 12 |
-| Final report | 2026-12-04 | 13 |
+| Issues #6, #13 | 2026-11-27 | 5 |
+| Issues #8, #14 | 2026-11-28 | 6 |
+| Issues #9, #15 | 2026-11-29 | 7 |
+| Code and recorded presentation | 2026-12-03 | 11 |
+| Final report | 2026-12-04 | 12 |
 
-**State:** the base platform, gossip, security, scripts and the product page are done. 7 of 10 issues are open, and none has a PR yet. Only 1 of the 6 course algorithms (gossip) is real today; the other 5 are stubs.
+**State:** the base platform, gossip, majority voting, security, scripts and the product page are done. Leases (#6) is in review. 6 of 10 issues are open.
 
 ## Per person
 
@@ -24,11 +24,10 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
 | [#6 Lease expiry](https://github.com/colmeabhi/sparecycles/issues/6) | 11-27 | Add `lease.Timeout` and its tests | — |
-| [#7 Majority voting](https://github.com/colmeabhi/sparecycles/issues/7) | 11-27 | Add `verify.Majority` and `SC_FAULTY_RATE` | — |
-| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | Add `scheduler.Matcher` with trust scores | Trust input needs #7 (can start before) |
+| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | Add `scheduler.Matcher` with trust scores | — (`Decision.Wrong` and late copies from #7 are the trust input) |
 | [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | Add the `montecarlo` workload | — |
 
-Suggested order: #6, #7, #8, #9.
+#7 is done. Suggested order: #6 (in review), #8, #9.
 
 ### Abhishek (`colmeabhi`)
 
@@ -61,9 +60,7 @@ All issues done (#10, #11, #12). Next:
 
 | This | Needs |
 | --- | --- |
-| `make fail-faulty`, test case TC-03 | #7 |
 | `make fail-leader`, test case TC-04 | #13 and #14 |
-| Trust scores in #8 | #7 (`Decision.Wrong`) |
 | #14 leader catch-up | #13 (`BeforeLead` hook, terms) |
 | Election-time metric (grading checklist, part 2) | #13 |
 | Failover test on AWS | #13, #14, #15 |
@@ -74,15 +71,16 @@ Do these right after the named PR merges, in the same day:
 
 | After | Do |
 | --- | --- |
-| #7 merges | Run `make fail-faulty`. Record TC-03 in `docs/test-results.md`. |
 | #13 and #14 merge | Run `make fail-leader`. Record TC-04. Check the "failure scripts" and "metrics" items in `docs/grading-checklist.md`. |
-| #7 merges | Run `make load-sweep` again: "full" mode then waits for 2 of 3 results. Update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
+| #7 merges | Kushagra: in `scripts/load-sweep.sh`, run "full" mode with 2 or more volunteers. With 1 volunteer it never finishes now: a unit needs 2 equal results from 2 different volunteers. Then run `make load-sweep` again, and update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
+| #6 and #7 both merge | Check "At least 3 algorithms" in `docs/grading-checklist.md` (gossip, leases, voting). |
 | Any algorithm issue merges | Update its card and the roadmap on the product page (`site/index.html`). |
 
 ## Done
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-22 | [#32](https://github.com/colmeabhi/sparecycles/pull/32) | Majority voting: `verify.Majority`, `SC_VOTE_QUORUM`, faulty mode `SC_FAULTY_RATE`, late copies checked, `make fail-faulty` passes (TC-03; closes #7) |
 | 2026-11-21 | [#30](https://github.com/colmeabhi/sparecycles/pull/30) | Docker Compose cluster tested with gossip and Prometheus (TC-12); Kushagra's ID and email in the report |
 | 2026-11-21 | [#29](https://github.com/colmeabhi/sparecycles/pull/29) | Slide text and speaker notes (`slides.md`); Kushagra's slides 4, 9, 11, 12 with 2 images |
 | 2026-11-21 | [#28](https://github.com/colmeabhi/sparecycles/pull/28) | Report 8.2a: terminal screenshot of the volunteer crash; `docs/report/screenshots/` for section 8 |

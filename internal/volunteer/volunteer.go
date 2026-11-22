@@ -28,6 +28,9 @@ type Config struct {
 	SpeedScore float64
 	// OnRegister is called with the new volunteer ID after each registration. It may be nil.
 	OnRegister func(id string)
+	// FaultyRate is the share of units (0 to 1) for which the volunteer sends a wrong
+	// output on purpose, to show majority voting in demos and tests. 0 for real runs.
+	FaultyRate float64
 }
 
 // Volunteer runs units for the leader.
@@ -141,6 +144,7 @@ func (v *Volunteer) step(ctx context.Context) (time.Duration, error) {
 		v.log.Warn("unit failed", "unit", unit.GetUnitId(), "err", err)
 		return 0, nil
 	}
+	output = v.maybeCorrupt(unit.GetUnitId(), output)
 
 	return 0, v.pool.Do(ctx, func(conn *grpc.ClientConn) error {
 		resp, err := pb.NewVolunteerServiceClient(conn).SubmitResult(ctx, &pb.SubmitResultRequest{

@@ -23,6 +23,7 @@ type Coordinator struct {
 	ResultsReceived       prometheus.Counter
 	UnitsAccepted         prometheus.Counter
 	WrongResults          prometheus.Counter
+	NoMajority            prometheus.Counter
 	LeasesExpired         prometheus.Counter
 	LeasesDeadVolunteer   prometheus.Counter
 	ReplicationErrors     prometheus.Counter
@@ -65,6 +66,9 @@ func NewCoordinator() *Coordinator {
 		WrongResults: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_wrong_results_total", Help: "Results that disagreed with the accepted output.",
 		}),
+		NoMajority: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_votes_no_majority_total", Help: "Voting rounds with no majority, after which a unit got more copies.",
+		}),
 		LeasesExpired: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_leases_expired_total", Help: "Leases released because they expired.",
 		}),
@@ -87,6 +91,7 @@ func NewCoordinator() *Coordinator {
 		m.ResultsReceived,
 		m.UnitsAccepted,
 		m.WrongResults,
+		m.NoMajority,
 		m.LeasesExpired,
 		m.LeasesDeadVolunteer,
 		m.ReplicationErrors,

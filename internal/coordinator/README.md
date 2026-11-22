@@ -27,6 +27,9 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 **Take a result:** `SubmitResult` → commit `ResultRecorded` → `decide` → `Verifier.Decide` → commit `CopiesRaised` and/or `UnitAccepted` → when all units are done, workload `Merge` → commit `JobFinished`.
 
+- `SubmitResult` holds `decideMu` from recording the result to the end of the vote, so each result is recorded and voted on in one step. Two results that arrive together give one decision (one accept or one raise, each wrong result counted once, no error for a volunteer whose result was recorded), and no result is recorded unseen while another vote is halfway. The job merge also runs under this lock, so a large merge pauses other votes for that time.
+- **Late copies** (`latecopies.go`): when a unit is accepted, the volunteers that still hold a lease on it are remembered until their lease ends. If one of them sends its result later, the result is not recorded, but it is compared with the accepted output and counted as a wrong result if it differs (BOINC checks late results the same way). Results from any other volunteer are ignored, so nobody can make another volunteer look faulty. This is leader-local and is lost after a failover.
+
 **Every tick (leader only, `Deps.TickInterval`, default 1 second):**
 
 - `releaseExpiredLeases`: `Leases.Expired` → commit `LeaseReleased`.
@@ -42,7 +45,7 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 ## Tests
 
-`server_test.go` runs full jobs in one process with `bufconn` (no network). `membership_test.go` checks that a dead volunteer loses its lease before the lease expires.
+`server_test.go` runs full jobs in one process with `bufconn` (no network). `membership_test.go` checks that a dead volunteer loses its lease before the lease expires. `voting_test.go` runs majority voting with faulty volunteers, concurrent decisions and late copies.
 
 - Do not change `startNode` in `server_test.go`, because many tests use it.
 - For a new part, copy the `startNode` pattern into your own test file, for example `lease_test.go`, and pass your implementation in `Deps`.

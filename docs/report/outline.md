@@ -48,12 +48,12 @@ State: ☐ not started · ◐ draft · ☑ done. Pages are a budget, without fig
 | 7.3 | Software components and how they interact (gRPC) | Kushagra | 0.4 | `proto/sparecycles/v1/sparecycles.proto`, `internal/leaderclient` | ◐ |
 | 8.1 | Success scenario with screenshots | Tejas | 0.2 | TC-01 in `docs/test-results.md` | ☐ |
 | 8.2a | Failure: volunteer crash | Kushagra | 0.25 | `make fail-volunteer`, TC-02 | ☑ |
-| 8.2b | Failure: faulty volunteer | Tejas | 0.25 | `make fail-faulty`, TC-03 (after #7) | ☐ |
+| 8.2b | Failure: faulty volunteer | Tejas | 0.25 | `make fail-faulty`, TC-03 | ☐ |
 | 8.2c | Failure: leader crash | Abhishek | 0.25 | `make fail-leader`, TC-04 (after #13, #14) | ☐ |
 | 9 | Growth rate of the major algorithms | Each person: own algorithms | 0.6 | 6.1 | ◐ Kushagra part done (in 6.1) |
 | 9.1 | Overall result and reflection on design decisions | Abhishek | 0.3 | All | ☐ |
 | 9.2–9.3 | Metrics, comparison with the baseline, throughput and latency | Kushagra | 0.7 | `results/load.csv`, TC-07, TC-08, `docs/observability.md` | ◐ volunteer and client sweeps done (rerun after #7) |
-| 10 | Test cases and results (at least 5) | Tejas (each adds own cases) | 0.6 | `docs/test-results.md` | ◐ 10 of 12 have results |
+| 10 | Test cases and results (at least 5) | Tejas (each adds own cases) | 0.6 | `docs/test-results.md` | ◐ 11 of 12 have results |
 | 11 | Conclusions, lessons learned, improvements | Abhishek | 0.4 | All | ☐ |
 | — | References (IEEE style) | Kushagra | — | Proposal §7 | ◐ (`references.bib`) |
 

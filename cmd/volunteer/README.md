@@ -32,6 +32,7 @@ Run the command in more terminals to add more volunteers. Each one picks a free 
 | `SC_GOSSIP_ADDR` | `:0` (free port) | Gossip listen address, or `off` |
 | `SC_GOSSIP_HOST` | `127.0.0.1` | Host that others use to reach this volunteer. `hostname` uses the machine name. |
 | `SC_GOSSIP_*` timings | see `.env.example` | Same as the coordinator |
+| `SC_FAULTY_RATE` | `0` | Demo only: share of units (0 to 1) with a wrong output on purpose. The volunteer logs a warning at start when it is above 0. |
 
 ## Behind a home router
 

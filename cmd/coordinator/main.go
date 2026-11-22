@@ -108,7 +108,7 @@ func newServer(cfg config.Coordinator, elector election.Elector, members members
 		Replicator:   replication.Noop{},
 		Membership:   members,
 		Leases:       lease.NoExpiry{Length: cfg.LeaseDuration},
-		Verifier:     verify.FirstResult{},
+		Verifier:     verify.Majority{Quorum: cfg.VoteQuorum},
 		Scheduler:    scheduler.FIFO{},
 		Auth:         sec.auth,
 		Signer:       sec.signer,
@@ -193,5 +193,6 @@ func newHTTPServer(addr string, m *metrics.Coordinator) *http.Server {
 func logStart(cfg config.Coordinator, elector election.Elector, log *slog.Logger) {
 	leader, _ := elector.Leader()
 	log.Info("coordinator started", "grpc", cfg.ListenAddr, "metrics", cfg.MetricsAddr,
-		"peers", len(cfg.Peers), "leader", leader, "is_leader", elector.IsLeader())
+		"peers", len(cfg.Peers), "leader", leader, "is_leader", elector.IsLeader(),
+		"copies", cfg.VoteReplicas, "quorum", cfg.VoteQuorum)
 }

@@ -13,7 +13,8 @@ The volunteer loop: register, ask for work, run it, send the result, and repeat.
 1. Register with the token, resources and gossip address. Keep the volunteer ID, and call `Config.OnRegister` with it.
 2. Ask for work (`RequestWork`). If there is no unit, wait for `retry_after_ms`.
 3. Check the signature of `security.TaskMessage(unit, workload, lease expiry, payload)`. Run the workload with a deadline at the lease expiry.
-4. Send the result (`SubmitResult`).
+4. Faulty mode only (`Config.FaultyRate` above 0): for that share of units, replace the output with a random wrong one and log `faulty mode: sent wrong output` (`faulty.go`). The change is random, so 2 faulty volunteers do not agree by chance.
+5. Send the result (`SubmitResult`).
 
 ## Error handling
 
@@ -27,4 +28,8 @@ The volunteer loop: register, ask for work, run it, send the result, and repeat.
 
 ## Settings
 
-Read in `internal/config` (volunteer section): `SC_COORDINATORS`, `SC_VOLUNTEER_TOKEN`, `SC_VOLUNTEER_NAME`, `SC_CPU_CORES`, `SC_MEMORY_MB`, `SC_SPEED_SCORE`, `SC_SIGNING_PUBLIC_KEY`, and the `SC_GOSSIP_*` settings.
+Read in `internal/config` (volunteer section): `SC_COORDINATORS`, `SC_VOLUNTEER_TOKEN`, `SC_VOLUNTEER_NAME`, `SC_CPU_CORES`, `SC_MEMORY_MB`, `SC_SPEED_SCORE`, `SC_SIGNING_PUBLIC_KEY`, `SC_FAULTY_RATE` (demos and tests only), and the `SC_GOSSIP_*` settings.
+
+## Tests
+
+`faulty_test.go`: a wrong output always differs from the real one, keeps its length, does not change the input, and two wrong outputs differ; rate 0 never and rate 1 always corrupts.
