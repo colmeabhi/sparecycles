@@ -45,8 +45,7 @@ Suggested order: #13, #14, #15.
 All issues done (#10, #11, #12). Next:
 
 - Run the "after merge" steps below when #7, #13 and #14 land.
-- Test Docker Compose with gossip (`make up`). It is not tested yet.
-- Report: your sections, diagrams D3, D6, I1 and the 8.2a screenshot are done. Left: your student ID and email on the title. Rerun `make load-sweep` after #7 and update 9.3.
+- Report: your sections, diagrams D3, D6, I1, the 8.2a screenshot, and your ID and email are done. Rerun `make load-sweep` after #7 and update 9.3.
 - Presentation: slides 4 (your part), 9, 11 and 12 are drafted in `docs/presentation/slides.md`. After #7, update slide 12 with the new load numbers.
 
 ### All three
@@ -84,6 +83,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-21 | [#30](https://github.com/colmeabhi/sparecycles/pull/30) | Docker Compose cluster tested with gossip and Prometheus (TC-12); Kushagra's ID and email in the report |
 | 2026-11-21 | [#29](https://github.com/colmeabhi/sparecycles/pull/29) | Slide text and speaker notes (`slides.md`); Kushagra's slides 4, 9, 11, 12 with 2 images |
 | 2026-11-21 | [#28](https://github.com/colmeabhi/sparecycles/pull/28) | Report 8.2a: terminal screenshot of the volunteer crash; `docs/report/screenshots/` for section 8 |
 | 2026-11-21 | [#27](https://github.com/colmeabhi/sparecycles/pull/27) | Submission README draft: setup steps and division of work |

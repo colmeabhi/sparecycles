@@ -81,7 +81,7 @@ State: ☐ not started · ◐ draft · ☑ final (after the run-through on 12-01
 - More volunteers: 69 → 110 → 140 units/s (1, 2, 4 volunteers, 1 copy).
 - 3 copies per unit: 74 units/s with 4 volunteers, 47% less.
 - More users: throughput is flat after 2 clients; job time grows from 1.5 s to 4.7 s.
-- 9 of 11 test cases pass. 2 wait for voting and election.
+- 10 of 12 test cases pass. 2 wait for voting and election.
 
 **Speaker notes:**
 
