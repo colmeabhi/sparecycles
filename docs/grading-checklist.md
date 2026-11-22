@@ -63,7 +63,7 @@ The report and the presentation need this evidence. Build it together with the f
 - [ ] Recorded presentation and demo.
 - [ ] Presentation slides.
 - [ ] Code.
-- [ ] Submission README: setup and compile steps, step-by-step run instructions, and the division of work for each student.
+- [ ] Submission README: setup and compile steps, step-by-step run instructions, and the division of work for each student. *(Drafted in `docs/submission.md`; final after its "Before you submit" list.)*
 
 ## 6. Literature knowledge
 
