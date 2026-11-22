@@ -47,6 +47,7 @@ All issues done (#10, #11, #12). Next:
 - Run the "after merge" steps below when #7, #13 and #14 land.
 - Test Docker Compose with gossip (`make up`). It is not tested yet.
 - Report: your sections and diagrams D3, D6, I1 are drafted. Left: a terminal screenshot for 8.2a, and your student ID and email on the title. Rerun `make load-sweep` after #7 and update 9.3.
+- Presentation: record the client sweep (step 4 in `docs/presentation/demo-script.md`), and draft slides 9, 11 and 12.
 
 ### All three
 
@@ -54,7 +55,7 @@ All issues done (#10, #11, #12). Next:
 | --- | --- | --- |
 | Final report (IEEE, 10 to 15 pages) | 12-04 | The LaTeX report is in `docs/report/` (`make report`). Fill your red `\todo` parts; first drafts by 11-30. Each person adds their student ID and email. |
 | UML diagrams (6 design, 3 implementation) | 12-04 | 3 of 9 done (D3, D6, I1). Tejas: D1, D4, I3. Abhishek: D2, D5, I2. PlantUML in `docs/report/diagrams/`. |
-| Recorded presentation (about 15 min) and slides | 12-03 | Plan the demo around `make fail-volunteer`, `fail-faulty`, `fail-leader` |
+| Recorded presentation (about 15 min) and slides | 12-03 | Agree on [docs/presentation/outline.md](presentation/outline.md) (14 slides, about 5 min each) and its slide tool by 11-24. Slides drafted by 11-30; run-through and backup demo clips on 12-01. Demo steps: [demo-script.md](presentation/demo-script.md). |
 | Submission README (setup and division of work) | 12-03 | Decide where it lives (the root README stays lean) |
 
 ## Waiting on
@@ -83,6 +84,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-21 | [#25](https://github.com/colmeabhi/sparecycles/pull/25) | Presentation plan (14 slides, speakers, timing) and demo script |
 | 2026-11-21 | [#24](https://github.com/colmeabhi/sparecycles/pull/24) | LaTeX report skeleton; Kushagra's sections and diagrams D3, D6, I1; `make report` |
 | 2026-11-21 | [#23](https://github.com/colmeabhi/sparecycles/pull/23) | Report outline with owners, page budget and UML plan; `AGENTS.md` state column fixed |
 | 2026-11-21 | [#22](https://github.com/colmeabhi/sparecycles/pull/22) | This shared status file |
