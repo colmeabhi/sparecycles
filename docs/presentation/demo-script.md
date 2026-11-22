@@ -13,7 +13,7 @@ Do these the day before and again 10 minutes before you record.
 | 1. Update and build | `git pull`, then `make build` |
 | 2. Check that tests pass | `make test` |
 | 3. Free the ports | Nothing may listen on 7400 to 7403 or 9400 to 9403. Stop old runs with Ctrl+C. |
-| 4. Record the client sweep (once) | Run `scripts/load.sh 4 8 1 full`, then with 2, 4 and 8 clients (the third number). Rows go to `results/load.csv`. |
+| 4. Client sweep data | Done on 2026-11-21 (TC-11 in `docs/test-results.md`). Rerun only if the code changes: `scripts/load.sh 4 8 C full` for C = 1, 2, 4, 8, in the foreground. |
 | 5. Record backup clips (on 12-01) | Record each part below once with QuickTime (File → New Screen Recording). |
 | 6. Prepare the screen | One terminal, font size 18 or larger, window at half the screen. `results/load.csv` chart and `site/index.html` open in a second window. |
 | 7. Silence the Mac | Turn on Do Not Disturb. Close chat apps. |
@@ -102,7 +102,7 @@ scripts/load.sh 4 8 4 full
 
 **Expected (about 15 seconds):** a summary with `throughput ... units/s` and `job time mean ..., p95 ...`.
 
-**Say:** "With more volunteers, throughput grows: 30, 51 and 86 units per second for 1, 2 and 4 volunteers without redundancy. With three copies per unit, we pay about two thirds of that for fault tolerance. With more clients at the same time, [read the client sweep numbers from step 4]."
+**Say:** "With more volunteers, throughput grows: 69, 110 and 140 units per second for 1, 2 and 4 volunteers without redundancy. With three copies per unit, 4 volunteers give 74 units per second, so fault tolerance costs about half the throughput. With more users, throughput rises from 42 to about 75 units per second at 2 clients, then stays flat, while job time grows from 1.5 to 4.7 seconds at 8 clients: the volunteers are the limit."
 
 ## If something fails during the recording
 
