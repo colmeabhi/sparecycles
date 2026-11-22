@@ -1,0 +1,56 @@
+% SpareCycles final report. Build: make report (or upload docs/report/ to Overleaf).
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{pgfplots}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\pgfplotsset{compat=1.18}
+
+% Marks text that an owner still has to write. Remove all of them before submission.
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\lstset{basicstyle=\ttfamily\scriptsize, columns=fullflexible, breaklines=true, frame=single, xleftmargin=2pt, xrightmargin=2pt}
+\graphicspath{{diagrams/}}
+
+\begin{document}
+
+\title{SpareCycles: A Fault-Tolerant Volunteer Computing Platform}
+
+\author{
+\IEEEauthorblockN{Tejas Chakkarwar}
+\IEEEauthorblockA{Student ID: \todo{ID}\\ \todo{email}}
+\and
+\IEEEauthorblockN{Kushagra Bainsla}
+\IEEEauthorblockA{Student ID: \todo{ID}\\ \todo{email}}
+\and
+\IEEEauthorblockN{Abhishek Ahirrao}
+\IEEEauthorblockA{Student ID: \todo{ID}\\ \todo{email}}
+}
+
+\maketitle
+
+\begin{abstract}
+\todo{All: write last, about 150 words. Problem, approach (6 algorithms), main results.}
+\end{abstract}
+
+\input{sections/02-goals}
+\input{sections/03-challenges}
+\input{sections/04-literature}
+\input{sections/05-design}
+\input{sections/06-evaluation}
+\input{sections/07-implementation}
+\input{sections/08-demonstration}
+\input{sections/09-performance}
+\input{sections/10-testing}
+\input{sections/11-conclusions}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

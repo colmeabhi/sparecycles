@@ -10,6 +10,9 @@ result.png
 # Script run folders (logs and images); results/ is kept
 /runs/
 
+# Report build output (the diagram PNGs are kept, so Overleaf can build the report)
+/docs/report/build/
+
 # Terraform
 .terraform/
 *.tfstate

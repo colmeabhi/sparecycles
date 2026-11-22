@@ -2,7 +2,7 @@ MODULE := github.com/colmeabhi/sparecycles
 GOBIN  := $(shell go env GOPATH)/bin
 
 .PHONY: help proto build test vet keys run-coordinator run-volunteer run-client up down logs clean \
-	load load-sweep fail-volunteer fail-faulty fail-leader evidence
+	load load-sweep fail-volunteer fail-faulty fail-leader evidence report
 
 help:
 	@echo "make build            Build all binaries into ./bin"
@@ -21,6 +21,7 @@ help:
 	@echo "make fail-faulty      Failure demo: a volunteer sends wrong results"
 	@echo "make fail-leader      Failure demo: kill the leader during a job"
 	@echo "make evidence         All 3 failure demos"
+	@echo "make report           Render diagrams and build docs/report/build/main.pdf"
 
 proto:
 	protoc \
@@ -76,6 +77,11 @@ fail-leader:
 	bash scripts/fail-leader.sh
 
 evidence: fail-volunteer fail-faulty fail-leader
+
+report:
+	plantuml -tpng docs/report/diagrams/*.puml
+	mkdir -p docs/report/build
+	tectonic --outdir docs/report/build docs/report/main.tex
 
 clean:
 	rm -rf bin result.png runs
