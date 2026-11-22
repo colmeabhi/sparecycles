@@ -47,7 +47,7 @@ State: ☐ not started · ◐ draft · ☑ done. Pages are a budget, without fig
 | 7.2 | Implementation UML (I1–I3) | Diagrams below | — | Code | ☐ |
 | 7.3 | Software components and how they interact (gRPC) | Kushagra | 0.4 | `proto/sparecycles/v1/sparecycles.proto`, `internal/leaderclient` | ◐ |
 | 8.1 | Success scenario with screenshots | Tejas | 0.2 | TC-01 in `docs/test-results.md` | ☐ |
-| 8.2a | Failure: volunteer crash | Kushagra | 0.25 | `make fail-volunteer`, TC-02 | ◐ (screenshot missing) |
+| 8.2a | Failure: volunteer crash | Kushagra | 0.25 | `make fail-volunteer`, TC-02 | ☑ |
 | 8.2b | Failure: faulty volunteer | Tejas | 0.25 | `make fail-faulty`, TC-03 (after #7) | ☐ |
 | 8.2c | Failure: leader crash | Abhishek | 0.25 | `make fail-leader`, TC-04 (after #13, #14) | ☐ |
 | 9 | Growth rate of the major algorithms | Each person: own algorithms | 0.6 | 6.1 | ◐ Kushagra part done (in 6.1) |
@@ -85,12 +85,14 @@ The course needs at least 3 design diagrams (5.3) and at least 3 implementation 
 
 ## Screenshots to capture
 
-| For | What | How |
-| --- | --- | --- |
-| 8.1 | Client progress and the result image | `make run-client` |
-| 8.2a | Coordinator log: suspect, dead, lease released | `make fail-volunteer` |
-| 8.2b | Coordinator log: wrong result; same image as the reference | `make fail-faulty` |
-| 8.2c | Logs of node 2: election, became leader | `make fail-leader` |
+Save them in `docs/report/screenshots/`.
+
+| For | What | How | File |
+| --- | --- | --- | --- |
+| 8.1 | Client progress and the result image | `make run-client` | `s1-success.png` |
+| 8.2a | Coordinator log: suspect, dead, lease released | `make fail-volunteer` | `s2-volunteer-crash.png` ☑ |
+| 8.2b | Coordinator log: wrong result; same image as the reference | `make fail-faulty` | `s3-faulty-volunteer.png` |
+| 8.2c | Logs of node 2: election, became leader | `make fail-leader` | `s4-leader-crash.png` |
 | 9.2 | Prometheus panels: throughput, members by state | Queries in `docs/observability.md` |
 | 9.3 | Chart from `results/load.csv`: units/s by volunteers, baseline and full | Any chart tool |
 

@@ -46,7 +46,7 @@ All issues done (#10, #11, #12). Next:
 
 - Run the "after merge" steps below when #7, #13 and #14 land.
 - Test Docker Compose with gossip (`make up`). It is not tested yet.
-- Report: your sections and diagrams D3, D6, I1 are drafted. Left: a terminal screenshot for 8.2a, and your student ID and email on the title. Rerun `make load-sweep` after #7 and update 9.3.
+- Report: your sections, diagrams D3, D6, I1 and the 8.2a screenshot are done. Left: your student ID and email on the title. Rerun `make load-sweep` after #7 and update 9.3.
 - Presentation: draft slides 9, 11 and 12. The client sweep is done (TC-11).
 
 ### All three
@@ -84,6 +84,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-21 | [#28](https://github.com/colmeabhi/sparecycles/pull/28) | Report 8.2a: terminal screenshot of the volunteer crash; `docs/report/screenshots/` for section 8 |
 | 2026-11-21 | [#27](https://github.com/colmeabhi/sparecycles/pull/27) | Submission README draft: setup steps and division of work |
 | 2026-11-21 | [#26](https://github.com/colmeabhi/sparecycles/pull/26) | Load data measured again in the foreground; client sweep (TC-11); report 9.3 and test results updated |
 | 2026-11-21 | [#25](https://github.com/colmeabhi/sparecycles/pull/25) | Presentation plan (14 slides, speakers, timing) and demo script |

@@ -30,18 +30,18 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 - **Goal:** work held by a dead volunteer moves to another volunteer before its lease ends.
 - **Steps:** `make fail-volunteer`. 1 coordinator, 2 volunteers, 1 copy per unit, fast gossip (300 ms interval, 2 s suspect timeout). A 256-unit job starts, then volunteer A gets `kill -9`.
 - **Expected:** A is suspect, then dead; its unit is released; the job finishes.
-- **Actual (2026-11-20):**
+- **Actual (2026-11-21):** the run in the report (Fig. 4, `docs/report/screenshots/s2-volunteer-crash.png`):
 
   ```text
-  18:28:01 member suspect                  member=vol-b907b9010959
-  18:28:03 member dead                     silent_for=2.914s
-  18:28:03 lease released: volunteer dead  unit=job-0dada023146c-105
-  18:28:03 volunteer removed: dead
-  18:28:09 job finished                    state=done
+  18:46:59 member suspect                  member=vol-30f3c3c0baac
+  18:47:01 member dead                     silent_for=2.886s
+  18:47:01 lease released: volunteer dead  unit=job-9e089c50a83b-116
+  18:47:01 volunteer removed: dead
+  18:47:02 job finished                    state=done
   PASS: volunteer-a was marked dead, its unit moved to volunteer-b, and the job finished
   ```
 
-  Without gossip, the unit would wait for the 3-minute lease.
+  An earlier run on 2026-11-20 gave the same result (dead after 2.914 s, unit 105 released). Without gossip, the unit would wait for the 3-minute lease.
 
 ## TC-03 Faulty volunteer
 
