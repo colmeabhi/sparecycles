@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Slide 12 visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #f3f2ed; }
+  .page { width: 1600px; height: 900px; box-sizing: border-box; padding: 40px; display: flex; gap: 30px; }
+  .panel { border: 3px solid #161616; }
+  .chart-volunteers { width: 600px; }
+  .chart-clients { width: 540px; }
+  .tiles { width: 320px; display: flex; flex-direction: column; gap: 22px; }
+  .tile { flex: 1; border: 3px solid #161616; padding: 18px 22px; display: flex; flex-direction: column; justify-content: center; }
+  .tile.dark { background: #161616; color: #f3f2ed; }
+  .tile .big { font-family: "Silkscreen", monospace; font-size: 54px; line-height: 1; }
+  .tile .what { font-family: "Space Grotesk", sans-serif; font-size: 20px; line-height: 1.3; margin-top: 12px; }
+  .source { font-family: "JetBrains Mono", monospace; font-size: 13px; color: #55544f; line-height: 1.4; }
+  svg { display: block; width: 100%; height: 100%; }
+  .px { font-family: "Silkscreen", monospace; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="panel chart-volunteers">
+<svg viewBox="0 0 594 814">
+  <text x="30" y="58" class="px" font-size="30" fill="#161616">More volunteers</text>
+  <text x="30" y="92" class="mono" font-size="17" fill="#55544f">accepted units per second · 2 clients</text>
+  <rect x="30" y="118" width="18" height="18" fill="#161616"/>
+  <text x="56" y="133" class="mono" font-size="16" fill="#161616">1 copy (baseline)</text>
+  <rect x="270" y="118" width="18" height="18" fill="#2f5bff"/>
+  <text x="296" y="133" class="mono" font-size="16" fill="#161616">3 copies (full)</text>
+
+  <g stroke="#d9d7cf" stroke-width="2">
+    <line x1="80" y1="180" x2="570" y2="180"/>
+    <line x1="80" y1="360" x2="570" y2="360"/>
+    <line x1="80" y1="540" x2="570" y2="540"/>
+  </g>
+  <line x1="80" y1="720" x2="570" y2="720" stroke="#161616" stroke-width="3"/>
+  <g class="mono" font-size="15" fill="#55544f" text-anchor="end">
+    <text x="68" y="725">0</text>
+    <text x="68" y="545">50</text>
+    <text x="68" y="365">100</text>
+    <text x="68" y="185">150</text>
+  </g>
+
+  <g fill="#161616">
+    <rect x="104" y="471.1" width="62" height="248.9"/>
+    <rect x="264" y="325.4" width="62" height="394.6"/>
+    <rect x="424" y="217.6" width="62" height="502.4"/>
+  </g>
+  <g fill="#2f5bff">
+    <rect x="174" y="474.5" width="62" height="245.5"/>
+    <rect x="334" y="471.0" width="62" height="249.0"/>
+    <rect x="494" y="453.1" width="62" height="266.9"/>
+  </g>
+  <g class="mono" font-size="17" text-anchor="middle" fill="#161616">
+    <text x="135" y="461">69</text>
+    <text x="295" y="315">110</text>
+    <text x="455" y="207">140</text>
+    <text x="205" y="464">68</text>
+    <text x="365" y="461">69</text>
+    <text x="525" y="443">74</text>
+  </g>
+
+  <g class="px" font-size="22" text-anchor="middle" fill="#161616">
+    <text x="170" y="756">1</text>
+    <text x="330" y="756">2</text>
+    <text x="490" y="756">4</text>
+  </g>
+  <text x="325" y="794" class="mono" font-size="16" fill="#55544f" text-anchor="middle">volunteers</text>
+</svg>
+</div>
+
+<div class="panel chart-clients">
+<svg viewBox="0 0 534 814">
+  <text x="30" y="58" class="px" font-size="30" fill="#161616">More users</text>
+  <text x="30" y="92" class="mono" font-size="17" fill="#55544f">4 volunteers · 3 copies</text>
+
+  <text x="30" y="140" class="mono" font-size="16" fill="#161616">units per second</text>
+  <g stroke="#d9d7cf" stroke-width="2">
+    <line x1="80" y1="160" x2="510" y2="160"/>
+    <line x1="80" y1="270" x2="510" y2="270"/>
+  </g>
+  <line x1="80" y1="380" x2="510" y2="380" stroke="#161616" stroke-width="3"/>
+  <g class="mono" font-size="15" fill="#55544f" text-anchor="end">
+    <text x="68" y="385">0</text>
+    <text x="68" y="275">50</text>
+    <text x="68" y="165">100</text>
+  </g>
+  <g fill="#2f5bff">
+    <rect x="103" y="286.5" width="64" height="93.5"/>
+    <rect x="213" y="219.2" width="64" height="160.8"/>
+    <rect x="323" y="209.7" width="64" height="170.3"/>
+    <rect x="433" y="230.1" width="64" height="149.9"/>
+  </g>
+  <g class="mono" font-size="17" text-anchor="middle" fill="#161616">
+    <text x="135" y="276">42</text>
+    <text x="245" y="209">73</text>
+    <text x="355" y="199">77</text>
+    <text x="465" y="220">68</text>
+  </g>
+
+  <text x="30" y="450" class="mono" font-size="16" fill="#161616">mean job time (s)</text>
+  <g stroke="#d9d7cf" stroke-width="2">
+    <line x1="80" y1="480" x2="510" y2="480"/>
+    <line x1="80" y1="590" x2="510" y2="590"/>
+  </g>
+  <line x1="80" y1="700" x2="510" y2="700" stroke="#161616" stroke-width="3"/>
+  <g class="mono" font-size="15" fill="#55544f" text-anchor="end">
+    <text x="68" y="705">0</text>
+    <text x="68" y="595">2.5</text>
+    <text x="68" y="485">5</text>
+  </g>
+  <g fill="#ff5a1f">
+    <rect x="103" y="633.7" width="64" height="66.3"/>
+    <rect x="213" y="628.0" width="64" height="72.0"/>
+    <rect x="323" y="579.0" width="64" height="121.0"/>
+    <rect x="433" y="495.1" width="64" height="204.9"/>
+  </g>
+  <g class="mono" font-size="17" text-anchor="middle" fill="#161616">
+    <text x="135" y="623">1.5</text>
+    <text x="245" y="618">1.6</text>
+    <text x="355" y="569">2.7</text>
+    <text x="465" y="485">4.7</text>
+  </g>
+
+  <g class="px" font-size="22" text-anchor="middle" fill="#161616">
+    <text x="135" y="736">1</text>
+    <text x="245" y="736">2</text>
+    <text x="355" y="736">4</text>
+    <text x="465" y="736">8</text>
+  </g>
+  <text x="295" y="776" class="mono" font-size="16" fill="#55544f" text-anchor="middle">clients at the same time</text>
+</svg>
+</div>
+
+<div class="tiles">
+  <div class="tile dark">
+    <div class="big">2.9 s</div>
+    <div class="what">to declare a killed volunteer dead. A lease alone takes 3 min.</div>
+  </div>
+  <div class="tile">
+    <div class="big">−47%</div>
+    <div class="what">throughput with 3 copies per unit, at 4 volunteers.</div>
+  </div>
+  <div class="tile">
+    <div class="big">9 / 11</div>
+    <div class="what">test cases pass. 2 wait for voting and election.</div>
+  </div>
+  <div class="source">Laptop, 10 cores, local processes.<br>results/load.csv · 2026-11-21</div>
+</div>
+
+</div>
+</body>
+</html>
