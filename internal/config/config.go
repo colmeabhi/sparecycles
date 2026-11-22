@@ -63,6 +63,10 @@ func LoadCoordinator() (Coordinator, error) {
 	if c.LeaseDuration, err = durationVar("SC_LEASE_DURATION", 3*time.Minute); err != nil {
 		return c, err
 	}
+	// A lease of 0 or less would expire on the next tick, so no unit could ever finish.
+	if c.LeaseDuration <= 0 {
+		return c, fmt.Errorf("SC_LEASE_DURATION must be positive, got %s", c.LeaseDuration)
+	}
 	if c.VoteReplicas, err = intVar("SC_VOTE_REPLICAS", 3); err != nil {
 		return c, err
 	}

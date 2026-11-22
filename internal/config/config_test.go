@@ -74,3 +74,14 @@ func TestLoadCoordinatorBadValues(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadCoordinatorLeaseMustBePositive(t *testing.T) {
+	for _, value := range []string{"0s", "-1m"} {
+		t.Run(value, func(t *testing.T) {
+			t.Setenv("SC_LEASE_DURATION", value)
+			if _, err := LoadCoordinator(); err == nil {
+				t.Fatalf("SC_LEASE_DURATION=%q: expected an error", value)
+			}
+		})
+	}
+}

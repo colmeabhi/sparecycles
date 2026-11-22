@@ -29,7 +29,7 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 **Every tick (leader only, `Deps.TickInterval`, default 1 second):**
 
-- `releaseExpiredLeases`: `Leases.Expired` → commit `LeaseReleased`.
+- `releaseExpiredLeases`: `Leases.Expired` → commit `LeaseReleased`, count `sc_leases_expired_total` and log `lease expired`. If the lease ended another way just before (the result came in time), it logs `expired lease already gone` at debug level.
 - `releaseDeadVolunteers`: for each lease held by a volunteer that `Membership.Dead` reports → commit `LeaseReleased`, count `sc_leases_dead_volunteer_total`, and forget the volunteer. If gossip was wrong, the volunteer gets `NotFound` on its next request and registers again.
 
 **Every change:** `commit` → `Table.Validate` → `Replicator.Send` → `Table.Apply`. One mutex keeps the changes in order.
@@ -42,7 +42,7 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 ## Tests
 
-`server_test.go` runs full jobs in one process with `bufconn` (no network). `membership_test.go` checks that a dead volunteer loses its lease before the lease expires.
+`server_test.go` runs full jobs in one process with `bufconn` (no network). `membership_test.go` checks that a dead volunteer loses its lease before the lease expires. `lease_test.go` checks that an expired lease moves a unit to another volunteer, and uses a fake clock (`Deps.Now`) to check the expiry time.
 
 - Do not change `startNode` in `server_test.go`, because many tests use it.
 - For a new part, copy the `startNode` pattern into your own test file, for example `lease_test.go`, and pass your implementation in `Deps`.

@@ -18,6 +18,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-09 | Gossip load does not grow with group size | `TestLoadPerPeriodDoesNotGrowWithGroupSize` | Pass |
 | TC-10 | Gossip finds a failed node over a real network | `TestGRPCClusterDetectsFailure` | Pass |
 | TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed container | `make up`, `make run-client`, `docker kill` | Pass |
+| TC-13 | Lease expiry moves a lost unit (gossip off) | Manual run in `internal/lease/README.md`; `TestExpiredLeaseMovesUnitToAnotherVolunteer` | Pass |
 
 ## TC-01 Success scenario
 
@@ -144,6 +145,21 @@ Test cases for the report (section 10). Each case lists how to run it and the re
     ```
 
     The second job finished on the 2 other volunteers in 2.0 s. Detection takes longer than in TC-02 (6.8 s against 2.9 s) because TC-02 uses fast demo gossip settings.
+
+## TC-13 Lease expiry without gossip
+
+- **Goal:** a unit held by a volunteer that gossip cannot see moves to another volunteer when its lease ends.
+- **Steps:** 1 coordinator with `SC_LEASE_DURATION=10s` and 1 copy per unit; volunteer A with `SC_GOSSIP_ADDR=off`, volunteer B with gossip on. Start a 4096×4096 job (256 units), then `kill -9` A after it sent 5 results. The steps are in `internal/lease/README.md`.
+- **Expected:** about 10 s after the kill, `lease expired` for A's unit; the job finishes with all 256 units.
+- **Actual (2026-11-22):**
+
+  ```text
+  13:11:44 kill -9 volunteer-a
+  13:11:55 lease expired  unit=job-19002f44ec14-57 volunteer=vol-353c32b28c54
+  13:12:18 job finished   job=job-19002f44ec14 state=done
+  ```
+
+  The client saved the full image (`done in 34.007s`). The metrics showed `sc_leases_expired_total 1` and `sc_leases_dead_volunteer_total 0`: the lease, not gossip, freed the unit. The automated test `TestExpiredLeaseMovesUnitToAnotherVolunteer` checks the same with a silent volunteer and a 300 ms lease, and that the late result is refused.
 
 ## How to add a case
 

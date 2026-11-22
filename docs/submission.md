@@ -174,7 +174,7 @@ Each algorithm is a Go package behind an interface. The base version has a simpl
 | SWIM gossip and failure detection | `internal/membership/` | Kushagra | [#10](https://github.com/colmeabhi/sparecycles/issues/10) | [#19](https://github.com/colmeabhi/sparecycles/pull/19) |
 | Volunteer tokens and Ed25519 signed tasks | `internal/security/`, `cmd/keygen/` | Kushagra | [#11](https://github.com/colmeabhi/sparecycles/issues/11) | [#20](https://github.com/colmeabhi/sparecycles/pull/20) |
 | Failure scripts, load generator and baseline mode | `scripts/`, `cmd/loadgen/`, `results/` | Kushagra | [#12](https://github.com/colmeabhi/sparecycles/issues/12) | [#21](https://github.com/colmeabhi/sparecycles/pull/21), [#26](https://github.com/colmeabhi/sparecycles/pull/26) |
-| Lease expiry and reassignment | `internal/lease/` | Tejas | [#6](https://github.com/colmeabhi/sparecycles/issues/6) | *In progress* |
+| Lease expiry and reassignment | `internal/lease/` | Tejas | [#6](https://github.com/colmeabhi/sparecycles/issues/6) | [#31](https://github.com/colmeabhi/sparecycles/pull/31) |
 | Majority voting | `internal/verify/` | Tejas | [#7](https://github.com/colmeabhi/sparecycles/issues/7) | *In progress* |
 | Resource discovery with trust scores | `internal/scheduler/` | Tejas (Abhishek reviews) | [#8](https://github.com/colmeabhi/sparecycles/issues/8) | *In progress* |
 | Monte Carlo workload | `internal/workload/` | Tejas | [#9](https://github.com/colmeabhi/sparecycles/issues/9) | *In progress* |

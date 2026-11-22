@@ -1,8 +1,8 @@
 // Package lease decides lease lengths and finds expired leases.
 //
 // Owner: Tejas (resource allocation with leases).
-// The base version gives leases that never expire, so lost work is never reassigned.
-// The real version releases a lease after its expiry time, so a different volunteer gets the unit.
+// Timeout releases a lease after its expiry time, so a different volunteer gets
+// the unit. NoExpiry never releases a lease; tests that must not lose leases use it.
 //
 // A Policy keeps no state of its own. Lease expiry times live in the task table,
 // so a new leader can continue after a failover.

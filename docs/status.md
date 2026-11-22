@@ -3,19 +3,19 @@
 Read this file right after `AGENTS.md`. It says what is left, who does it next, and what blocks it.
 GitHub issues hold the task details. This file only summarizes and links.
 
-**Updated:** 2026-11-21 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
+**Updated:** 2026-11-22 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
 
 ## Now
 
 | Deadline | Date | Days left |
 | --- | --- | ---: |
-| Issues #6, #7, #13 | 2026-11-27 | 6 |
-| Issues #8, #14 | 2026-11-28 | 7 |
-| Issues #9, #15 | 2026-11-29 | 8 |
-| Code and recorded presentation | 2026-12-03 | 12 |
-| Final report | 2026-12-04 | 13 |
+| Issues #7, #13 | 2026-11-27 | 5 |
+| Issues #8, #14 | 2026-11-28 | 6 |
+| Issues #9, #15 | 2026-11-29 | 7 |
+| Code and recorded presentation | 2026-12-03 | 11 |
+| Final report | 2026-12-04 | 12 |
 
-**State:** the base platform, gossip, security, scripts and the product page are done. 7 of 10 issues are open, and none has a PR yet. Only 1 of the 6 course algorithms (gossip) is real today; the other 5 are stubs.
+**State:** the base platform, gossip, leases, security, scripts and the product page are done. 6 of 10 issues are open. 2 of the 6 course algorithms (gossip, leases) are real today; the other 4 are stubs.
 
 ## Per person
 
@@ -23,12 +23,11 @@ GitHub issues hold the task details. This file only summarizes and links.
 
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
-| [#6 Lease expiry](https://github.com/colmeabhi/sparecycles/issues/6) | 11-27 | Add `lease.Timeout` and its tests | — |
 | [#7 Majority voting](https://github.com/colmeabhi/sparecycles/issues/7) | 11-27 | Add `verify.Majority` and `SC_FAULTY_RATE` | — |
 | [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | Add `scheduler.Matcher` with trust scores | Trust input needs #7 (can start before) |
 | [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | Add the `montecarlo` workload | — |
 
-Suggested order: #6, #7, #8, #9.
+#6 is done. Suggested order: #7, #8, #9.
 
 ### Abhishek (`colmeabhi`)
 
@@ -83,6 +82,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-22 | [#31](https://github.com/colmeabhi/sparecycles/pull/31) | Lease expiry: `lease.Timeout`; a lost unit moves to another volunteer when its lease ends (TC-13; closes #6) |
 | 2026-11-21 | [#30](https://github.com/colmeabhi/sparecycles/pull/30) | Docker Compose cluster tested with gossip and Prometheus (TC-12); Kushagra's ID and email in the report |
 | 2026-11-21 | [#29](https://github.com/colmeabhi/sparecycles/pull/29) | Slide text and speaker notes (`slides.md`); Kushagra's slides 4, 9, 11, 12 with 2 images |
 | 2026-11-21 | [#28](https://github.com/colmeabhi/sparecycles/pull/28) | Report 8.2a: terminal screenshot of the volunteer crash; `docs/report/screenshots/` for section 8 |

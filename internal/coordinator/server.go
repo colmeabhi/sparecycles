@@ -123,6 +123,12 @@ func (s *Server) tick(ctx context.Context) {
 func (s *Server) releaseExpiredLeases(ctx context.Context) {
 	for _, e := range s.d.Leases.Expired(s.d.Table.OpenUnits(), s.d.Now()) {
 		err := s.commit(ctx, tasktable.Change{Kind: tasktable.LeaseReleased, UnitID: e.UnitID, VolunteerID: e.VolunteerID})
+		if status.Code(err) == codes.FailedPrecondition {
+			// The lease ended another way between the read and this commit, for example
+			// the volunteer sent its result just in time. Nothing is left to release.
+			s.d.Log.Debug("expired lease already gone", "unit", e.UnitID, "volunteer", e.VolunteerID, "reason", err)
+			continue
+		}
 		if err != nil {
 			s.d.Log.Warn("release expired lease", "unit", e.UnitID, "volunteer", e.VolunteerID, "err", err)
 			continue
