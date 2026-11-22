@@ -9,25 +9,16 @@ Each scenario runs with one command from a fresh clone (\texttt{make fail-volunt
 
 \subsection{Failure Scenario 1: A Volunteer Crashes}
 \label{sec:scenario-volunteer}
-One coordinator and two volunteers run a job of 256 units, each unit on a single volunteer so that only gossip can rescue a lost unit. Gossip uses a 300\,ms period, a 150\,ms probe timeout and a 2\,s suspect timeout. Once volunteer~A has returned five results, it is killed with \texttt{kill -9}, which gives it no chance to say goodbye. Fig.~\ref{fig:volunteer-crash} shows the coordinator log.
+One coordinator and two volunteers run a job of 256 units, each unit on a single volunteer so that only gossip can rescue a lost unit. Gossip uses a 300\,ms period, a 150\,ms probe timeout and a 2\,s suspect timeout. Once volunteer~A has returned five results, it is killed with \texttt{kill -9}, which gives it no chance to say goodbye. Fig.~\ref{fig:volunteer-crash} shows the terminal output of the run, including the relevant lines of the coordinator log.
 
-\begin{figure}[t]
-\begin{lstlisting}
-18:28:01 member suspect                 member=vol-b907b9010959
-18:28:03 member dead                    silent_for=2.914s
-18:28:03 lease released: volunteer dead unit=job-0dada023146c-105
-18:28:03 volunteer removed: dead
-18:28:09 job finished                   state=done
-PASS: volunteer-a was marked dead, its unit moved to
-      volunteer-b, and the job finished
-\end{lstlisting}
-\caption{Coordinator log when a volunteer is killed during a job (shortened).}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{s2-volunteer-crash.png}
+\caption{Terminal output of \texttt{make fail-volunteer}: volunteer~A is killed during a 256-unit job, and the script prints the coordinator log lines for suspicion, death, the released lease and the finished job.}
 \label{fig:volunteer-crash}
-\end{figure}
+\end{figure*}
 
-The coordinator first suspected the volunteer at 18:28:01 and declared it dead two seconds later, 2.9\,s after its last contact with it. In the same second it released the lease on unit 105, which volunteer~B then completed, and the job finished six seconds later. Without gossip the unit would have waited for its full three-minute lease. The volunteer that crashed is also removed from the leader's list; had it been wrongly declared dead, its next request would be refused and it would register again under a new identifier.
-
-\todo{Kushagra: add a terminal screenshot of this run next to the listing.}
+The coordinator first suspected the volunteer at 18:46:59 and declared it dead two seconds later, 2.9\,s after its last contact with it. In the same second it released the lease on unit 116, which volunteer~B then completed, and the job finished one second later. Without gossip the unit would have waited for its full three-minute lease. The volunteer that crashed is also removed from the leader's list; had it been wrongly declared dead, its next request would be refused and it would register again under a new identifier.
 
 \subsection{Failure Scenario 2: A Faulty Volunteer}
 \todo{Tejas: after \#7 merges, run \texttt{make fail-faulty} (one volunteer with \texttt{SC\_FAULTY\_RATE=1.0} among three honest ones). Show the \texttt{wrong result} log lines and that the image matches the honest reference.}
