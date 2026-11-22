@@ -89,6 +89,14 @@ make run-client
 
 **Expected:** the client prints `16/16 units done` and saves `result.png`. Open it to see the fractal.
 
+The second workload estimates pi with Monte Carlo sampling and saves JSON:
+
+```bash
+go run ./cmd/client -workload montecarlo -params '{"units":8,"samples_per_unit":1000000}' -out pi.json
+```
+
+**Expected:** `8/8 units done`, and `pi.json` holds an estimate close to 3.1416.
+
 Stop each process with Ctrl+C.
 
 ### Step 5: Run the failure demos and the load tests
@@ -177,7 +185,7 @@ Each algorithm is a Go package behind an interface. The base version has a simpl
 | Lease expiry and reassignment | `internal/lease/` | Tejas | [#6](https://github.com/colmeabhi/sparecycles/issues/6) | *In progress* |
 | Majority voting | `internal/verify/` | Tejas | [#7](https://github.com/colmeabhi/sparecycles/issues/7) | *In progress* |
 | Resource discovery with trust scores | `internal/scheduler/` | Tejas (Abhishek reviews) | [#8](https://github.com/colmeabhi/sparecycles/issues/8) | *In progress* |
-| Monte Carlo workload | `internal/workload/` | Tejas | [#9](https://github.com/colmeabhi/sparecycles/issues/9) | *In progress* |
+| Monte Carlo workload | `internal/workload/` | Tejas | [#9](https://github.com/colmeabhi/sparecycles/issues/9) | [#34](https://github.com/colmeabhi/sparecycles/pull/34) |
 | Bully election with terms | `internal/election/` | Abhishek | [#13](https://github.com/colmeabhi/sparecycles/issues/13) | *In progress* |
 | Task-table replication | `internal/replication/` | Abhishek | [#14](https://github.com/colmeabhi/sparecycles/issues/14) | *In progress* |
 | AWS deployment with Terraform | `deploy/` | Abhishek | [#15](https://github.com/colmeabhi/sparecycles/issues/15) | *In progress* |

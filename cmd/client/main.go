@@ -21,7 +21,9 @@ func main() {
 	cfg := config.LoadClient()
 
 	workloadName := flag.String("workload", "fractal", "workload name")
-	params := flag.String("params", `{"width":1024,"height":1024,"tile_size":256,"max_iter":1000}`, "workload parameters as JSON")
+	// Empty parameters mean the defaults of the chosen workload. For fractal they
+	// are a 1024×1024 image with 256-pixel tiles and 1000 iterations.
+	params := flag.String("params", "", "workload parameters as JSON (empty: the workload's defaults)")
 	out := flag.String("out", "result.png", "file for the result")
 	poll := flag.Duration("poll", time.Second, "time between progress checks")
 	timeout := flag.Duration("timeout", 30*time.Minute, "maximum time to wait")

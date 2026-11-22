@@ -46,7 +46,7 @@ Each folder in the table has a `README.md`. Read it before you change the folder
 | `internal/lease/` | Lease length and expiry | `NoExpiry`: leases never expire | Tejas |
 | `internal/verify/` | Majority voting | `FirstResult`: accepts the first result | Tejas |
 | `internal/scheduler/` | Resource discovery: which unit goes to which volunteer | `FIFO`: oldest unit first | Tejas |
-| `internal/workload/` | Workloads: split, run, merge | Fractal complete | Tejas (Monte Carlo) |
+| `internal/workload/` | Workloads: split, run, merge | Fractal and Monte Carlo complete | Tejas (Monte Carlo) |
 | `internal/membership/` | SWIM gossip and failure detection | Done: `SWIM` (`Static` kept for tests) | Kushagra |
 | `internal/security/` | Volunteer tokens and task signatures | Done: `TokenList`, Ed25519 (`NoSign` when no key) | Kushagra |
 | `internal/election/` | Bully election with terms | `Static`: highest node ID | Abhishek |

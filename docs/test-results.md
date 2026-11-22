@@ -18,6 +18,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-09 | Gossip load does not grow with group size | `TestLoadPerPeriodDoesNotGrowWithGroupSize` | Pass |
 | TC-10 | Gossip finds a failed node over a real network | `TestGRPCClusterDetectsFailure` | Pass |
 | TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed container | `make up`, `make run-client`, `docker kill` | Pass |
+| TC-15 | Second workload: Monte Carlo estimate of pi, the same bytes on arm64 and amd64 | Client command in `docs/setup.md`; `TestEndToEndMonteCarlo`, `TestMonteCarloGoldenCounts` | Pass |
 
 ## TC-01 Success scenario
 
@@ -144,6 +145,22 @@ Test cases for the report (section 10). Each case lists how to run it and the re
     ```
 
     The second job finished on the 2 other volunteers in 2.0 s. Detection takes longer than in TC-02 (6.8 s against 2.9 s) because TC-02 uses fast demo gossip settings.
+
+## TC-15 Monte Carlo workload
+
+- **Goal:** the second workload runs through the cluster, gives a correct estimate of pi, and gives the same bytes on every CPU, so that votes can compare hashes.
+- **Steps:** 1 coordinator and 2 volunteers on one machine. Run the client command from `docs/setup.md` (8 units of 1,000,000 samples), then the default size (16 units of 50,000,000 samples). Run the golden test on arm64 and on amd64 (`GOARCH=amd64 go test -run MonteCarlo ./internal/workload/`, with Rosetta on Apple silicon).
+- **Expected:** both jobs finish with an estimate near 3.1416. The golden counts are the same on both CPUs.
+- **Actual (2026-11-22):**
+
+  ```text
+  8/8 units done, done in 1.002s
+  {"estimate":3.1419955,"inside":6283991,"total":8000000,"units":8}
+  done in 4.002s
+  {"estimate":3.14158544,"inside":628317088,"total":800000000,"units":16}
+  ```
+
+  The counts for seed 42 (786162, 785489 and 785008 inside of 1,000,000) were the same on arm64 and on amd64. One sample takes about 3 ns (3.2 ns on arm64, 2.2 ns on amd64 under Rosetta). The automated test `TestEndToEndMonteCarlo` runs a job through the coordinator and checks that the result is byte for byte the same as the job run in the test.
 
 ## How to add a case
 

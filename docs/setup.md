@@ -96,6 +96,14 @@ Terminal 3, the client. It submits a 1024×1024 fractal job and saves `result.pn
 make run-client
 ```
 
+To run the second workload, a Monte Carlo estimate of pi, use the client with `-workload`. It saves the result as JSON:
+
+```bash
+go run ./cmd/client -workload montecarlo -params '{"units":8,"samples_per_unit":1000000}' -out pi.json
+```
+
+`pi.json` then holds a result like `{"estimate":3.1419955,"inside":6283991,"total":8000000,"units":8}`. Parameters: `units`, `samples_per_unit` and `seed` (see `internal/workload/README.md`).
+
 ## 5. Run with Docker Compose
 
 This starts 1 coordinator, 3 volunteers and Prometheus. Start Docker Desktop first.
