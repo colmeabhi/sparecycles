@@ -18,6 +18,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-09 | Gossip load does not grow with group size | `TestLoadPerPeriodDoesNotGrowWithGroupSize` | Pass |
 | TC-10 | Gossip finds a failed node over a real network | `TestGRPCClusterDetectsFailure` | Pass |
 | TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed container | `make up`, `make run-client`, `docker kill` | Pass |
+| TC-16 | Requests under another volunteer's ID are rejected | `TestRequestsUnderAnotherVolunteersIDAreRejected` | Pass |
 
 ## TC-01 Success scenario
 
@@ -144,6 +145,14 @@ Test cases for the report (section 10). Each case lists how to run it and the re
     ```
 
     The second job finished on the 2 other volunteers in 2.0 s. Detection takes longer than in TC-02 (6.8 s against 2.9 s) because TC-02 uses fast demo gossip settings.
+
+## TC-16 Session secrets
+
+- **Goal:** a volunteer that knows another volunteer's ID (gossip shares all IDs) cannot take work or send results in its name.
+- **Steps:** 1 coordinator with a token list. The victim and the attacker register, and the victim takes a unit. The attacker sends `RequestWork` and `SubmitResult` under the victim's ID, with no secret and with its own secret. Then the victim sends its real result.
+- **Expected:** every attacker request gets `Unauthenticated`, nothing is recorded, and the victim's result finishes the job.
+- **Actual (2026-11-23):** all 4 attacker requests got `Unauthenticated`. `sc_requests_rejected_total` = 4 and `sc_results_received_total` = 0. The victim's result was recorded, and the job finished. The test passed 10 runs in a row with the race detector. `TestNewRegistrationGetsNewSecret` also checks that an old secret does not work for a new registration, and `TestVolunteerRegistersAgainAfterRejectedSession` checks that a rejected volunteer registers again and uses its new secret.
+- **Also checked:** `make fail-volunteer` passes, and a short load test (`scripts/load.sh 2 4 2 full`) finished all jobs, so real volunteers send their secrets correctly.
 
 ## How to add a case
 

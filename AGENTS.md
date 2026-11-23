@@ -48,7 +48,7 @@ Each folder in the table has a `README.md`. Read it before you change the folder
 | `internal/scheduler/` | Resource discovery: which unit goes to which volunteer | `FIFO`: oldest unit first | Tejas |
 | `internal/workload/` | Workloads: split, run, merge | Fractal complete | Tejas (Monte Carlo) |
 | `internal/membership/` | SWIM gossip and failure detection | Done: `SWIM` (`Static` kept for tests) | Kushagra |
-| `internal/security/` | Volunteer tokens and task signatures | Done: `TokenList`, Ed25519 (`NoSign` when no key) | Kushagra |
+| `internal/security/` | Volunteer tokens, session secrets and task signatures | Done: `TokenList`, `SessionHash`, Ed25519 (`NoSign` when no key) | Kushagra |
 | `internal/election/` | Bully election with terms | `Static`: highest node ID | Abhishek |
 | `internal/replication/` | Copy table changes to backups | `Noop`: copies nothing | Abhishek |
 | `deploy/` | Prometheus config, later Terraform | Prometheus only | Abhishek (Terraform) |
