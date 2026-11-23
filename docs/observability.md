@@ -25,6 +25,7 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Units moved after a lease expired | `increase(sc_leases_expired_total[5m])` |
 | Wrong results caught | `increase(sc_wrong_results_total[5m])` |
 | Rejected registrations | `increase(sc_registrations_rejected_total[5m])` |
+| Requests with a bad session secret | `increase(sc_requests_rejected_total[5m])` |
 | Which node leads | `sc_coordinator_is_leader` |
 | Wasted copies (assigned but not needed) | `rate(sc_units_assigned_total[1m]) - rate(sc_results_received_total[1m])` |
 
@@ -37,7 +38,7 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Job lifecycle | `job submitted`, `job finished` |
 | Gossip | `member suspect`, `member dead`, `member alive again`, `refuted suspicion` |
 | Lost work | `lease released: volunteer dead`, `lease expired` |
-| Security | `registration rejected` (coordinator), `bad signature` (volunteer) |
+| Security | `registration rejected` and `request rejected: bad session` (coordinator), `bad signature` and `leader rejected the session` (volunteer) |
 | Voting (after #7) | `wrong result`, `no majority, more copies` |
 | Election (after #13) | `election started`, `became leader` |
 

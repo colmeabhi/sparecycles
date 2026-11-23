@@ -492,8 +492,11 @@ func (x *RegisterRequest) GetName() string {
 }
 
 type RegisterResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	VolunteerId   string                 `protobuf:"bytes,1,opt,name=volunteer_id,json=volunteerId,proto3" json:"volunteer_id,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	VolunteerId string                 `protobuf:"bytes,1,opt,name=volunteer_id,json=volunteerId,proto3" json:"volunteer_id,omitempty"`
+	// Secret for this registration. The volunteer sends it with every later
+	// request, so that nobody else can act under its ID. Keep it private.
+	SessionSecret []byte `protobuf:"bytes,2,opt,name=session_secret,json=sessionSecret,proto3" json:"session_secret,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -535,9 +538,18 @@ func (x *RegisterResponse) GetVolunteerId() string {
 	return ""
 }
 
+func (x *RegisterResponse) GetSessionSecret() []byte {
+	if x != nil {
+		return x.SessionSecret
+	}
+	return nil
+}
+
 type RequestWorkRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	VolunteerId   string                 `protobuf:"bytes,1,opt,name=volunteer_id,json=volunteerId,proto3" json:"volunteer_id,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	VolunteerId string                 `protobuf:"bytes,1,opt,name=volunteer_id,json=volunteerId,proto3" json:"volunteer_id,omitempty"`
+	// The session_secret from RegisterResponse.
+	SessionSecret []byte `protobuf:"bytes,2,opt,name=session_secret,json=sessionSecret,proto3" json:"session_secret,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -577,6 +589,13 @@ func (x *RequestWorkRequest) GetVolunteerId() string {
 		return x.VolunteerId
 	}
 	return ""
+}
+
+func (x *RequestWorkRequest) GetSessionSecret() []byte {
+	if x != nil {
+		return x.SessionSecret
+	}
+	return nil
 }
 
 type WorkUnit struct {
@@ -719,10 +738,12 @@ func (x *RequestWorkResponse) GetRetryAfterMs() uint32 {
 }
 
 type SubmitResultRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	VolunteerId   string                 `protobuf:"bytes,1,opt,name=volunteer_id,json=volunteerId,proto3" json:"volunteer_id,omitempty"`
-	UnitId        string                 `protobuf:"bytes,2,opt,name=unit_id,json=unitId,proto3" json:"unit_id,omitempty"`
-	Output        []byte                 `protobuf:"bytes,3,opt,name=output,proto3" json:"output,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	VolunteerId string                 `protobuf:"bytes,1,opt,name=volunteer_id,json=volunteerId,proto3" json:"volunteer_id,omitempty"`
+	UnitId      string                 `protobuf:"bytes,2,opt,name=unit_id,json=unitId,proto3" json:"unit_id,omitempty"`
+	Output      []byte                 `protobuf:"bytes,3,opt,name=output,proto3" json:"output,omitempty"`
+	// The session_secret from RegisterResponse.
+	SessionSecret []byte `protobuf:"bytes,4,opt,name=session_secret,json=sessionSecret,proto3" json:"session_secret,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -774,6 +795,13 @@ func (x *SubmitResultRequest) GetUnitId() string {
 func (x *SubmitResultRequest) GetOutput() []byte {
 	if x != nil {
 		return x.Output
+	}
+	return nil
+}
+
+func (x *SubmitResultRequest) GetSessionSecret() []byte {
+	if x != nil {
+		return x.SessionSecret
 	}
 	return nil
 }
@@ -1640,11 +1668,13 @@ const file_proto_sparecycles_v1_sparecycles_proto_rawDesc = "" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12\x18\n" +
 	"\aaddress\x18\x02 \x01(\tR\aaddress\x127\n" +
 	"\tresources\x18\x03 \x01(\v2\x19.sparecycles.v1.ResourcesR\tresources\x12\x12\n" +
-	"\x04name\x18\x04 \x01(\tR\x04name\"5\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\"\\\n" +
 	"\x10RegisterResponse\x12!\n" +
-	"\fvolunteer_id\x18\x01 \x01(\tR\vvolunteerId\"7\n" +
+	"\fvolunteer_id\x18\x01 \x01(\tR\vvolunteerId\x12%\n" +
+	"\x0esession_secret\x18\x02 \x01(\fR\rsessionSecret\"^\n" +
 	"\x12RequestWorkRequest\x12!\n" +
-	"\fvolunteer_id\x18\x01 \x01(\tR\vvolunteerId\"\xc1\x01\n" +
+	"\fvolunteer_id\x18\x01 \x01(\tR\vvolunteerId\x12%\n" +
+	"\x0esession_secret\x18\x02 \x01(\fR\rsessionSecret\"\xc1\x01\n" +
 	"\bWorkUnit\x12\x17\n" +
 	"\aunit_id\x18\x01 \x01(\tR\x06unitId\x12\x15\n" +
 	"\x06job_id\x18\x02 \x01(\tR\x05jobId\x12\x1a\n" +
@@ -1654,11 +1684,12 @@ const file_proto_sparecycles_v1_sparecycles_proto_rawDesc = "" +
 	"\tsignature\x18\x06 \x01(\fR\tsignature\"i\n" +
 	"\x13RequestWorkResponse\x12,\n" +
 	"\x04unit\x18\x01 \x01(\v2\x18.sparecycles.v1.WorkUnitR\x04unit\x12$\n" +
-	"\x0eretry_after_ms\x18\x02 \x01(\rR\fretryAfterMs\"i\n" +
+	"\x0eretry_after_ms\x18\x02 \x01(\rR\fretryAfterMs\"\x90\x01\n" +
 	"\x13SubmitResultRequest\x12!\n" +
 	"\fvolunteer_id\x18\x01 \x01(\tR\vvolunteerId\x12\x17\n" +
 	"\aunit_id\x18\x02 \x01(\tR\x06unitId\x12\x16\n" +
-	"\x06output\x18\x03 \x01(\fR\x06output\"2\n" +
+	"\x06output\x18\x03 \x01(\fR\x06output\x12%\n" +
+	"\x0esession_secret\x18\x04 \x01(\fR\rsessionSecret\"2\n" +
 	"\x14SubmitResultResponse\x12\x1a\n" +
 	"\brecorded\x18\x01 \x01(\bR\brecorded\"H\n" +
 	"\x0fElectionRequest\x12\x12\n" +

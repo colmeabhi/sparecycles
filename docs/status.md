@@ -3,19 +3,19 @@
 Read this file right after `AGENTS.md`. It says what is left, who does it next, and what blocks it.
 GitHub issues hold the task details. This file only summarizes and links.
 
-**Updated:** 2026-11-21 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
+**Updated:** 2026-11-23 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
 
 ## Now
 
 | Deadline | Date | Days left |
 | --- | --- | ---: |
-| Issues #6, #7, #13 | 2026-11-27 | 6 |
-| Issues #8, #14 | 2026-11-28 | 7 |
-| Issues #9, #15 | 2026-11-29 | 8 |
-| Code and recorded presentation | 2026-12-03 | 12 |
-| Final report | 2026-12-04 | 13 |
+| Issues #6, #7, #13 | 2026-11-27 | 4 |
+| Issues #8, #14, #35 | 2026-11-28 | 5 |
+| Issues #9, #15 | 2026-11-29 | 6 |
+| Code and recorded presentation | 2026-12-03 | 10 |
+| Final report | 2026-12-04 | 11 |
 
-**State:** the base platform, gossip, security, scripts and the product page are done. 7 of 10 issues are open, and none has a PR yet. Only 1 of the 6 course algorithms (gossip) is real today; the other 5 are stubs.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has no PR yet (#13 to #15).
 
 ## Per person
 
@@ -23,12 +23,12 @@ GitHub issues hold the task details. This file only summarizes and links.
 
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
-| [#6 Lease expiry](https://github.com/colmeabhi/sparecycles/issues/6) | 11-27 | Add `lease.Timeout` and its tests | — |
-| [#7 Majority voting](https://github.com/colmeabhi/sparecycles/issues/7) | 11-27 | Add `verify.Majority` and `SC_FAULTY_RATE` | — |
-| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | Add `scheduler.Matcher` with trust scores | Trust input needs #7 (can start before) |
-| [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | Add the `montecarlo` workload | — |
+| [#6 Lease expiry](https://github.com/colmeabhi/sparecycles/issues/6) | 11-27 | PR [#31](https://github.com/colmeabhi/sparecycles/pull/31): fix the review comments, then merge | — |
+| [#7 Majority voting](https://github.com/colmeabhi/sparecycles/issues/7) | 11-27 | PR [#32](https://github.com/colmeabhi/sparecycles/pull/32): fix the review comments, then merge | — |
+| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | PR [#33](https://github.com/colmeabhi/sparecycles/pull/33): fix the block bug, then merge | #32 (stacked on it) |
+| [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | PR [#34](https://github.com/colmeabhi/sparecycles/pull/34): fix the review comments, then merge | — |
 
-Suggested order: #6, #7, #8, #9.
+Merge order: #31, #32, #33, #34.
 
 ### Abhishek (`colmeabhi`)
 
@@ -42,9 +42,9 @@ Suggested order: #13, #14, #15.
 
 ### Kushagra (`Kushagrabainsla`)
 
-All issues done (#10, #11, #12). Next:
+Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 
-- Run the "after merge" steps below when #7, #13 and #14 land.
+- Run the "after merge" steps below when #31 to #34, #13 and #14 land.
 - Report: your sections, diagrams D3, D6, I1, the 8.2a screenshot, and your ID and email are done. Rerun `make load-sweep` after #7 and update 9.3.
 - Presentation: slides 4 (your part), 9, 11 and 12 are drafted in `docs/presentation/slides.md`. After #7, update slide 12 with the new load numbers.
 
@@ -76,13 +76,17 @@ Do these right after the named PR merges, in the same day:
 | --- | --- |
 | #7 merges | Run `make fail-faulty`. Record TC-03 in `docs/test-results.md`. |
 | #13 and #14 merge | Run `make fail-leader`. Record TC-04. Check the "failure scripts" and "metrics" items in `docs/grading-checklist.md`. |
-| #7 merges | Run `make load-sweep` again: "full" mode then waits for 2 of 3 results. Update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
+| #7 merges | Kushagra: change `scripts/load-sweep.sh` so that "full" mode uses 2 or more volunteers (1 volunteer never reaches 2 of 3). Then run `make load-sweep` again, and update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
+| #9 merges | Kushagra: give `cmd/loadgen` an empty `-params` default, as in the client, so `-workload montecarlo` works. |
+| #6 to #9 merge | Kushagra: update diagram I1 (the stubs that were replaced), and the test count on slide 12. |
+| #35 and any PR with new tests merge | A test that calls `RequestWork` or `SubmitResult` directly must send the `session_secret` from its `RegisterResponse`. Whoever merges second fixes the tests. |
 | Any algorithm issue merges | Update its card and the roadmap on the product page (`site/index.html`). |
 
 ## Done
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-23 | [#36](https://github.com/colmeabhi/sparecycles/pull/36) | Session secrets: nobody can act under another volunteer's ID (closes #35, TC-16) |
 | 2026-11-21 | [#30](https://github.com/colmeabhi/sparecycles/pull/30) | Docker Compose cluster tested with gossip and Prometheus (TC-12); Kushagra's ID and email in the report |
 | 2026-11-21 | [#29](https://github.com/colmeabhi/sparecycles/pull/29) | Slide text and speaker notes (`slides.md`); Kushagra's slides 4, 9, 11, 12 with 2 images |
 | 2026-11-21 | [#28](https://github.com/colmeabhi/sparecycles/pull/28) | Report 8.2a: terminal screenshot of the volunteer crash; `docs/report/screenshots/` for section 8 |
