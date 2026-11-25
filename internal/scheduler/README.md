@@ -9,7 +9,7 @@ Decides which unit a volunteer gets. This is the "resource discovery" algorithm,
 - Volunteers report their resources when they register: CPU cores, memory and a speed score (`SC_CPU_CORES`, `SC_MEMORY_MB`, `SC_SPEED_SCORE`).
 - `RequestWork` in the coordinator builds the candidates: open units that need a volunteer and that this volunteer does not have yet, oldest first.
 - `Pick(candidates, volunteer)` returns one unit, or nil for "no work now". With nil, the volunteer asks again after 1 second.
-- After each vote, the coordinator tells the scheduler which results were right (`TrustRecorder`), if the scheduler implements it. It does this for the results in the vote (`decide`) and for late copies (`checkLateResult`).
+- After each vote, the coordinator tells the scheduler which results were right (`TrustRecorder`), if the scheduler implements it. It does this for the results in the vote (`decide`, with the Verifier's `Decision.Wrong` as the only source for "wrong") and for late copies (`checkLateResult`), and only for registered volunteers.
 - When gossip declares a volunteer dead, the coordinator calls `Forget` (`Forgetter`), if the scheduler implements it. A dead fast volunteer then no longer makes slow volunteers wait.
 
 ## Types and interfaces
@@ -52,7 +52,9 @@ Trust is a beta reputation, as in VECTrust: `(correct + 1) / (correct + wrong + 
 | 2 wrong | 0.25 (blocked with the default minimum of 0.3) |
 | 10 correct, 1 wrong | 0.85 |
 
-A volunteer is blocked once its trust falls below `SC_TRUST_MIN`. It then gets no units, so its trust cannot change again. The block lasts until the leader changes (trust is leader-local) or the volunteer registers again with a new ID.
+A volunteer is blocked once its trust falls below `SC_TRUST_MIN`. It then gets no units, and the block holds even if its trust rises again later, for example when an older correct result is accepted after the block. The block lasts until the leader changes (trust is leader-local) or the volunteer registers again with a new ID.
+
+Trust has no decay. The "2 wrong results" in the table is for a new volunteer: after 100 correct results, a volunteer needs more than 234 wrong ones to fall below 0.3.
 
 ## Pick rules, in order
 
@@ -92,7 +94,8 @@ Logs: `volunteer blocked: low trust` (info, with the trust and the counts). At d
 ## Rules
 
 - `Pick` and `RecordResult` run in many goroutines at the same time. `Matcher` protects its state with a mutex.
-- Trust, blocks and the active-volunteer list are leader-local. After a failover, volunteers register again and start at 0.5. `Forget` removes the state of dead volunteers, so it does not grow with churn (volunteers with gossip off are not removed).
+- Trust, blocks and the active-volunteer list are leader-local. After a failover, volunteers register again and start at 0.5. `Forget` removes the state of dead volunteers, and the coordinator reports trust only for registered volunteers, so a forgotten volunteer's late results do not bring its state back. The state does not grow with churn, except for volunteers with gossip off, which are never declared dead.
+- Session secrets (`internal/security`) stop a volunteer from sending results under another volunteer's ID, so nobody can lower another volunteer's trust.
 - Trust is per volunteer ID. A blocked volunteer that restarts gets a new ID and a new neutral trust. Keying trust by the per-volunteer token (`SC_VOLUNTEER_TOKENS`) would close this, and is a possible next step.
 - Speed and memory are reported by the volunteer and are not checked.
 - Do not change the `Pick` signature without the team.
@@ -117,5 +120,5 @@ The coordinator logs `volunteer blocked: low trust` after the faulty volunteer's
 go test -race ./internal/scheduler/ ./internal/coordinator/ -run 'Trust|Matcher|Slow|Memory|FIFO|Pick|Last'
 ```
 
-- `scheduler_test.go`: `Forget` drops a dead volunteer; a Matcher with no metrics works; trust values; a new volunteer gets the oldest unit; trust goes up and down; low trust gets nothing and is counted once; low trust avoids the last copy but takes it when it is the only unit; a slow volunteer takes the newest unit while a fast one is active and the oldest when none is; a slow volunteer waits at the end, but takes copies that fast volunteers cannot; the memory limit; zero rules work like FIFO; concurrent `Pick` and `RecordResult` under `-race`.
+- `scheduler_test.go`: a block holds when trust rises again and is counted once; `Forget` drops a dead volunteer; a Matcher with no metrics works; trust values; a new volunteer gets the oldest unit; trust goes up and down; low trust gets nothing and is counted once; low trust avoids the last copy but takes it when it is the only unit; a slow volunteer takes the newest unit while a fast one is active and the oldest when none is; a slow volunteer waits at the end, but takes copies that fast volunteers cannot; the memory limit; zero rules work like FIFO; concurrent `Pick` and `RecordResult` under `-race`.
 - `internal/coordinator/scheduler_test.go`: a faulty volunteer is outvoted in job 1, blocked, and runs no unit of job 2, and both images are correct; when gossip declares a fast volunteer dead, a slow volunteer gets the last copy at once.

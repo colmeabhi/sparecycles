@@ -13,8 +13,8 @@ import (
 // that is always last is still caught.
 //
 // Only volunteers that held a lease at the moment of the accept are listed, and
-// only until that lease would have expired. Another volunteer cannot send a
-// wrong result under their ID to make them look faulty.
+// only until that lease would have expired. Session secrets stop another
+// volunteer from sending a wrong result under their ID to make them look faulty.
 //
 // It is leader-local: after a failover, late copies are not checked. It is not
 // safe for concurrent use; SubmitResult holds decideMu while it uses it.

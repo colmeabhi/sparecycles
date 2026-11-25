@@ -48,10 +48,11 @@ Each folder in the table has a `README.md`. Read it before you change the folder
 | `internal/scheduler/` | Resource discovery: which unit goes to which volunteer | Done: `Matcher` with trust (`FIFO` kept for tests) | Tejas |
 | `internal/workload/` | Workloads: split, run, merge | Fractal complete | Tejas (Monte Carlo) |
 | `internal/membership/` | SWIM gossip and failure detection | Done: `SWIM` (`Static` kept for tests) | Kushagra |
-| `internal/security/` | Volunteer tokens and task signatures | Done: `TokenList`, Ed25519 (`NoSign` when no key) | Kushagra |
-| `internal/election/` | Bully election with terms | `Static`: highest node ID | Abhishek |
-| `internal/replication/` | Copy table changes to backups | `Noop`: copies nothing | Abhishek |
-| `deploy/` | Prometheus config, later Terraform | Prometheus only | Abhishek (Terraform) |
+| `internal/security/` | Volunteer tokens, session secrets and task signatures | Done: `TokenList`, `SessionHash`, Ed25519 (`NoSign` when no key) | Kushagra |
+| `internal/election/` | Bully election with terms | Done: `Bully` (`Static` kept for tests) | Abhishek |
+| `internal/replication/` | Copy table changes to backups | Done: `Quorum` with leader catch-up (`Noop` kept for tests) | Abhishek |
+| `internal/peerconn/` | One gRPC connection per coordinator, for election and replication | Complete | Abhishek |
+| `deploy/` | Prometheus config and Terraform for AWS | Terraform written and validated; first apply to do | Abhishek (Terraform) |
 | `cmd/` | Binaries: coordinator, volunteer, client, keygen, loadgen | Complete | All |
 | `scripts/` | One-command failure demos and load tests | Complete | Kushagra |
 | `results/` | Load test results (`load.csv`), kept in git for the report | Data | All |

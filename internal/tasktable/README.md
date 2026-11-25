@@ -35,7 +35,7 @@ The task table holds the state of all jobs and work units. Every coordinator has
 - `Apply` must be deterministic. Do not read the clock, random numbers or maps in random order inside `Apply`. Put such values in the `Change` instead.
 - In each case of `apply`, do all checks before the first modification. Then a failed change leaves the table as it was.
 - `Validate` runs the same checks without changes. The coordinator calls it before replication.
-- Getters (`Job`, `Unit`, `OpenUnits`) return copies. Callers can not change the table by accident.
+- Getters (`Job`, `Unit`, `OpenUnits`, `RunningJobs`) return copies. Callers can not change the table by accident. `RunningJobs` returns the IDs of the unfinished jobs, sorted; the leader uses it to finish a job whose last commit failed.
 - If you add a change kind, add a test that replays it on two tables and compares the snapshots.
 
 ## Test

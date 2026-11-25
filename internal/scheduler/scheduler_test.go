@@ -287,3 +287,26 @@ func TestNilMetricsGetADefault(t *testing.T) {
 		t.Fatal("got nothing, want a unit")
 	}
 }
+
+// Once blocked, a volunteer stays blocked, even if older correct results of it
+// are accepted later and its trust rises above the minimum again.
+func TestBlockHolds(t *testing.T) {
+	m, metric := newTestMatcher(&testClock{})
+	m.RecordResult("v", false)
+	m.RecordResult("v", false) // trust 0.25: blocked
+	for i := 0; i < 3; i++ {
+		m.RecordResult("v", true) // trust 4/7 = 0.57
+	}
+	if got := m.trustOf("v"); got < 0.3 {
+		t.Fatalf("trust = %v, want it above the minimum again for this test", got)
+	}
+	if got := m.Pick(fresh(1), volunteer("v", 1)); got != nil {
+		t.Fatalf("a blocked volunteer got %s after its trust rose, want nothing", got.ID)
+	}
+	m.RecordResult("v", false)
+	m.RecordResult("v", false)
+	m.RecordResult("v", false)
+	if got := testutil.ToFloat64(metric.Blocked); got != 1 {
+		t.Fatalf("sc_volunteers_blocked_total = %v, want 1 (one block, not one per fall)", got)
+	}
+}

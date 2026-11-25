@@ -65,8 +65,10 @@ type Server struct {
 	lateCopies lateCopies // leader-local; copies still running when their unit was accepted
 
 	mu         sync.Mutex
-	volunteers map[string]scheduler.Volunteer // leader-local; volunteers register again after a failover
-	submitted  map[string]time.Time           // leader-local; for the job duration metric
+	volunteers map[string]scheduler.Volunteer  // leader-local; volunteers register again after a failover
+	sessions   map[string]security.SessionHash // leader-local; by volunteer ID, removed with the volunteer
+	waiting    map[string]bool                 // leader-local; units already reported as without a volunteer
+	submitted  map[string]time.Time            // leader-local; for the job duration metric
 }
 
 // New returns a Server.
@@ -81,7 +83,11 @@ func New(d Deps) *Server {
 		d.TickInterval = time.Second
 	}
 	return &Server{
-		d: d, volunteers: map[string]scheduler.Volunteer{}, submitted: map[string]time.Time{}, lateCopies: lateCopies{},
+		d:          d,
+		volunteers: map[string]scheduler.Volunteer{},
+		sessions:   map[string]security.SessionHash{},
+		submitted:  map[string]time.Time{},
+		lateCopies: lateCopies{},
 	}
 }
 
@@ -123,6 +129,8 @@ func (s *Server) tick(ctx context.Context) {
 	s.d.Metrics.IsLeader.Set(1)
 	s.releaseExpiredLeases(ctx)
 	s.releaseDeadVolunteers(ctx)
+	s.retryStuckVotes(ctx)
+	s.reportUnitsWithoutVolunteer()
 }
 
 func (s *Server) releaseExpiredLeases(ctx context.Context) {
@@ -160,6 +168,7 @@ func (s *Server) releaseDeadVolunteers(ctx context.Context) {
 	for id := range s.volunteers {
 		if s.d.Membership.Dead(id) {
 			delete(s.volunteers, id)
+			delete(s.sessions, id)
 			s.forgetVolunteer(id)
 			s.d.Log.Info("volunteer removed: dead", "volunteer", id)
 		}
@@ -278,22 +287,34 @@ func (s *Server) Register(_ context.Context, req *pb.RegisterRequest) (*pb.Regis
 			CPUCores: int(r.GetCpuCores()), MemoryMB: int(r.GetMemoryMb()), SpeedScore: r.GetSpeedScore(),
 		},
 	}
+	secret, hash := security.NewSession()
 	s.mu.Lock()
 	s.volunteers[v.ID] = v
+	s.sessions[v.ID] = hash
 	s.mu.Unlock()
 	s.d.Membership.Join(membership.Member{ID: v.ID, Address: v.Address})
 	s.d.Metrics.VolunteersRegistered.Inc()
 	s.d.Log.Info("volunteer registered", "volunteer", v.ID, "name", v.Name, "token", tokenName,
 		"cpu", v.Resources.CPUCores, "speed", v.Resources.SpeedScore)
-	return &pb.RegisterResponse{VolunteerId: v.ID}, nil
+	return &pb.RegisterResponse{VolunteerId: v.ID, SessionSecret: secret}, nil
 }
 
-func (s *Server) volunteer(id string) (scheduler.Volunteer, error) {
+// volunteer returns a registered volunteer if the request carries its session
+// secret. Gossip shares volunteer IDs with every member, so the ID alone does not
+// prove who sends the request. An unknown ID gives NotFound and a wrong secret
+// gives Unauthenticated; in both cases the volunteer registers again.
+func (s *Server) volunteer(id string, secret []byte) (scheduler.Volunteer, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	v, ok := s.volunteers[id]
+	hash := s.sessions[id]
+	s.mu.Unlock()
 	if !ok {
 		return v, status.Errorf(codes.NotFound, "unknown volunteer %q: register again", id)
+	}
+	if err := hash.Check(secret); err != nil {
+		s.d.Metrics.RequestsRejected.Inc()
+		s.d.Log.Warn("request rejected: bad session", "volunteer", id)
+		return scheduler.Volunteer{}, status.Error(codes.Unauthenticated, err.Error())
 	}
 	return v, nil
 }
@@ -303,7 +324,7 @@ func (s *Server) RequestWork(ctx context.Context, req *pb.RequestWorkRequest) (*
 	if err := s.requireLeader(); err != nil {
 		return nil, err
 	}
-	v, err := s.volunteer(req.GetVolunteerId())
+	v, err := s.volunteer(req.GetVolunteerId(), req.GetSessionSecret())
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +371,7 @@ func (s *Server) SubmitResult(ctx context.Context, req *pb.SubmitResultRequest) 
 	if err := s.requireLeader(); err != nil {
 		return nil, err
 	}
-	v, err := s.volunteer(req.GetVolunteerId())
+	v, err := s.volunteer(req.GetVolunteerId(), req.GetSessionSecret())
 	if err != nil {
 		return nil, err
 	}
@@ -385,10 +406,6 @@ func (s *Server) decide(ctx context.Context, unitID string) error {
 		return nil
 	}
 	d := s.d.Verifier.Decide(u)
-	for _, id := range d.Wrong {
-		s.d.Metrics.WrongResults.Inc()
-		s.d.Log.Warn("wrong result", "unit", unitID, "volunteer", id)
-	}
 	if d.ExtraCopies > 0 {
 		err := s.commit(ctx, tasktable.Change{Kind: tasktable.CopiesRaised, UnitID: unitID, Copies: u.Copies + d.ExtraCopies})
 		if err != nil {
@@ -403,25 +420,46 @@ func (s *Server) decide(ctx context.Context, unitID string) error {
 	if err := s.commit(ctx, tasktable.Change{Kind: tasktable.UnitAccepted, UnitID: unitID, Output: d.Output}); err != nil {
 		return err
 	}
+	// Count wrong results only after the accept is committed. If the commit
+	// fails, the vote runs again on a later tick and must not count them twice.
+	for _, id := range d.Wrong {
+		s.d.Metrics.WrongResults.Inc()
+		s.d.Log.Warn("wrong result", "unit", unitID, "volunteer", id)
+	}
 	s.lateCopies.add(unitID, u.Assignments, s.d.Now())
-	s.recordVotes(u.Results, d.Output)
+	s.recordVotes(u.Results, d.Wrong)
 	s.d.Metrics.UnitsAccepted.Inc()
 	return s.finishJobIfDone(ctx, u.JobID)
 }
 
 // recordVotes tells the Scheduler, if it learns trust, which results of an
-// accepted unit agreed with the accepted output and which did not.
-func (s *Server) recordVotes(results []tasktable.Result, accepted []byte) {
-	hash := tasktable.Hash(accepted)
+// accepted unit agreed with the accepted output and which did not. The
+// Verifier's Decision.Wrong is the only source for "wrong".
+func (s *Server) recordVotes(results []tasktable.Result, wrong []string) {
+	isWrong := make(map[string]bool, len(wrong))
+	for _, id := range wrong {
+		isWrong[id] = true
+	}
 	for _, r := range results {
-		s.recordTrust(r.VolunteerID, r.Hash == hash)
+		s.recordTrust(r.VolunteerID, !isWrong[r.VolunteerID])
 	}
 }
 
 // recordTrust passes one checked result to the Scheduler, if it is a
 // scheduler.TrustRecorder. Other schedulers ignore trust.
+//
+// Only registered volunteers count. A volunteer that gossip declared dead was
+// forgotten (forgetVolunteer); its old results that are accepted later must not
+// create its state again, and it registers with a new ID if it comes back.
 func (s *Server) recordTrust(volunteerID string, correct bool) {
-	if tr, ok := s.d.Scheduler.(scheduler.TrustRecorder); ok {
+	tr, ok := s.d.Scheduler.(scheduler.TrustRecorder)
+	if !ok {
+		return
+	}
+	s.mu.Lock()
+	_, registered := s.volunteers[volunteerID]
+	s.mu.Unlock()
+	if registered {
 		tr.RecordResult(volunteerID, correct)
 	}
 }

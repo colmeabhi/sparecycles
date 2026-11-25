@@ -39,8 +39,10 @@ type MatcherConfig struct {
 //
 //  1. Memory: a volunteer that reports less than MinMemoryMB gets nothing.
 //     A volunteer that reports no memory (0) is allowed.
-//  2. Trust: a volunteer with trust below MinTrust gets nothing. Trust comes
-//     from votes (RecordResult) and starts at 0.5.
+//  2. Trust: a volunteer with trust below MinTrust is blocked and gets nothing,
+//     also if its trust rises again later. Trust comes from votes
+//     (RecordResult) and starts at 0.5. It has no decay: a long good history
+//     needs many wrong results to fall below MinTrust.
 //  3. Last copy: a volunteer with trust below LastCopyTrust skips units where
 //     it would take the last copy, if any other unit is open. The last copy
 //     often decides the vote, so it goes to a volunteer with a good history.
@@ -144,7 +146,9 @@ func (m *Matcher) excluded(v Volunteer) string {
 	if m.cfg.MinMemoryMB > 0 && v.Resources.MemoryMB > 0 && v.Resources.MemoryMB < m.cfg.MinMemoryMB {
 		return reasonLowMemory
 	}
-	if m.trustOf(v.ID) < m.cfg.MinTrust {
+	// A block holds even if the trust rises again later, for example when an
+	// older correct result of the volunteer is accepted after the block.
+	if m.blocked[v.ID] || m.trustOf(v.ID) < m.cfg.MinTrust {
 		return reasonLowTrust
 	}
 	return ""

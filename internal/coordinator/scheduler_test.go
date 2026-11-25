@@ -125,33 +125,34 @@ func TestDeadFastVolunteerIsForgotten(t *testing.T) {
 	})
 	vc := pb.NewVolunteerServiceClient(serveNode(t, ctx, srv))
 
-	register := func(speed float64) string {
+	register := func(speed float64) session {
 		r, err := vc.Register(ctx, &pb.RegisterRequest{Token: testToken, Resources: &pb.Resources{SpeedScore: speed}})
 		if err != nil {
 			t.Fatal(err)
 		}
-		return r.GetVolunteerId()
+		return newSession(r)
+	}
+	requestWork := func(v session) *pb.WorkUnit {
+		resp, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: v.id, SessionSecret: []byte(v.secret)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return resp.GetUnit()
 	}
 	fast, slow := register(2), register(0.3)
-	if _, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: fast}); err != nil {
-		t.Fatal(err) // no job yet: the fast volunteer is only seen as active
-	}
+	requestWork(fast) // no job yet: the fast volunteer is only seen as active
 	if _, err := srv.SubmitJob(ctx, &pb.SubmitJobRequest{
 		Workload: "fractal", Params: []byte(`{"width":16,"height":16,"tile_size":16,"max_iter":10}`),
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if got, _ := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: slow}); got.GetUnit() != nil {
+	if got := requestWork(slow); got != nil {
 		t.Fatal("slow got the only unit while the fast volunteer is active, want nothing")
 	}
 
-	members.kill(fast)
+	members.kill(fast.id)
 	for {
-		got, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: slow})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got.GetUnit() != nil {
+		if requestWork(slow) != nil {
 			return
 		}
 		select {
