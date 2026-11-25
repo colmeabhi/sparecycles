@@ -26,7 +26,7 @@ The report and the presentation need this evidence. Build it together with the f
 
 The full draft is in `docs/report/` (2026-11-25, about 13 pages of text and 21 pages with figures). The team reviews it on 12-01 and 12-02.
 
-- [ ] 1. Cover page: names, student IDs and email addresses. *(Tejas's and Abhishek's ID and email are missing)*
+- [x] 1. Cover page: names, student IDs and email addresses. *(all 3 in `docs/report/main.tex`)*
 - [x] 2. Project goals and motivation.
 - [x] 3. Distributed systems challenges addressed.
 - [x] 4. Detailed literature review. *(BOINC, SWIM, VECA, Bully, VECTrust)*
