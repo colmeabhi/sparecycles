@@ -14,7 +14,7 @@ This file is the README for the course submission. It has 2 parts, as the course
 | --- | --- |
 | Final report (IEEE, PDF) | `docs/report/build/main.pdf` (build it with step 7 below) — *link to the uploaded PDF: to do* |
 | Recorded presentation and demo | *Link: to do* |
-| Presentation slides (PDF) | *Link: to do* |
+| Presentation slides (PDF) | Made in Google Slides; source text and images in `docs/presentation/` — *link to the exported PDF: to do* |
 | Code | This repository |
 | This README | `docs/submission.md` |
 
@@ -106,25 +106,38 @@ Each script starts its own coordinators and volunteers, prints the important log
 | Command | What it shows |
 | --- | --- |
 | `make fail-volunteer` | A volunteer is killed with `kill -9`. Gossip marks it dead, its unit moves to another volunteer, and the job finishes. |
-| `make fail-faulty` | A volunteer sends wrong results. Majority voting rejects them. *Prints `SKIP` until issue #7 merges.* |
-| `make fail-leader` | The leader coordinator is killed. A backup wins the election and the job finishes. *Prints `SKIP` until issues #13 and #14 merge.* |
+| `make fail-faulty` | 1 of 4 volunteers sends wrong results. Majority voting outvotes them, resource discovery blocks the volunteer after its second wrong result, and the image equals an honest reference. |
+| `make fail-leader` | The leader of 3 coordinators is killed during a job. Node 2 wins the election in a new term, continues from the replicated task table, and the job finishes. |
+| `make evidence` | Runs the 3 failure demos above, one after the other. |
 | `make load-sweep` | Throughput and latency with 1 copy per unit (1, 2 and 4 volunteers) and with 3 copies and voting (2, 3 and 4 volunteers). Appends to `results/load.csv`. |
+
+**Expected:** each failure demo ends with `PASS` (checked on `main` on 2026-11-25). The expected log lines are in [presentation/demo-script.md](presentation/demo-script.md) and [test-results.md](test-results.md).
 
 Run the load tests from a terminal in the foreground. A background run on macOS can measure about half the real throughput.
 
 ### Step 6: Run the local cluster with Docker Compose (optional)
 
-This starts 1 coordinator, 3 volunteers and Prometheus. Start Docker Desktop first.
+This starts 3 coordinators, 3 volunteers and Prometheus. Start Docker Desktop first.
 
 ```bash
 make up
 ```
 
+The client finds the leader on ports 7401 to 7403 on its own:
+
 ```bash
 make run-client
 ```
 
-Open http://localhost:9090 for Prometheus. The queries are in [observability.md](observability.md). Stop the cluster:
+Open http://localhost:9090 for Prometheus. The queries are in [observability.md](observability.md).
+
+To see a failover, stop the first leader during a job. The logs of `coordinator-2` then show `election started` and `became leader`:
+
+```bash
+docker compose stop coordinator-3
+```
+
+Stop the cluster:
 
 ```bash
 make down
@@ -142,6 +155,36 @@ make report
 
 The PDF is `docs/report/build/main.pdf`. You can also upload the `docs/report/` folder to Overleaf and set the main file to `main.tex`.
 
+### Step 8: Run on AWS EC2 (optional)
+
+This creates 3 coordinators in 3 availability zones, volunteers on spot instances and Prometheus. It costs money while it runs, so remove it after each test. The full steps and settings are in [deploy/terraform/README.md](../deploy/terraform/README.md). *The first real run is issue #15.*
+
+1. Install Terraform 1.6 or later, and log in to AWS (`aws configure`, or the AWS Academy credentials).
+2. Copy the example settings, and fill in your laptop IP and a volunteer token. Git ignores this file.
+
+   ```bash
+   cp deploy/terraform/terraform.tfvars.example deploy/terraform/terraform.tfvars
+   ```
+
+3. Build the Linux binaries and create the cluster:
+
+   ```bash
+   make deploy-up
+   ```
+
+4. Copy the `sc_coordinators` output line into your laptop `.env`, and run a job:
+
+   ```bash
+   make run-client
+   ```
+
+5. Failover test: during a job, run the `kill_leader_command` output. The logs of coordinator 2 show `became leader` and `leader continues from table index`.
+6. Remove everything:
+
+   ```bash
+   make deploy-down
+   ```
+
 ### Settings
 
 All settings are environment variables that start with `SC_`. To change one, copy the example file and edit it:
@@ -156,8 +199,10 @@ cp .env.example .env
 
 | Port | Use |
 | --- | --- |
-| 7400 | Coordinator gRPC |
+| 7400 | Coordinator gRPC (`make run-coordinator`) |
 | 9400 | Coordinator `/metrics` and `/healthz` |
+| 7401 to 7403 | gRPC of the 3 Docker Compose coordinators |
+| 9401 to 9403 | `/metrics` of the 3 Docker Compose coordinators |
 | 9090 | Prometheus (Docker Compose only) |
 
 ## 2. Division of work
@@ -182,14 +227,15 @@ Each algorithm is a Go package behind an interface. The base version has a simpl
 | SWIM gossip and failure detection | `internal/membership/` | Kushagra | [#10](https://github.com/colmeabhi/sparecycles/issues/10) | [#19](https://github.com/colmeabhi/sparecycles/pull/19) |
 | Volunteer tokens and Ed25519 signed tasks | `internal/security/`, `cmd/keygen/` | Kushagra | [#11](https://github.com/colmeabhi/sparecycles/issues/11) | [#20](https://github.com/colmeabhi/sparecycles/pull/20) |
 | Session secrets: no requests under another volunteer's ID | `internal/security/`, `internal/coordinator/`, `internal/volunteer/`, `proto/` | Kushagra | [#35](https://github.com/colmeabhi/sparecycles/issues/35) | [#36](https://github.com/colmeabhi/sparecycles/pull/36) |
-| Failure scripts, load generator and baseline mode | `scripts/`, `cmd/loadgen/`, `results/` | Kushagra | [#12](https://github.com/colmeabhi/sparecycles/issues/12) | [#21](https://github.com/colmeabhi/sparecycles/pull/21), [#26](https://github.com/colmeabhi/sparecycles/pull/26) |
+| Failure scripts, load generator and baseline mode | `scripts/`, `cmd/loadgen/`, `results/` | Kushagra | [#12](https://github.com/colmeabhi/sparecycles/issues/12) | [#21](https://github.com/colmeabhi/sparecycles/pull/21), [#26](https://github.com/colmeabhi/sparecycles/pull/26), [#41](https://github.com/colmeabhi/sparecycles/pull/41) |
+| Task table memory fix (found under load in Docker) | `internal/tasktable/` | Kushagra | — | [#45](https://github.com/colmeabhi/sparecycles/pull/45) |
 | Lease expiry and reassignment | `internal/lease/` | Tejas | [#6](https://github.com/colmeabhi/sparecycles/issues/6) | [#31](https://github.com/colmeabhi/sparecycles/pull/31) |
 | Majority voting | `internal/verify/` | Tejas | [#7](https://github.com/colmeabhi/sparecycles/issues/7) | [#32](https://github.com/colmeabhi/sparecycles/pull/32) |
 | Resource discovery with trust scores | `internal/scheduler/` | Tejas (Abhishek reviews) | [#8](https://github.com/colmeabhi/sparecycles/issues/8) | [#33](https://github.com/colmeabhi/sparecycles/pull/33) |
 | Monte Carlo workload | `internal/workload/` | Tejas | [#9](https://github.com/colmeabhi/sparecycles/issues/9) | [#34](https://github.com/colmeabhi/sparecycles/pull/34) |
-| Bully election with terms | `internal/election/` | Abhishek | [#13](https://github.com/colmeabhi/sparecycles/issues/13) | *In progress* |
-| Task-table replication | `internal/replication/` | Abhishek | [#14](https://github.com/colmeabhi/sparecycles/issues/14) | *In progress* |
-| AWS deployment with Terraform | `deploy/` | Abhishek | [#15](https://github.com/colmeabhi/sparecycles/issues/15) | *In progress* |
+| Bully election with terms | `internal/election/`, `internal/peerconn/` | Abhishek | [#13](https://github.com/colmeabhi/sparecycles/issues/13) | [#37](https://github.com/colmeabhi/sparecycles/pull/37) |
+| Task-table replication and leader catch-up | `internal/replication/` | Abhishek | [#14](https://github.com/colmeabhi/sparecycles/issues/14) | [#38](https://github.com/colmeabhi/sparecycles/pull/38) |
+| AWS deployment with Terraform | `deploy/` | Abhishek | [#15](https://github.com/colmeabhi/sparecycles/issues/15) | [#39](https://github.com/colmeabhi/sparecycles/pull/39) (Terraform); *first real run to do* |
 | Product page and documentation | `site/`, `docs/`, module READMEs | Kushagra | — | [#16](https://github.com/colmeabhi/sparecycles/pull/16), [#17](https://github.com/colmeabhi/sparecycles/pull/17) |
 
 ### Report
@@ -226,8 +272,10 @@ All 3 students share the test cases in [test-results.md](test-results.md) and th
 
 Remove this section after the last item is done.
 
-- [ ] Each "In progress" row in "Code" has a merged pull request.
-- [ ] `make fail-faulty` and `make fail-leader` print `PASS`.
-- [ ] Add the links to the report PDF, the recording and the slides.
-- [ ] Add an AWS run step from `deploy/` after issue #15 merges.
-- [ ] Check that the report and slide owners match the final versions.
+- [x] Each algorithm row in "Code" has a merged pull request. *(2026-11-25)*
+- [x] `make fail-volunteer`, `make fail-faulty` and `make fail-leader` print `PASS`. *(checked on `main`, 2026-11-25)*
+- [x] Step 8 describes the AWS run. *(2026-11-25)*
+- [ ] Do the first real AWS run (#15). Then remove "first real run to do" in "Code" and the note in step 8, or fix the steps if the run shows a difference.
+- [ ] Check that the report and slide owners in "Division of work" match the final versions. The tables show the planned owners; all 3 students edited the full report and the deck.
+- [ ] Add the links to the report PDF, the recording and the slides PDF in "What is in the submission".
+- [ ] Remove this section.

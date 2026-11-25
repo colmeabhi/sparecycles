@@ -46,7 +46,7 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 | Final report (IEEE, 10 to 15 pages) | 12-04 | Full draft in `docs/report/` (`make report`): about 13 pages of text, 22 with figures. Each person reads all of it by 12-02, mainly the parts on their own algorithms, and puts the abstract, introduction and conclusions in the team's own words. All 3 IDs and emails are on the cover page; no `\todo` marks are left. If the AWS run (#15) happens, update the AWS sentences in sections I, IV-C, IX and X. |
 | UML diagrams (6 design, 3 implementation) | 12-04 | All 9 done (D1 to D6, I1 to I3), drawn from the code. |
 | Recorded presentation (about 15 min) and slides | 12-03 | All 14 slides are drafted in [slides.md](presentation/slides.md), with speaker notes and an image for each slide in `presentation/visuals/` (PR #43). The notes take about 10.5 min and the demo 3.5 min. The deck is in Google Slides ("SpareCycles presentation" in Kushagra's Drive, built 2026-11-25 with all 14 images and speaker notes; slide 11 got its own image). Tejas and Abhishek have edit access (2026-11-25). Next: each speaker reads their notes in the deck and changes the words to their own; run-through with a timer and backup demo clips on 12-01. Speakers: Tejas 1, 2, 3, 4 (BOINC), 8, 14; Kushagra 4 (SWIM, VECA), 9, 11, 12; Abhishek 4 (Bully, VECTrust), 5, 6, 7, 10, 13. Demo steps: [demo-script.md](presentation/demo-script.md). |
-| Submission README (setup and division of work) | 12-03 | Drafted in [docs/submission.md](submission.md). Each person checks their rows. On 12-03, do its "Before you submit" list. |
+| Submission README (setup and division of work) | 12-03 | [docs/submission.md](submission.md) is up to date (2026-11-25): all PRs, the 3 failure demos pass, Docker with 3 coordinators, and an AWS step. Left in its "Before you submit" list: the first AWS run (#15), the team agrees on the report and slide owners, and the 3 links (report PDF, recording, slides PDF). |
 
 ## Waiting on
 
@@ -70,6 +70,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-25 | [#48](https://github.com/colmeabhi/sparecycles/pull/48) | Submission README up to date: merged PRs, failure demos without `SKIP`, 3 coordinators in Docker, AWS step 8; grading checklist items for the algorithms and the properties ticked |
 | 2026-11-25 | [#47](https://github.com/colmeabhi/sparecycles/pull/47) | Report cover page: all 3 student IDs and emails; no `\todo` marks left. Deck shared with Tejas and Abhishek (edit access) |
 | 2026-11-25 | [#46](https://github.com/colmeabhi/sparecycles/pull/46) | Slide tool: Google Slides. The deck has all 14 slides with titles, images and speaker notes; new image for slide 11 (live demo) |
 | 2026-11-25 | [#45](https://github.com/colmeabhi/sparecycles/pull/45) | Task table drops unit outputs it no longer needs: before, a leader crash under load in Docker ran 2 coordinators out of memory and stopped the cluster; now memory stays below 270 MB (TC-12 part 2). Prometheus figure in report 9.3 |

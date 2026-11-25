@@ -6,9 +6,9 @@ Mark an item `[x]` only when the evidence exists in the repo or in the submissio
 
 ## 1. Code
 
-- [x] At least 3 algorithms from the course list. The plan has 6: leader election (5), gossip (3), resource allocation (8), resource discovery (10), agreement (11), replication and consistency (12). *(Real on `main`: gossip, leader election, replication, and agreement with majority voting.)*
-- [ ] Each algorithm is written by the team, not taken from a library.
-- [ ] The code handles fault tolerance, performance, scalability, availability, consistency and concurrency.
+- [x] At least 3 algorithms from the course list. The plan has 6: leader election (5), gossip (3), resource allocation (8), resource discovery (10), agreement (11), replication and consistency (12). *(All 6 are on `main`: SWIM gossip, Bully election, leases (resource allocation), trust-based resource discovery, majority voting (agreement), and primary-backup replication.)*
+- [x] Each algorithm is written by the team, not taken from a library. *(`go.mod` has no library for election, gossip, consensus or replication; each algorithm is a package in `internal/` with its own tests.)*
+- [x] The code handles fault tolerance, performance, scalability, availability, consistency and concurrency. *(Report section VI-B; test cases TC-01 to TC-16; `go test -race` in CI.)*
 - [ ] The system runs on AWS EC2 with 3 coordinators and many volunteers.
 - [x] At least 5 test cases, with recorded results. *(`docs/test-results.md`: all 16 cases have results.)*
 
@@ -24,7 +24,7 @@ The report and the presentation need this evidence. Build it together with the f
 
 ## 3. Final report (IEEE double column, 10 to 15 pages without images)
 
-The full draft is in `docs/report/` (2026-11-25, about 13 pages of text and 21 pages with figures). The team reviews it on 12-01 and 12-02.
+The full draft is in `docs/report/` (2026-11-25, about 13 pages of text and 22 pages with figures). The team reviews it on 12-01 and 12-02.
 
 - [x] 1. Cover page: names, student IDs and email addresses. *(all 3 in `docs/report/main.tex`)*
 - [x] 2. Project goals and motivation.
@@ -67,7 +67,7 @@ All 14 slides are drafted with speaker notes and images in `docs/presentation/` 
 - [ ] Recorded presentation and demo.
 - [ ] Presentation slides.
 - [ ] Code.
-- [ ] Submission README: setup and compile steps, step-by-step run instructions, and the division of work for each student. *(Drafted in `docs/submission.md`; final after its "Before you submit" list.)*
+- [ ] Submission README: setup and compile steps, step-by-step run instructions, and the division of work for each student. *(In `docs/submission.md`, up to date on 2026-11-25 with all PRs and an AWS step; final after its "Before you submit" list: AWS run, owner check, links.)*
 
 ## 6. Literature knowledge
 
