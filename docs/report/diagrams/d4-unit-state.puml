@@ -1,0 +1,41 @@
+@startuml d4-unit-state
+' D4 (design, state): one work unit in the task table. Owner: team.
+' Transitions carry the tasktable Change kind that the leader commits.
+' A = len(Assignments) (running leases), R = len(Results).
+skinparam dpi 220
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam ranksep 30
+skinparam nodesep 20
+
+[*] --> UnitOpen : JobAdded\n(Copies = 3)
+
+state UnitOpen {
+  state "Needs copies" as Needs : A + R < Copies
+  state "All copies out" as Out : A + R = Copies, A > 0
+  state "All copies back" as Back : R = Copies, A = 0,\nno quorum
+
+  [*] --> Needs
+  Needs --> Needs : UnitAssigned,\nResultRecorded,\nLeaseReleased
+  Needs --> Out : UnitAssigned\n(last copy)
+  Out --> Needs : LeaseReleased\n(expired, or\nvolunteer dead)
+  Out --> Out : ResultRecorded
+  Out --> Back : ResultRecorded\n(last result)
+  Back --> Needs : CopiesRaised\n(Copies + 2)
+}
+
+UnitOpen --> UnitDone : UnitAccepted\n(Quorum results\nwith one Hash)
+
+UnitDone : Output set, A = 0
+UnitDone : Job.Done + 1
+UnitDone --> UnitDone : late result:\nnot recorded,\nchecked against\nOutput
+
+note left of UnitDone
+  A = len(Assignments)
+  R = len(Results)
+  All units of the job
+  done: JobFinished
+end note
+@enduml

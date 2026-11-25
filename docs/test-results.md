@@ -29,6 +29,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 - **Steps:** start 1 coordinator and 2 volunteers; run the client with a 1024×1024 fractal (16 units).
 - **Expected:** the client saves a correct 1024×1024 PNG.
 - **Actual (2026-11-20):** `16/16 units done`, `done in 1.002s`, `saved result.png (50587 bytes)`. The image is the Mandelbrot set. The automated test `TestEndToEndFractal` passes on every CI run.
+- **Again on 2026-11-25** (`main` with majority voting; report Fig. `s1-success.png`): the same output, `submitted job-4b39aea6c0f9 with 16 units` and `done in 1.002s`. The coordinator started with `copies=3 quorum=2`. Each of the 2 volunteers sent 16 results, so every tile ran twice, and the leader accepted it when the 2 results agreed.
 
 ## TC-02 Volunteer crash
 
@@ -85,7 +86,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
   ```
 
   The new leader took over 2.5 s after the kill. The 3 volunteers registered again within 1.3 s, under new IDs. Gossip marked the old IDs dead, and the leader released their leases 4.5 s after the takeover, before the 20 s lease timeout. The client saw 3 failed progress checks during the election, then finished the 256-unit job in 10.0 s.
-- **Unit test:** `TestLeaderCrashJobContinues` stops the leader after 20 of 256 units. The new leader accepts exactly the other 236, so no accepted unit runs again.
+- **Unit test:** `TestLeaderCrashJobContinues` stops the leader after 20 of 256 units. It checks that the new leader accepts no more units than remained open (at most 256 minus those accepted before the stop), so no accepted unit runs again.
 
 ## TC-05 Unknown token
 

@@ -1,0 +1,89 @@
+@startuml i2-packages
+' I2 (implementation, component): Go packages and their imports. Owner: team.
+' From: go list -f '{{.ImportPath}}: {{join .Imports " "}}' ./...
+' Edges to metrics, logging, config and gen/sparecycles/v1 are left out (see the legend).
+skinparam dpi 220
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam legendFontSize 10
+skinparam componentStyle rectangle
+skinparam nodesep 15
+skinparam ranksep 35
+
+package "cmd" {
+  [keygen] as CmdKey
+  [coordinator] as CmdCoord
+  [volunteer] as CmdVol
+  [client] as CmdClient
+  [loadgen] as CmdLoad
+}
+
+package "internal" {
+  [coordinator] as Coord
+  [volunteer] as Vol
+
+  rectangle "Coordinator parts" as Parts {
+    [election] as Election
+    [replication] as Replication
+    [lease] as Lease
+    [verify] as Verify
+    [scheduler] as Scheduler
+    [tasktable] as Table
+    [membership] as Membership
+    [security] as Security
+    [workload] as Workload
+  }
+
+  [peerconn] as PeerConn
+  [leaderclient] as LeaderClient
+}
+
+package "shared (import edges not drawn)" as Shared {
+  [metrics] as Metrics
+  [logging] as Logging
+  [config] as Config
+  [gen/sparecycles/v1] as Gen
+}
+
+CmdCoord --> Coord
+CmdCoord --> Parts
+CmdCoord --> PeerConn
+Coord --> Parts
+
+CmdVol --> Vol
+CmdVol --> LeaderClient
+CmdVol --> Membership
+CmdVol --> Security
+CmdVol --> Workload
+
+CmdClient --> LeaderClient
+CmdLoad --> LeaderClient
+CmdKey --> Security
+
+Vol --> LeaderClient
+Vol --> Security
+Vol --> Workload
+
+Election --> PeerConn
+Replication --> PeerConn
+Replication --> Table
+Lease --> Table
+Lease --> Scheduler
+Scheduler --> Table
+Verify --> Table
+
+Table -[hidden]down- Metrics
+Metrics -[hidden]right- Logging
+Logging -[hidden]right- Config
+Config -[hidden]right- Gen
+
+legend bottom
+  An arrow to "Coordinator parts" means an import of every package in it.
+  gen/sparecycles/v1 is imported by cmd/client, cmd/loadgen, cmd/volunteer, and by
+  internal/coordinator, volunteer, election, replication and membership.
+  metrics: cmd/coordinator, coordinator, election, replication, membership, scheduler.
+  logging: cmd/coordinator, cmd/volunteer. config: every binary except keygen.
+endlegend
+@enduml

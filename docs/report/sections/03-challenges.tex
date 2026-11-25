@@ -2,4 +2,14 @@
 \section{Distributed Systems Challenges Addressed}
 \label{sec:challenges}
 
-\todo{Abhishek, about 0.5 page. List each challenge and the mechanism that addresses it: volunteer churn (leases, SWIM gossip), incorrect results (majority voting, trust), coordinator failure (Bully election with terms), split brain (term numbers and a 2-of-3 leader lease), state loss on failover (primary-backup replication of the task table), heterogeneity (resource discovery), untrusted participants (tokens and signed tasks). Refer forward to Section~\ref{sec:design}.}
+Volunteer computing brings several classic problems of distributed systems together in one setting. The machines that do the work are outside the operator's control, they join and leave at will, and the coordinator that tracks the work is itself a machine that can fail. SpareCycles addresses the following challenges, each with a dedicated mechanism that Section~\ref{sec:design} describes in detail.
+
+\begin{itemize}
+\item \emph{Volunteer churn.} A volunteer can stop at any moment and take its work unit with it. Every unit is handed out under a lease, and SWIM gossip detects a crashed volunteer within seconds, so the leader releases its leases long before they would expire.
+\item \emph{Incorrect results.} A volunteer can return a wrong result through faulty hardware or on purpose. Each unit runs on three different volunteers and is accepted only when two results agree. Volunteers whose results lose votes lose trust, and below a threshold they receive no more work.
+\item \emph{Coordinator failure.} A single coordinator, like BOINC's project server, is a single point of failure. SpareCycles runs three coordinators that elect a leader with the Bully algorithm, so a backup takes over when the leader crashes.
+\item \emph{Split brain.} A timeout cannot tell a crashed leader from an unreachable one, so plain Bully can produce two leaders that both hand out work. Every election therefore starts a new term, nodes reject messages from older terms, and a leader may act only while 2 of 3 coordinators have recently confirmed it (a leader lease).
+\item \emph{State loss on failover.} A new leader is of little use if it does not know which units were assigned and accepted. Every change to the task table reaches a backup before it takes effect, and a new leader loads the newest replicated table before it serves any request.
+\item \emph{Heterogeneity.} Volunteers differ in cores, memory and speed. Resource discovery matches units to volunteers on their reported resources and their trust, so that slow volunteers do not hold up the oldest jobs.
+\item \emph{Untrusted participants.} Anyone could pose as a volunteer, or as a coordinator handing out tasks. Volunteers authenticate with per-volunteer tokens and per-session secrets, and the leader signs every task, so a volunteer runs only work that the leader issued.
+\end{itemize}

@@ -24,27 +24,29 @@ The report and the presentation need this evidence. Build it together with the f
 
 ## 3. Final report (IEEE double column, 10 to 15 pages without images)
 
-- [ ] 1. Cover page: names, student IDs and email addresses.
-- [ ] 2. Project goals and motivation.
-- [ ] 3. Distributed systems challenges addressed.
-- [ ] 4. Detailed literature review.
-- [ ] 5.1 Design goals for each challenge: heterogeneity, openness, security, failure handling, concurrency, quality of service, scalability and transparency.
-- [ ] 5.2 Key components and algorithms.
-- [ ] 5.3 Architecture with at least 3 design UML diagrams: use case, deployment or component, communication, sequence, activity or state.
-- [ ] 6.1 Why the approach is good: intuitive description, correctness and complexity of each algorithm.
-- [ ] 6.2 How the project handles fault tolerance, performance, scalability, consistency, concurrency and security.
-- [ ] 7.1 Architectural style.
-- [ ] 7.2 At least 3 implementation UML diagrams: class, object, interaction.
-- [ ] 7.3 Software components and how they interact (gRPC).
-- [ ] 8.1 1 success scenario, with screenshots.
-- [ ] 8.2 3 failure scenarios, with screenshots and the system response.
-- [ ] 9.1 Overall result and reflection on design decisions.
-- [ ] 9.2 Metrics, ideally compared to another system.
+The full draft is in `docs/report/` (2026-11-25, about 13 pages of text and 21 pages with figures). The team reviews it on 12-01 and 12-02.
+
+- [ ] 1. Cover page: names, student IDs and email addresses. *(Tejas's and Abhishek's ID and email are missing)*
+- [x] 2. Project goals and motivation.
+- [x] 3. Distributed systems challenges addressed.
+- [x] 4. Detailed literature review. *(BOINC, SWIM, VECA, Bully, VECTrust)*
+- [x] 5.1 Design goals for each challenge: heterogeneity, openness, security, failure handling, concurrency, quality of service, scalability and transparency.
+- [x] 5.2 Key components and algorithms.
+- [x] 5.3 Architecture with at least 3 design UML diagrams: use case, deployment or component, communication, sequence, activity or state. *(D1 to D6)*
+- [x] 6.1 Why the approach is good: intuitive description, correctness and complexity of each algorithm.
+- [x] 6.2 How the project handles fault tolerance, performance, scalability, consistency, concurrency and security.
+- [x] 7.1 Architectural style.
+- [x] 7.2 At least 3 implementation UML diagrams: class, object, interaction. *(I1 class, I2 component, I3 object)*
+- [x] 7.3 Software components and how they interact (gRPC).
+- [x] 8.1 1 success scenario, with screenshots.
+- [x] 8.2 3 failure scenarios, with screenshots and the system response.
+- [x] 9.1 Overall result and reflection on design decisions.
+- [x] 9.2 Metrics, ideally compared to another system. *(baseline without redundancy)*
 - [x] 9.3 Simulated workloads with measured throughput and latency. *(2026-11-25 sweep on the final code; TC-07, TC-08, TC-11)*
-- [ ] 9 Growth rate of the major algorithms.
-- [ ] 10.1 At least 5 test cases, explained.
-- [ ] 10.2 Test results and discussion.
-- [ ] 11. Conclusions, lessons learned and possible improvements.
+- [x] 9 Growth rate of the major algorithms.
+- [x] 10.1 At least 5 test cases, explained. *(16 cases, Table III)*
+- [x] 10.2 Test results and discussion.
+- [x] 11. Conclusions, lessons learned and possible improvements.
 
 ## 4. Recorded presentation (about 15 minutes)
 

@@ -1,0 +1,61 @@
+@startuml d5-failover-sequence
+' D5 (design, sequence): the leader crashes and coordinator 2 takes over. Owner: team.
+' Messages follow internal/election/bully.go, internal/replication and internal/leaderclient.
+' The volunteer and the client list the coordinators as 1, 2, 3 (SC_COORDINATORS).
+' leaderclient tries the last coordinator that worked first, then the next ones,
+' on UNAVAILABLE or FAILED_PRECONDITION. Coordinator 1 is left out of the
+' client and volunteer retries to save space; it answers FAILED_PRECONDITION.
+skinparam dpi 220
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam sequenceMessageAlign center
+hide footbox
+
+participant "Coordinator 3\n(old leader)" as C3
+participant "Coordinator 2" as C2
+participant "Coordinator 1" as C1
+participant "Volunteer" as V
+actor Client
+
+== term t: coordinator 3 leads ==
+C3 -> C2 : Heartbeat(t, 3)
+C3 -> C1 : Heartbeat(t, 3)
+
+== coordinator 3 crashes ==
+C2 -> C2 : timeout;\n"election started"\n(term t+1)
+C2 ->x C3 : Election(t+1, 2)
+C2 -> C1 : Coordinator(t+1, 2)
+C1 --> C2 : accepted
+C2 ->x C3 : Coordinator(t+1, 2)
+
+group won with 2 of 3; CatchUp
+  C2 -> C1 : Snapshot(t+1)
+  C1 --> C2 : index, table
+  C2 ->x C3 : Snapshot(t+1)
+  C2 -> C2 : restore if newer;\n"leader continues\nfrom table index"
+end
+
+Client ->x C3 : GetJob
+Client -> C2 : GetJob
+C2 --> Client : FAILED_PRECONDITION
+note over V, Client : "progress check failed";\nRequestWork fails too
+C2 -> C2 : old lease over;\n"became leader"
+C2 -> C1 : Heartbeat(t+1, 2)
+
+V ->x C3 : RequestWork
+V -> C2 : RequestWork\n(old ID, old secret)
+C2 --> V : NOT_FOUND
+V -> C2 : Register(token, ...)
+C2 --> V : new ID,\nnew session secret
+V -> C2 : RequestWork
+C2 -> C1 : Replicate(t+1, j,\nUnitAssigned)
+C1 -> C2 : Snapshot(t+1)
+note right of C1 : new term:\ncopy the\nleader table
+C2 --> C1 : index, table
+C1 --> C2 : ok
+C2 --> V : unit, lease, signature
+Client -> C2 : GetJob
+C2 --> Client : units done / total
+@enduml

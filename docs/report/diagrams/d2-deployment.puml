@@ -1,0 +1,50 @@
+@startuml d2-deployment
+' D2 (design, deployment): what deploy/terraform creates on AWS EC2. Owner: team.
+' Only the laptop is outside Terraform. Ports come from main.tf and .env.example.
+skinparam dpi 220
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam legendFontSize 10
+skinparam nodesep 20
+skinparam ranksep 35
+
+rectangle "AWS us-east-1" {
+  frame "VPC 10.40.0.0/16, one public subnet per AZ" {
+    rectangle "3 coordinators: t3.small, :7400 gRPC, :9400 metrics" as Coordinators {
+      frame "AZ a" {
+        node "coordinator-1\n10.40.1.10" as C1
+      }
+      frame "AZ b" {
+        node "coordinator-2\n10.40.2.10" as C2
+      }
+      frame "AZ c" {
+        node "coordinator-3\n10.40.3.10" as C3
+      }
+    }
+    node "volunteer x volunteer_count\n(default 3, spot t3.small,\nAZ = index mod 3)\n:7500 gossip" as Volunteers
+    node "prometheus\n(t3.micro, AZ a)\n:9090 web" as Prometheus
+  }
+  storage "S3 bucket\n(binaries)" as S3
+}
+
+node "Laptop (allowed_cidrs):\nclient, or volunteer\nwith gossip off" as Laptop
+
+C1 -right- C2
+C2 -right- C3
+Volunteers <-up-> Coordinators : ":7400, :7500"
+Prometheus -up-> Coordinators : ":9400\nevery 5 s"
+Volunteers -[hidden]right- Prometheus
+Prometheus -[hidden]right- S3
+Laptop -up-> Prometheus : ":9090"
+Laptop -up-> Coordinators : ":7400, :22"
+Coordinators ..> S3 : "binary at boot"
+Volunteers ..> S3 : "binary at boot"
+
+legend bottom
+  :7400 between coordinators: Election, Coordinator, Heartbeat, Replicate, Snapshot, Ping, PingReq
+  :7400 volunteer to coordinator: Register, RequestWork, SubmitResult, Ping, PingReq
+  :7500 coordinator to volunteer: Ping, PingReq
+endlegend
+@enduml

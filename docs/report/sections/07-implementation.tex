@@ -16,7 +16,21 @@ The last choice shaped how the team worked. We first built a complete system in 
 
 Two rules keep the replicated state machine correct. Applying a change is deterministic: anything that varies, such as identifiers or lease expiry times, is computed by the leader and stored in the change itself. And every change is validated before it is replicated, under a single mutex that orders all changes, so a backup never receives a change that the leader would then reject.
 
-\todo{Abhishek: implementation diagram I2 (component diagram of the Go packages). Tejas: implementation diagram I3 (object diagram of the task table during a job).}
+Fig.~\ref{fig:packages} shows the Go packages and their import dependencies: the binaries in \texttt{cmd/} only wire the parts together; no algorithm package imports the coordinator, and the lease, voting, scheduling and replication packages depend on the task table. Fig.~\ref{fig:task-table-object} shows the task table in the middle of a job.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.7\textwidth]{i2-packages.png}
+  \caption{Go packages and their import dependencies (implementation diagram I2). Each distributed algorithm lives in its own package behind an interface, and only \texttt{cmd/coordinator} and \texttt{internal/coordinator} depend on all of them.}
+  \label{fig:packages}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.85\textwidth]{i3-task-table-object.png}
+  \caption{Snapshot of the task table during a fractal job (implementation diagram I3). One unit is accepted with two agreeing results, one has a result and two running leases, and one is still open; the table index counts the eleven changes applied so far.}
+  \label{fig:task-table-object}
+\end{figure*}
 
 \subsection{Software Components and Their Interaction}
 \label{sec:components}
@@ -26,7 +40,7 @@ The system is written in Go and consists of three main programs (coordinator, vo
 \item \texttt{ClientService} (client to leader): submit a job, read its progress and result.
 \item \texttt{VolunteerService} (volunteer to leader): register, request work, submit a result.
 \item \texttt{ElectionService} (coordinator to coordinator): election, coordinator announcement, heartbeat.
-\item \texttt{ReplicationService} (leader to backups): replicate one change, send a snapshot.
+\item \texttt{ReplicationService} (between coordinators): the leader replicates one change, and a coordinator fetches a full table snapshot from another.
 \item \texttt{GossipService} (any member to any member): ping and indirect ping.
 \end{itemize}
 

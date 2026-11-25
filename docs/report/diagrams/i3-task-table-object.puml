@@ -1,0 +1,94 @@
+@startuml i3-task-table-object
+' I3 (implementation, object): the task table during one fractal job. Owner: team.
+' Field names are from internal/tasktable/table.go. IDs and hashes are shortened.
+' Table.index 12 = 1 JobAdded + unit 0 (3 UnitAssigned, 2 ResultRecorded,
+' 1 UnitAccepted) + unit 1 (3 UnitAssigned, 1 ResultRecorded).
+skinparam dpi 220
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam legendFontSize 10
+skinparam nodesep 12
+skinparam ranksep 40
+
+object "table : Table" as T {
+  index = 11
+  units = {job-7d2e-0, -1, -2}
+  order = [job-7d2e-0, -1, -2]
+}
+
+object "job : Job" as J {
+  ID = "job-7d2e"
+  Workload = "fractal"
+  UnitIDs = [job-7d2e-0, -1, -2]
+  Done = 1
+  State = JobRunning
+}
+
+object "unit0 : Unit" as U0 {
+  ID = "job-7d2e-0"
+  Index = 0
+  State = UnitDone
+  Copies = 3
+  Assignments = {}
+  Output = (PNG tile)
+}
+
+object "r0a : Result" as R0A {
+  VolunteerID = "vol-A"
+  Hash = "9b1f..."
+}
+
+object "r0b : Result" as R0B {
+  VolunteerID = "vol-B"
+  Hash = "9b1f..."
+}
+
+object "unit1 : Unit" as U1 {
+  ID = "job-7d2e-1"
+  Index = 1
+  State = UnitOpen
+  Copies = 3
+}
+
+object "r1a : Result" as R1A {
+  VolunteerID = "vol-A"
+  Hash = "c04e..."
+}
+
+object "a1b : Assignment" as A1B {
+  VolunteerID = "vol-B"
+  LeaseExpiry = 10:03:00Z
+}
+
+object "a1c : Assignment" as A1C {
+  VolunteerID = "vol-C"
+  LeaseExpiry = 10:03:02Z
+}
+
+object "unit2 : Unit" as U2 {
+  ID = "job-7d2e-2"
+  Index = 2
+  State = UnitOpen
+  Copies = 3
+  Assignments = {}
+  Results = []
+}
+
+T -right-> J : jobs[job-7d2e]
+J ..> U0 : UnitIDs[0]
+J ..> U1 : UnitIDs[1]
+J ..> U2 : UnitIDs[2]
+U0 --> R0A : Results[0]
+U0 --> R0B : Results[1]
+U1 --> R1A : Results[0]
+U1 --> A1B : Assignments\n[vol-B]
+U1 --> A1C : Assignments\n[vol-C]
+
+legend bottom
+  unit0: 2 of 3 results agree, so UnitAccepted cleared the lease of vol-C.
+  Its late result is still checked against Output (leader-local, not in the table).
+  unit1: ResultRecorded removed the lease of vol-A; vol-B and vol-C still run it.
+endlegend
+@enduml
