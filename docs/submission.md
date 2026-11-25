@@ -108,7 +108,7 @@ Each script starts its own coordinators and volunteers, prints the important log
 | `make fail-volunteer` | A volunteer is killed with `kill -9`. Gossip marks it dead, its unit moves to another volunteer, and the job finishes. |
 | `make fail-faulty` | A volunteer sends wrong results. Majority voting rejects them. *Prints `SKIP` until issue #7 merges.* |
 | `make fail-leader` | The leader coordinator is killed. A backup wins the election and the job finishes. *Prints `SKIP` until issues #13 and #14 merge.* |
-| `make load-sweep` | Throughput and latency for 1, 2 and 4 volunteers, with and without redundancy. Appends to `results/load.csv`. |
+| `make load-sweep` | Throughput and latency with 1 copy per unit (1, 2 and 4 volunteers) and with 3 copies and voting (2, 3 and 4 volunteers). Appends to `results/load.csv`. |
 
 Run the load tests from a terminal in the foreground. A background run on macOS can measure about half the real throughput.
 

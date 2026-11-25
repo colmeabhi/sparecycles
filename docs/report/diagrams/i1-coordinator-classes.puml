@@ -64,23 +64,27 @@ Server o--- Auth
 Server o--- Signer
 Server o--- Workload
 
-class "Static <<stub>>" as ElStatic
-class "Noop <<stub>>" as Noop
+' The implementations that cmd/coordinator uses. The base stubs (Static, Noop,
+' NoExpiry, FirstResult, FIFO) stay in their packages for tests only.
+class Bully
+class Quorum
 class SWIM
-class "NoExpiry <<stub>>" as NoExpiry
-class "FirstResult <<stub>>" as FirstResult
-class "FIFO <<stub>>" as FIFO
+class Timeout
+class Majority
+class Matcher
 class TokenList
 class "Ed25519Signer" as Ed
 class Fractal
+class MonteCarlo
 
-Elector <|.. ElStatic
-Replicator <|.. Noop
+Elector <|.. Bully
+Replicator <|.. Quorum
 Membership <|.. SWIM
-Policy <|.. NoExpiry
-Verifier <|.. FirstResult
-Scheduler <|.. FIFO
+Policy <|.. Timeout
+Verifier <|.. Majority
+Scheduler <|.. Matcher
 Auth <|.. TokenList
 Signer <|.. Ed
 Workload <|.. Fractal
+Workload <|.. MonteCarlo
 @enduml

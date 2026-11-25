@@ -21,7 +21,7 @@ One-command demos and load tests. They produce the evidence for the report and t
 | `fail-faulty.sh` | `make fail-faulty` | 1 faulty volunteer (`SC_FAULTY_RATE=1.0`) among 3 honest ones. It is outvoted, and the image equals an honest reference. | #7 |
 | `fail-leader.sh` | `make fail-leader` | `kill -9` the leader of 3 coordinators during a job. Node 2 becomes leader and the job finishes. | #13, #14 |
 | `load.sh` | `make load` | One load test. Appends a row to `results/load.csv`. | — |
-| `load-sweep.sh` | `make load-sweep` | Load tests for 1, 2 and 4 volunteers, in baseline and full mode. | — |
+| `load-sweep.sh` | `make load-sweep` | Load tests in baseline mode (1, 2 and 4 volunteers) and full mode (2, 3 and 4 volunteers). | — |
 | `lib.sh` | — | Shared helpers. Source it; do not run it. | — |
 
 `make evidence` runs the 3 failure demos.
@@ -35,12 +35,13 @@ scripts/load.sh VOLUNTEERS JOBS CLIENTS MODE
 | Mode | Copies per unit | Meaning |
 | --- | --- | --- |
 | `baseline` | 1 | No fault tolerance. The comparison point for the report. |
-| `full` | 3 | Each unit runs on 3 volunteers, for majority voting. |
+| `full` | 3 | Each unit goes to 3 volunteers, and the leader accepts it when 2 agree. Needs 2 or more volunteers: the script stops with an error for 1. |
 
-Set `PARAMS` to change the job, for example `PARAMS='{"width":512,"height":512,"tile_size":128}' scripts/load.sh 2 4 2 full`.
+The default job is a fixed fractal (1024×1024, tile 128, 2000 iterations, 64 units), the same as in every row of `results/load.csv`. Set `PARAMS` to change the job, for example `PARAMS='{"width":512,"height":512,"tile_size":128}' scripts/load.sh 2 4 2 full`. Set `WORKLOAD` for another workload: `WORKLOAD=montecarlo scripts/load.sh 2 4 2 full` uses the Monte Carlo defaults.
 
-## After an issue merges
+Run load tests from a terminal in the foreground. A background run on macOS can measure about half the throughput.
 
-- After #7: run `make fail-faulty`. It uses `SC_FAULTY_RATE` and expects the log line `wrong result`.
-- After #13 and #14: run `make fail-leader`. It expects `SC_ELECTION_TIMEOUT` in `.env.example` and the log line `became leader`.
+## Leader demo settings
+
+`fail-leader.sh` sets `SC_LEASE_DURATION=20s` on the coordinators. After a failover the volunteers register under new IDs. Gossip usually frees the units of the old IDs in a few seconds; the short lease frees them in 20 s at most if gossip does not.
 - If a log line or setting name differs, change the script in the same PR, and update `docs/test-results.md`.

@@ -43,7 +43,9 @@ func main() {
 	flag.IntVar(&o.jobs, "jobs", 8, "number of jobs to submit")
 	flag.IntVar(&o.concurrency, "concurrency", 2, "number of clients that submit at the same time")
 	flag.StringVar(&o.workload, "workload", "fractal", "workload name")
-	flag.StringVar(&o.params, "params", `{"width":1024,"height":1024,"tile_size":128,"max_iter":2000}`, "workload parameters as JSON")
+	// Empty parameters mean the defaults of the chosen workload, as in the client.
+	// A fixed fractal default would break every other workload.
+	flag.StringVar(&o.params, "params", "", "workload parameters as JSON (empty: the workload's defaults)")
 	flag.StringVar(&o.label, "label", "full", "name of this setup in the CSV, for example full or baseline")
 	flag.IntVar(&o.volunteers, "volunteers", 0, "number of volunteers in the cluster, recorded in the CSV")
 	flag.StringVar(&o.csvPath, "csv", "", "append the result to this CSV file")

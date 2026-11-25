@@ -40,7 +40,7 @@ The report and the presentation need this evidence. Build it together with the f
 - [ ] 8.2 3 failure scenarios, with screenshots and the system response.
 - [ ] 9.1 Overall result and reflection on design decisions.
 - [ ] 9.2 Metrics, ideally compared to another system.
-- [ ] 9.3 Simulated workloads with measured throughput and latency.
+- [x] 9.3 Simulated workloads with measured throughput and latency. *(2026-11-25 sweep on the final code; TC-07, TC-08, TC-11)*
 - [ ] 9 Growth rate of the major algorithms.
 - [ ] 10.1 At least 5 test cases, explained.
 - [ ] 10.2 Test results and discussion.

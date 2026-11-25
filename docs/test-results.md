@@ -62,7 +62,9 @@ Test cases for the report (section 10). Each case lists how to run it and the re
   13:37:05 wrong result  unit=job-786948cf8d3b-45 volunteer=vol-21a5f9a9e1ac late=true
   ```
 
-  A first run on the same day, before late copies were checked, failed with `no result was outvoted`: the faulty volunteer joined last, so it always ran the third copy, and the 2 honest copies won before it finished. Its 5 results were turned away and never compared. The automated tests `TestFaultyVolunteerIsOutvoted`, `TestNoMajorityAsksForTwoMoreCopies` and `TestLateCopyIsChecked` cover both paths.
+  A run on 2026-11-25, on `main` with resource discovery, passed too. The faulty volunteer sent 8 wrong results, and all 8 were caught. After its 2nd wrong result the coordinator logged `volunteer blocked: low trust trust=0.25 correct=0 wrong=2`. The other 6 were units that it had already taken before the block. Both images were identical (42258 bytes).
+
+  A first run on 2026-11-22, before late copies were checked, failed with `no result was outvoted`: the faulty volunteer joined last, so it always ran the third copy, and the 2 honest copies won before it finished. Its 5 results were turned away and never compared. The automated tests `TestFaultyVolunteerIsOutvoted`, `TestNoMajorityAsksForTwoMoreCopies` and `TestLateCopyIsChecked` cover both paths.
 
 ## TC-04 Leader crash
 
@@ -70,6 +72,19 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 - **Steps:** `make fail-leader`. 3 coordinators, 3 volunteers; `kill -9` the leader (node 3) during a job.
 - **Expected:** node 2 logs `became leader`, and the job finishes.
 - **Actual (2026-11-25, branch of #14):** `PASS: node 2 took over after the leader crash, and the job finished`. Node 2 logged `election started term=3`, `leader continues from table index index=58` and `became leader term=3`, about 2.5 s after the last heartbeat of node 3. Node 1 logged `snapshot restored from=2 index=58`. The 256-unit job finished in 12 s.
+- **Actual (2026-11-25, `main` with all algorithms, `SC_LEASE_DURATION=20s`):** `PASS` again. The script killed node 3 at 21:11:09.5, right after volunteer-1 sent its 5th result. Node 2 logged:
+
+  ```text
+  21:11:12.025 election started                  term=3
+  21:11:12.026 member dead                       member=coord-3 silent_for=3.293s
+  21:11:12.040 leader continues from table index index=296 term=3
+  21:11:12.040 became leader                     term=3
+  21:11:12.289 volunteer registered              name=volunteer-2
+  21:11:16.525 lease released: volunteer dead    unit=job-8497fb4ac85d-57
+  21:11:18.301 job finished                      state=done
+  ```
+
+  The new leader took over 2.5 s after the kill. The 3 volunteers registered again within 1.3 s, under new IDs. Gossip marked the old IDs dead, and the leader released their leases 4.5 s after the takeover, before the 20 s lease timeout. The client saw 3 failed progress checks during the election, then finished the 256-unit job in 10.0 s.
 - **Unit test:** `TestLeaderCrashJobContinues` stops the leader after 20 of 256 units. The new leader accepts exactly the other 236, so no accepted unit runs again.
 
 ## TC-05 Unknown token
@@ -91,43 +106,47 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 - **Goal:** measure throughput and job time as volunteers grow, with and without fault tolerance.
 - **Steps:** `make load-sweep`, from a terminal in the foreground. 8 jobs of 64 units each (1024×1024 fractal, tile 128, 2000 iterations), 2 clients at the same time, 1 coordinator.
   - `baseline`: 1 copy per unit (no fault tolerance).
-  - `full`: 3 copies per unit (for majority voting). Until #7, the leader accepts the first result.
-- **Actual (2026-11-21, `results/load.csv`):**
+  - `full`: 3 copies per unit, and the leader accepts a unit when 2 copies agree (majority voting, #7). Full mode starts at 2 volunteers, because 1 volunteer never gets 2 copies of the same unit.
+- **Actual (2026-11-25, `main` after #31 to #38, `results/load.csv`):**
 
-  | Mode | Volunteers | Total time | Units/s | Jobs/min | Mean job | p95 job |
-  | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-  | baseline | 1 | 7.4 s | 69.1 | 64.8 | 1.75 s | 2.55 s |
-  | baseline | 2 | 4.7 s | 109.6 | 102.8 | 1.12 s | 2.14 s |
-  | baseline | 4 | 3.7 s | 139.6 | 130.8 | 0.89 s | 1.64 s |
-  | full | 1 | 7.5 s | 68.2 | 63.9 | 1.76 s | 2.45 s |
-  | full | 2 | 7.4 s | 69.2 | 64.9 | 1.75 s | 2.55 s |
-  | full | 4 | 6.9 s | 74.1 | 69.5 | 1.63 s | 2.15 s |
+  | Mode | Volunteers | Total time | Units/s | Jobs/min | Mean job | p95 job | Repeat units/s |
+  | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+  | baseline | 1 | 7.1 s | 72.0 | 67.5 | 1.68 s | 2.25 s | 68.1 |
+  | baseline | 2 | 5.6 s | 91.6 | 85.9 | 1.30 s | 1.74 s | 84.1 |
+  | baseline | 4 | 4.6 s | 112.0 | 105.0 | 1.09 s | 2.05 s | 104.9 |
+  | full | 2 | 7.4 s | 69.1 | 64.8 | 1.75 s | 2.55 s | 67.3 |
+  | full | 3 | 7.5 s | 68.1 | 63.9 | 1.78 s | 2.56 s | 69.1 |
+  | full | 4 | 6.7 s | 76.4 | 71.6 | 1.59 s | 2.15 s | 71.1 |
 
+  The "Repeat" column is a second full sweep run right after the first one. The two sweeps differ by less than 10%.
+
+- **Results per unit (from the volunteer logs of the repeat sweep):** with 2 volunteers, each volunteer sent 512 results, so every unit ran exactly 2 times. With 3 volunteers, the volunteers sent 1128 results (2.2 per unit); with 4, they sent 1331 (2.6 per unit). The leader accepts a unit at 2 equal results, but a third copy that is already running still finishes, and the leader checks it as a late copy.
 - **Analysis:**
-  - Baseline throughput grows 1.6× with 2 volunteers and 2.0× with 4. In this test job one unit takes only about 15 ms, instead of the planned 60 s. So the per-unit messages to the coordinator (request, result, table change) are a large part of the cost, and adding volunteers helps less. With real 60-second units, this overhead would be negligible.
-  - In full mode, each unit runs on up to 3 different volunteers. With 1 or 2 volunteers, full mode equals one volunteer's throughput (68.2 and 69.2 units/s), as the model N / min(N, 3) predicts.
-  - With 4 volunteers, full mode reaches 74.1 units/s: 53% of the baseline, so fault tolerance costs 47% here. The model predicts one third for N ≥ 3; the measured share is higher because the baseline itself scales sublinearly in this test.
-  - A repeat of the baseline run with 1 volunteer gave 69.0 units/s, against 69.1, so the runs are stable.
-  - **Note:** an earlier sweep (2026-11-20) gave about half of these numbers. It ran as a background task, which macOS can schedule on its slower efficiency cores. Its rows were removed. Run load tests from a terminal in the foreground.
+  - Baseline throughput grows 1.3× with 2 volunteers and 1.6× with 4. In this test job one unit takes only about 15 ms, instead of the planned 60 s. So the per-unit messages to the coordinator (request, result, table change) are a large part of the cost, and adding volunteers helps less. With real 60-second units, this overhead would be negligible.
+  - In full mode, every unit runs at least 2 times. With 2 or 3 volunteers, full mode equals one volunteer's throughput (69.1 and 68.1 units/s).
+  - With 4 volunteers, full mode reaches 76.4 units/s: 68% of the baseline, so fault tolerance costs 32% here. The repeat sweep gives the same share (71.1 against 104.9 units/s, 68%).
+  - **Compared with the sweep of 2026-11-21** (before #6 to #9 merged): that full mode accepted the first result, and fault tolerance cost 47% at 4 volunteers. Do not compare 47% with 32% directly. Full mode with 4 volunteers changed only a little (74.1 then, 76.4 now), but the baseline then reached 139.6 units/s, against 112.0 now. We did not isolate the cause. The coordinator now runs resource discovery and trust bookkeeping on every request, and with 15 ms units the per-request work is a large part of the cost. The older rows stay in `results/load.csv` with their dates.
+  - **Note:** an even earlier sweep (2026-11-20) gave about half of the 2026-11-21 numbers. It ran as a background task, which macOS can schedule on its slower efficiency cores. Its rows were removed. Run load tests from a terminal in the foreground.
 
 ## TC-11 Performance as clients increase
 
 - **Goal:** show how throughput and job time change as more users submit jobs at the same time. The course demo asks for this.
 - **Steps:** `scripts/load.sh 4 8 C full` for C = 1, 2, 4 and 8 clients. 4 volunteers, full mode, 8 jobs of 64 units.
-- **Actual (2026-11-21, `results/load.csv`):**
+- **Actual (2026-11-25, `main` with majority voting, `results/load.csv`):**
 
   | Clients | Total time | Units/s | Jobs/min | Mean job | p95 job |
   | ---: | ---: | ---: | ---: | ---: | ---: |
-  | 1 | 12.1 s | 42.5 | 39.8 | 1.51 s | 2.03 s |
-  | 2 | 7.0 s | 73.1 | 68.5 | 1.64 s | 2.25 s |
-  | 4 | 6.6 s | 77.4 | 72.6 | 2.75 s | 3.57 s |
-  | 8 | 7.5 s | 68.1 | 63.9 | 4.66 s | 7.52 s |
+  | 1 | 12.9 s | 39.7 | 37.3 | 1.61 s | 1.82 s |
+  | 2 | 7.2 s | 71.1 | 66.7 | 1.69 s | 2.55 s |
+  | 4 | 6.8 s | 75.1 | 70.4 | 2.93 s | 4.08 s |
+  | 8 | 7.3 s | 69.9 | 65.5 | 4.53 s | 7.33 s |
 
 - **Analysis:**
   - With 1 client, the volunteers wait between jobs (submit, split, poll), so throughput is low.
-  - With 2 clients, the volunteers are busy, and throughput rises to 73 units/s. More clients add almost nothing: the volunteers are the limit (about 75 units/s in full mode).
-  - Job time grows with the number of clients, because more jobs share the same volunteers: the mean is 1.5 s with 1 client and 4.7 s with 8. This is the expected queueing behavior.
-  - With 8 clients, throughput drops a little (68 units/s), because more jobs and more polling compete for the single coordinator.
+  - With 2 clients, the volunteers are busy, and throughput rises to 71 units/s. More clients add almost nothing: the volunteers are the limit (about 75 units/s in full mode).
+  - Job time grows with the number of clients, because more jobs share the same volunteers: the mean is 1.6 s with 1 client and 4.5 s with 8. This is the expected queueing behavior.
+  - With 8 clients, throughput drops a little (70 units/s), because more jobs and more polling compete for the single coordinator.
+  - The sweep of 2026-11-21 (first result accepted) gave the same shape: 42.5, 73.1, 77.4 and 68.1 units/s.
 
 ## TC-09 Gossip load
 
