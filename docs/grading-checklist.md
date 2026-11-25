@@ -19,7 +19,7 @@ The report and the presentation need this evidence. Build it together with the f
 - [ ] **Metrics** in Prometheus: jobs per minute, unit latency, lease expiries, reassignments, wrong results caught, election time. *(All are in. Election time is `sc_election_failover_seconds`; see `docs/observability.md`.)*
 - [x] **Baseline mode** for comparison, for example 1 coordinator and no voting. The report must compare the system "ideally" to another system. *(`scripts/load.sh ... baseline`)*
 - [x] **Load scripts** that increase the number of volunteers and the number of clients. The report needs throughput and latency as load grows. *(`scripts/load.sh`, `scripts/load-sweep.sh`, `results/load.csv`)*
-- [ ] **Failure scripts** for 3 failure scenarios: kill a volunteer, run a malicious volunteer, kill the leader. *(All 3 are written. `fail-volunteer.sh` passes; the other 2 skip until #7, #13 and #14 merge.)*
+- [ ] **Failure scripts** for 3 failure scenarios: kill a volunteer, run a malicious volunteer, kill the leader. *(All 3 are written. `fail-volunteer.sh` and `fail-leader.sh` pass; `fail-faulty.sh` skips until #7 merges.)*
 - [x] **Clear logs or a dashboard** for screenshots of 1 success scenario and the 3 failure scenarios. *(`docs/observability.md`: Prometheus queries and log lines)*
 
 ## 3. Final report (IEEE double column, 10 to 15 pages without images)

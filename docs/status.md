@@ -15,7 +15,7 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has a PR open for Bully election (#13); #14 and #15 are next.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has PRs open for Bully election (#13) and replication (#14, stacked on #13); #15 is next.
 
 ## Per person
 
@@ -35,10 +35,10 @@ Merge order: #31, #32, #33, #34.
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
 | [#13 Bully election](https://github.com/colmeabhi/sparecycles/issues/13) | 11-27 | PR open: review, then merge | — |
-| [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | Add `replication.Quorum` and leader catch-up | #13 merge (terms and `BeforeLead` are on its branch) |
-| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Add `deploy/terraform` | Failover test on AWS needs #13 and #14 |
+| [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | PR open: review, then merge | #13 (stacked on it) |
+| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Add `deploy/terraform` | Failover test on AWS needs #13 and #14 merged |
 
-Suggested order: #13, #14, #15.
+Merge order: #13, then #14.
 
 ### Kushagra (`Kushagrabainsla`)
 
@@ -62,7 +62,6 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 | This | Needs |
 | --- | --- |
 | `make fail-faulty`, test case TC-03 | #7 |
-| `make fail-leader`, test case TC-04 | #14 (the script skips until `SC_REPLICATION_TIMEOUT` exists) |
 | Trust scores in #8 | #7 (`Decision.Wrong`) |
 | Failover test on AWS | #13, #14, #15 |
 
@@ -73,11 +72,12 @@ Do these right after the named PR merges, in the same day:
 | After | Do |
 | --- | --- |
 | #7 merges | Run `make fail-faulty`. Record TC-03 in `docs/test-results.md`. |
-| #13 and #14 merge | Run `make fail-leader`. Record TC-04. Check the "failure scripts" and "metrics" items in `docs/grading-checklist.md`. |
+| #13 and #14 merge | Run `make fail-leader` on `main` to confirm TC-04 (it passed on the #14 branch). |
 | #7 merges | Kushagra: change `scripts/load-sweep.sh` so that "full" mode uses 2 or more volunteers (1 volunteer never reaches 2 of 3). Then run `make load-sweep` again, and update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
 | #9 merges | Kushagra: give `cmd/loadgen` an empty `-params` default, as in the client, so `-workload montecarlo` works. |
 | #6 to #9 merge | Kushagra: update diagram I1 (the stubs that were replaced), and the test count on slide 12. |
 | #35 and any PR with new tests merge | A test that calls `RequestWork` or `SubmitResult` directly must send the `session_secret` from its `RegisterResponse`. Whoever merges second fixes the tests. |
+| #14 merges | Kushagra: the new leader does not know the old volunteer IDs. Their leases end through gossip (`member dead`) or, after #6, the lease timeout. Check this in `make fail-leader` logs. |
 | Any algorithm issue merges | Update its card and the roadmap on the product page (`site/index.html`). |
 
 ## Done

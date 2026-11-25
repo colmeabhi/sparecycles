@@ -120,7 +120,7 @@ docker compose stop coordinator-3
 docker compose logs coordinator-2 | grep -E "election started|became leader"
 ```
 
-Coordinator 2 leads in a higher term within a few seconds, and `make run-client` works again. Until replication (#14) is done, a job that was running on the old leader is lost.
+Coordinator 2 leads in a higher term within a few seconds. It first loads the newest task table (`leader continues from table index`), so a running job continues and `make run-client` finishes. `make fail-leader` runs the same test without Docker.
 
 ```bash
 make down

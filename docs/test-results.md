@@ -9,7 +9,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-01 | Success scenario: one job end to end | `make run-client` with 1 coordinator and 2 volunteers; `TestEndToEndFractal` | Pass |
 | TC-02 | Volunteer crash | `make fail-volunteer` | Pass |
 | TC-03 | Faulty volunteer is outvoted | `make fail-faulty` | Not run yet (needs #7) |
-| TC-04 | Leader crash | `make fail-leader` | Not run yet (needs #13, #14) |
+| TC-04 | Leader crash | `make fail-leader`; `TestLeaderCrashJobContinues` | Pass |
 | TC-05 | Unknown token is rejected | Manual run; `TestUnknownTokenIsRejectedAndCounted` | Pass |
 | TC-06 | Wrong signing key | Manual run; `TestVolunteerWithWrongKeyStopsAndSendsNothing` | Pass |
 | TC-07 | Throughput grows with volunteers (baseline) | `make load-sweep` | Pass |
@@ -57,7 +57,8 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 - **Goal:** a new leader takes over and finishes the job.
 - **Steps:** `make fail-leader`. 3 coordinators, 3 volunteers; `kill -9` the leader (node 3) during a job.
 - **Expected:** node 2 logs `became leader`, and the job finishes.
-- **Actual:** not run yet. The script prints `SKIP: needs issues #13 (Bully election) and #14 (replication)`.
+- **Actual (2026-11-25, branch of #14):** `PASS: node 2 took over after the leader crash, and the job finished`. Node 2 logged `election started term=3`, `leader continues from table index index=58` and `became leader term=3`, about 2.5 s after the last heartbeat of node 3. Node 1 logged `snapshot restored from=2 index=58`. The 256-unit job finished in 12 s.
+- **Unit test:** `TestLeaderCrashJobContinues` stops the leader after 20 of 256 units. The new leader accepts exactly the other 236, so no accepted unit runs again.
 
 ## TC-05 Unknown token
 

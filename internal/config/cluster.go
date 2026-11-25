@@ -25,3 +25,20 @@ func loadElection() (Election, error) {
 	}
 	return e, nil
 }
+
+// Replication holds the task-table replication settings.
+type Replication struct {
+	Timeout time.Duration // time the leader waits for the backups for one table change
+}
+
+func loadReplication() (Replication, error) {
+	var r Replication
+	var err error
+	if r.Timeout, err = durationVar("SC_REPLICATION_TIMEOUT", time.Second); err != nil {
+		return r, err
+	}
+	if r.Timeout <= 0 {
+		return r, fmt.Errorf("SC_REPLICATION_TIMEOUT must be positive, got %s", r.Timeout)
+	}
+	return r, nil
+}
