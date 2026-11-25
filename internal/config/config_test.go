@@ -98,6 +98,17 @@ func TestLoadCoordinatorBadValues(t *testing.T) {
 	}
 }
 
+func TestLoadCoordinatorLeaseMustBePositive(t *testing.T) {
+	for _, value := range []string{"0s", "-1m"} {
+		t.Run(value, func(t *testing.T) {
+			t.Setenv("SC_LEASE_DURATION", value)
+			if _, err := LoadCoordinator(); err == nil {
+				t.Fatalf("SC_LEASE_DURATION=%q: expected an error", value)
+			}
+		})
+	}
+}
+
 func TestVoteQuorumDefaultsToMajority(t *testing.T) {
 	cases := map[string]int{"1": 1, "2": 2, "3": 2, "4": 3, "5": 3}
 	for replicas, want := range cases {
