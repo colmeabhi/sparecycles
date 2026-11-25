@@ -169,6 +169,7 @@ func (s *Server) releaseDeadVolunteers(ctx context.Context) {
 		if s.d.Membership.Dead(id) {
 			delete(s.volunteers, id)
 			delete(s.sessions, id)
+			s.forgetVolunteer(id)
 			s.d.Log.Info("volunteer removed: dead", "volunteer", id)
 		}
 	}
@@ -426,8 +427,49 @@ func (s *Server) decide(ctx context.Context, unitID string) error {
 		s.d.Log.Warn("wrong result", "unit", unitID, "volunteer", id)
 	}
 	s.lateCopies.add(unitID, u.Assignments, s.d.Now())
+	s.recordVotes(u.Results, d.Wrong)
 	s.d.Metrics.UnitsAccepted.Inc()
 	return s.finishJobIfDone(ctx, u.JobID)
+}
+
+// recordVotes tells the Scheduler, if it learns trust, which results of an
+// accepted unit agreed with the accepted output and which did not. The
+// Verifier's Decision.Wrong is the only source for "wrong".
+func (s *Server) recordVotes(results []tasktable.Result, wrong []string) {
+	isWrong := make(map[string]bool, len(wrong))
+	for _, id := range wrong {
+		isWrong[id] = true
+	}
+	for _, r := range results {
+		s.recordTrust(r.VolunteerID, !isWrong[r.VolunteerID])
+	}
+}
+
+// recordTrust passes one checked result to the Scheduler, if it is a
+// scheduler.TrustRecorder. Other schedulers ignore trust.
+//
+// Only registered volunteers count. A volunteer that gossip declared dead was
+// forgotten (forgetVolunteer); its old results that are accepted later must not
+// create its state again, and it registers with a new ID if it comes back.
+func (s *Server) recordTrust(volunteerID string, correct bool) {
+	tr, ok := s.d.Scheduler.(scheduler.TrustRecorder)
+	if !ok {
+		return
+	}
+	s.mu.Lock()
+	_, registered := s.volunteers[volunteerID]
+	s.mu.Unlock()
+	if registered {
+		tr.RecordResult(volunteerID, correct)
+	}
+}
+
+// forgetVolunteer tells the Scheduler that a volunteer is gone, if it keeps
+// state per volunteer (scheduler.Forgetter).
+func (s *Server) forgetVolunteer(volunteerID string) {
+	if f, ok := s.d.Scheduler.(scheduler.Forgetter); ok {
+		f.Forget(volunteerID)
+	}
 }
 
 func (s *Server) finishJobIfDone(ctx context.Context, jobID string) error {

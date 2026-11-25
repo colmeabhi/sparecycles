@@ -72,7 +72,9 @@ func (s *Server) checkLateResult(unitID, volunteerID string, output []byte) {
 	if !ok || u.State != tasktable.UnitDone {
 		return
 	}
-	if tasktable.Hash(output) == tasktable.Hash(u.Output) {
+	correct := tasktable.Hash(output) == tasktable.Hash(u.Output)
+	s.recordTrust(volunteerID, correct)
+	if correct {
 		s.d.Log.Debug("late result agrees", "unit", unitID, "volunteer", volunteerID)
 		return
 	}

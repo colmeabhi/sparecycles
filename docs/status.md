@@ -10,12 +10,12 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Deadline | Date | Days left |
 | --- | --- | ---: |
 | Issues #6, #13 | 2026-11-27 | 2 |
-| Issues #8, #14, #35 | 2026-11-28 | 3 |
+| Issues #14, #35 | 2026-11-28 | 3 |
 | Issues #9, #15 | 2026-11-29 | 4 |
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Majority voting (#7, PR #32) is merged. Tejas has PRs open for his other issues, with the review comments fixed. Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Majority voting (#7, PR #32) and resource discovery (#8, PR #33) are merged. Tejas has PRs open for his other issues, with the review comments fixed. Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
 
 ## Per person
 
@@ -24,10 +24,9 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
 | [#6 Lease expiry](https://github.com/colmeabhi/sparecycles/issues/6) | 11-27 | PR [#31](https://github.com/colmeabhi/sparecycles/pull/31): fix the review comments, then merge | — |
-| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | PR [#33](https://github.com/colmeabhi/sparecycles/pull/33): fix the block bug, then merge | #32 (stacked on it) |
 | [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | PR [#34](https://github.com/colmeabhi/sparecycles/pull/34): fix the review comments, then merge | — |
 
-#7 is done (#32). Merge order: #31, #33 (change its base to `main` first), #34.
+#7 and #8 are done (#32, #33). Merge order: #31, #34.
 
 ### Abhishek (`colmeabhi`)
 
@@ -77,6 +76,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-22 | [#33](https://github.com/colmeabhi/sparecycles/pull/33) | Resource discovery: `scheduler.Matcher` with VECTrust-style trust, speed and memory rules; faulty volunteer blocked after 2 wrong results (TC-14; closes #8; stacked on #32) |
 | 2026-11-22 | [#32](https://github.com/colmeabhi/sparecycles/pull/32) | Majority voting: `verify.Majority`, `SC_VOTE_QUORUM`, faulty mode `SC_FAULTY_RATE`, late copies checked, `make fail-faulty` passes (TC-03; closes #7) |
 | 2026-11-25 | [#40](https://github.com/colmeabhi/sparecycles/pull/40) | Pages workflow split into build and deploy jobs; the deploy no longer fails when GitHub lists the artifact late |
 | 2026-11-25 | [#39](https://github.com/colmeabhi/sparecycles/pull/39) | Terraform for AWS: 3 coordinators in 3 zones, spot volunteers, Prometheus; `make deploy-up` and `deploy-down`; CI checks it (refs #15; first apply to do) |

@@ -147,3 +147,30 @@ func TestFaultyRate(t *testing.T) {
 		}
 	}
 }
+
+func TestDiscoveryDefaults(t *testing.T) {
+	c, err := LoadCoordinator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := Discovery{MinTrust: 0.3, LastCopyTrust: 0.6, SlowSpeed: 0.5, MinMemoryMB: 0}
+	if c.Discovery != want {
+		t.Fatalf("discovery = %+v, want %+v", c.Discovery, want)
+	}
+}
+
+func TestDiscoveryBadValues(t *testing.T) {
+	cases := []struct{ key, value string }{
+		{"SC_TRUST_MIN", "-0.1"}, {"SC_TRUST_MIN", "1.1"}, {"SC_TRUST_MIN", "NaN"},
+		{"SC_TRUST_LAST_COPY", "2"}, {"SC_SLOW_SPEED", "-1"}, {"SC_SLOW_SPEED", "NaN"},
+		{"SC_MIN_MEMORY_MB", "-1"}, {"SC_MIN_MEMORY_MB", "lots"},
+	}
+	for _, c := range cases {
+		t.Run(c.key+"="+c.value, func(t *testing.T) {
+			t.Setenv(c.key, c.value)
+			if _, err := LoadCoordinator(); err == nil {
+				t.Fatalf("%s=%q: expected an error", c.key, c.value)
+			}
+		})
+	}
+}

@@ -177,7 +177,7 @@ Each algorithm is a Go package behind an interface. The base version has a simpl
 | Failure scripts, load generator and baseline mode | `scripts/`, `cmd/loadgen/`, `results/` | Kushagra | [#12](https://github.com/colmeabhi/sparecycles/issues/12) | [#21](https://github.com/colmeabhi/sparecycles/pull/21), [#26](https://github.com/colmeabhi/sparecycles/pull/26) |
 | Lease expiry and reassignment | `internal/lease/` | Tejas | [#6](https://github.com/colmeabhi/sparecycles/issues/6) | *In progress* |
 | Majority voting | `internal/verify/` | Tejas | [#7](https://github.com/colmeabhi/sparecycles/issues/7) | [#32](https://github.com/colmeabhi/sparecycles/pull/32) |
-| Resource discovery with trust scores | `internal/scheduler/` | Tejas (Abhishek reviews) | [#8](https://github.com/colmeabhi/sparecycles/issues/8) | *In progress* |
+| Resource discovery with trust scores | `internal/scheduler/` | Tejas (Abhishek reviews) | [#8](https://github.com/colmeabhi/sparecycles/issues/8) | [#33](https://github.com/colmeabhi/sparecycles/pull/33) |
 | Monte Carlo workload | `internal/workload/` | Tejas | [#9](https://github.com/colmeabhi/sparecycles/issues/9) | *In progress* |
 | Bully election with terms | `internal/election/` | Abhishek | [#13](https://github.com/colmeabhi/sparecycles/issues/13) | *In progress* |
 | Task-table replication | `internal/replication/` | Abhishek | [#14](https://github.com/colmeabhi/sparecycles/issues/14) | *In progress* |

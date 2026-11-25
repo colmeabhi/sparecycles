@@ -10,7 +10,7 @@ Mark an item `[x]` only when the evidence exists in the repo or in the submissio
 - [ ] Each algorithm is written by the team, not taken from a library.
 - [ ] The code handles fault tolerance, performance, scalability, availability, consistency and concurrency.
 - [ ] The system runs on AWS EC2 with 3 coordinators and many volunteers.
-- [x] At least 5 test cases, with recorded results. *(`docs/test-results.md`: all 13 cases have results.)*
+- [x] At least 5 test cases, with recorded results. *(`docs/test-results.md`: all 14 cases have results.)*
 
 ## 2. Evidence that the code must produce
 

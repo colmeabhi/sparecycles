@@ -18,6 +18,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-09 | Gossip load does not grow with group size | `TestLoadPerPeriodDoesNotGrowWithGroupSize` | Pass |
 | TC-10 | Gossip finds a failed node over a real network | `TestGRPCClusterDetectsFailure` | Pass |
 | TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed container | `make up`, `make run-client`, `docker kill` | Pass |
+| TC-14 | Trust blocks a faulty volunteer; slow volunteers get less work | Manual run in `internal/scheduler/README.md`; `TestFaultyVolunteerLosesTrustAndGetsNoWork` | Pass |
 | TC-16 | Requests under another volunteer's ID are rejected | `TestRequestsUnderAnotherVolunteersIDAreRejected` | Pass |
 
 ## TC-01 Success scenario
@@ -155,6 +156,28 @@ Test cases for the report (section 10). Each case lists how to run it and the re
     ```
 
     The second job finished on the 2 other volunteers in 2.0 s. Detection takes longer than in TC-02 (6.8 s against 2.9 s) because TC-02 uses fast demo gossip settings.
+
+## TC-14 Trust and speed in resource discovery
+
+- **Goal:** a volunteer that keeps sending wrong results is blocked and gets no more units; slow volunteers get fewer units while fast ones are active.
+- **Steps:** 1 coordinator with the default rules (`min_trust=0.3 last_copy_trust=0.6 slow_speed=0.5`). 4 volunteers: `fast-1` and `fast-2` with `SC_SPEED_SCORE=2.0`, `slow` with `SC_SPEED_SCORE=0.3`, and `faulty` with `SC_FAULTY_RATE=1.0`. Two 1024×1024 jobs of 64 units, one after the other. The steps are in `internal/scheduler/README.md`.
+- **Expected:** `volunteer blocked: low trust` for the faulty volunteer after its 2nd wrong result; it runs no more units; fast volunteers run more units than the slow one; both images are correct.
+- **Actual (2026-11-22):**
+
+  ```text
+  13:50:29 wrong result                  unit=job-f0fe1a9f933a-1 volunteer=vol-857c08921db6
+  13:50:29 wrong result                  unit=job-f0fe1a9f933a-2 volunteer=vol-857c08921db6
+  13:50:29 volunteer blocked: low trust  volunteer=vol-857c08921db6 trust=0.25 correct=0 wrong=2
+  ```
+
+  | Volunteer | Units run |
+  | --- | ---: |
+  | fast-1 (speed 2.0) | 126 |
+  | fast-2 (speed 2.0) | 123 |
+  | slow (speed 0.3) | 69 |
+  | faulty | 4, all caught as wrong |
+
+  The faulty volunteer took 4 first copies before any vote, then was blocked and got nothing for the rest of the 2 jobs. The metrics showed `sc_scheduler_picks_total{speed="fast"} 253`, `{speed="slow"} 69`, `sc_volunteers_blocked_total 1` and `sc_wrong_results_total 4`. Both job images are identical. All volunteers compute at the same real speed on one machine, so the gap between fast and slow comes from the pick rules alone.
 
 ## TC-16 Session secrets
 

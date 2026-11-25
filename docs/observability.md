@@ -25,6 +25,9 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Units moved after a lease expired | `increase(sc_leases_expired_total[5m])` |
 | Wrong results caught | `increase(sc_wrong_results_total[5m])` |
 | Votes with no majority | `increase(sc_votes_no_majority_total[5m])` |
+| Units by volunteer speed | `sum by (speed) (increase(sc_scheduler_picks_total[5m]))` |
+| Requests refused, by reason | `sum by (reason) (increase(sc_scheduler_refusals_total[5m]))` |
+| Volunteers blocked for low trust | `sc_volunteers_blocked_total` |
 | Units that wait for a new volunteer | `sc_units_without_volunteer` |
 | Rejected registrations | `increase(sc_registrations_rejected_total[5m])` |
 | Requests with a bad session secret | `increase(sc_requests_rejected_total[5m])` |
@@ -48,6 +51,7 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Lost work | `lease released: volunteer dead`, `lease expired` |
 | Security | `registration rejected` and `request rejected: bad session` (coordinator), `bad signature` and `leader rejected the session` (volunteer) |
 | Voting | `wrong result` (`late=true` for a late copy), `no majority, more copies`, `unit stuck: every volunteer already ran it` |
+| Trust | `volunteer blocked: low trust` |
 | Election | `election started`, `became leader`, `new leader`, `stepped down` (each with the term) |
 | Replication | `leader continues from table index`, `snapshot restored`, `backup behind` |
 
