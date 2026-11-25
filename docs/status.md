@@ -3,19 +3,19 @@
 Read this file right after `AGENTS.md`. It says what is left, who does it next, and what blocks it.
 GitHub issues hold the task details. This file only summarizes and links.
 
-**Updated:** 2026-11-23 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
+**Updated:** 2026-11-25 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
 
 ## Now
 
 | Deadline | Date | Days left |
 | --- | --- | ---: |
-| Issues #6, #7, #13 | 2026-11-27 | 4 |
-| Issues #8, #14, #35 | 2026-11-28 | 5 |
-| Issues #9, #15 | 2026-11-29 | 6 |
-| Code and recorded presentation | 2026-12-03 | 10 |
-| Final report | 2026-12-04 | 11 |
+| Issues #6, #7, #13 | 2026-11-27 | 2 |
+| Issues #8, #14, #35 | 2026-11-28 | 3 |
+| Issues #9, #15 | 2026-11-29 | 4 |
+| Code and recorded presentation | 2026-12-03 | 8 |
+| Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has no PR yet (#13 to #15).
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has a PR open for Bully election (#13); #14 and #15 are next.
 
 ## Per person
 
@@ -34,8 +34,8 @@ Merge order: #31, #32, #33, #34.
 
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
-| [#13 Bully election](https://github.com/colmeabhi/sparecycles/issues/13) | 11-27 | Add `election.Bully` with terms and the `BeforeLead` hook | — |
-| [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | Add `replication.Quorum` and leader catch-up | Terms and `BeforeLead` from #13 (backup side can start) |
+| [#13 Bully election](https://github.com/colmeabhi/sparecycles/issues/13) | 11-27 | PR open: review, then merge | — |
+| [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | Add `replication.Quorum` and leader catch-up | #13 merge (terms and `BeforeLead` are on its branch) |
 | [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Add `deploy/terraform` | Failover test on AWS needs #13 and #14 |
 
 Suggested order: #13, #14, #15.
@@ -62,10 +62,8 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 | This | Needs |
 | --- | --- |
 | `make fail-faulty`, test case TC-03 | #7 |
-| `make fail-leader`, test case TC-04 | #13 and #14 |
+| `make fail-leader`, test case TC-04 | #14 (the script skips until `SC_REPLICATION_TIMEOUT` exists) |
 | Trust scores in #8 | #7 (`Decision.Wrong`) |
-| #14 leader catch-up | #13 (`BeforeLead` hook, terms) |
-| Election-time metric (grading checklist, part 2) | #13 |
 | Failover test on AWS | #13, #14, #15 |
 
 ## After merge

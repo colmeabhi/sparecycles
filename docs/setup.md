@@ -98,7 +98,7 @@ make run-client
 
 ## 5. Run with Docker Compose
 
-This starts 1 coordinator, 3 volunteers and Prometheus. Start Docker Desktop first.
+This starts 3 coordinators, 3 volunteers and Prometheus. Start Docker Desktop first.
 
 ```bash
 make up
@@ -108,6 +108,20 @@ make up
 make run-client
 ```
 
+The client tries `localhost:7400` to `7403` and finds the leader by itself.
+
+To see a leader failover, stop the leader (coordinator 3, the highest ID):
+
+```bash
+docker compose stop coordinator-3
+```
+
+```bash
+docker compose logs coordinator-2 | grep -E "election started|became leader"
+```
+
+Coordinator 2 leads in a higher term within a few seconds, and `make run-client` works again. Until replication (#14) is done, a job that was running on the old leader is lost.
+
 ```bash
 make down
 ```
@@ -116,8 +130,10 @@ make down
 
 | Port | Use |
 | --- | --- |
-| 7400 | Coordinator gRPC |
-| 9400 | Coordinator `/metrics` and `/healthz` |
+| 7400 | Coordinator gRPC (`make run-coordinator`) |
+| 9400 | Coordinator `/metrics` and `/healthz` (`make run-coordinator`) |
+| 7401 to 7403 | gRPC of coordinators 1 to 3 (Docker Compose) |
+| 9401 to 9403 | `/metrics` of coordinators 1 to 3 (Docker Compose) |
 | 9090 | Prometheus web page (Docker Compose only) |
 
 Port 7000 is not used, because macOS uses it for AirPlay.

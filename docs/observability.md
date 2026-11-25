@@ -6,7 +6,7 @@ How to watch SpareCycles during a demo, and the queries for the report screensho
 
 | Source | Where |
 | --- | --- |
-| Metrics | `http://localhost:9400/metrics` on each coordinator (Prometheus text format) |
+| Metrics | `http://localhost:9400/metrics` for `make run-coordinator`; ports 9401 to 9403 for the 3 Docker Compose coordinators (Prometheus text format) |
 | Prometheus | `http://localhost:9090` with `make up` (Docker Compose) |
 | Logs | stderr of each process. The scripts keep them in `runs/<script>-<time>/` |
 
@@ -27,6 +27,9 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Rejected registrations | `increase(sc_registrations_rejected_total[5m])` |
 | Requests with a bad session secret | `increase(sc_requests_rejected_total[5m])` |
 | Which node leads | `sc_coordinator_is_leader` |
+| Election term | `sc_election_term` |
+| Elections started and won | `increase(sc_elections_started_total[5m])`, `increase(sc_elections_won_total[5m])` |
+| Failover time (old leader silent to new leader acts), p95 | `histogram_quantile(0.95, rate(sc_election_failover_seconds_bucket[10m]))` |
 | Wasted copies (assigned but not needed) | `rate(sc_units_assigned_total[1m]) - rate(sc_results_received_total[1m])` |
 
 ## Log lines for screenshots
@@ -40,7 +43,7 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Lost work | `lease released: volunteer dead`, `lease expired` |
 | Security | `registration rejected` and `request rejected: bad session` (coordinator), `bad signature` and `leader rejected the session` (volunteer) |
 | Voting (after #7) | `wrong result`, `no majority, more copies` |
-| Election (after #13) | `election started`, `became leader` |
+| Election | `election started`, `became leader`, `new leader`, `stepped down` (each with the term) |
 
 ## Quick view without Prometheus
 

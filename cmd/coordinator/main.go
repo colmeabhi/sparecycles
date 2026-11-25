@@ -60,7 +60,12 @@ func run(cfg config.Coordinator, log *slog.Logger) error {
 		return err
 	}
 	m := metrics.NewCoordinator()
-	elector := election.NewStatic(cfg.NodeID, cfg.Peers)
+	electionTransport := election.NewGRPCTransport()
+	defer electionTransport.Close()
+	elector, err := newElector(cfg, electionTransport, m, log)
+	if err != nil {
+		return err
+	}
 	transport := membership.NewGRPCTransport()
 	defer transport.Close()
 	srv := newServer(cfg, elector, newMembership(cfg, transport, m, log), sec, m, log)
@@ -155,6 +160,23 @@ func newSecurity(cfg config.Coordinator, log *slog.Logger) (securityParts, error
 	p.signer = signer
 	log.Info("tasks are signed with Ed25519", "public_key", signer.PublicKeyBase64())
 	return p, nil
+}
+
+// newElector builds the Bully elector. With no peers, the node leads at once.
+func newElector(cfg config.Coordinator, t election.Transport, m *metrics.Coordinator, log *slog.Logger) (*election.Bully, error) {
+	elector, err := election.NewBully(election.BullyConfig{
+		Self:      cfg.NodeID,
+		Peers:     cfg.Peers,
+		Transport: t,
+		Heartbeat: cfg.Election.Heartbeat,
+		Timeout:   cfg.Election.Timeout,
+		Metrics:   m.Election,
+		Log:       log,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("election: %w", err)
+	}
+	return elector, nil
 }
 
 // newMembership builds the SWIM member of this coordinator. The other coordinators are the seeds.

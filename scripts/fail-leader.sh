@@ -6,13 +6,13 @@
 # must be elected in a higher term, continue from the replicated task table,
 # and finish the job.
 #
-# Needs issues #13 (Bully election) and #14 (replication). Until then it skips.
+# Needs issue #14 (replication); #13 (Bully election) is done. Until #14 it skips.
 #
 # Usage: scripts/fail-leader.sh
 
 source "$(dirname "$0")/lib.sh"
 
-has_setting SC_ELECTION_TIMEOUT || skip "needs issues #13 (Bully election) and #14 (replication)"
+has_setting SC_REPLICATION_TIMEOUT || skip "needs issue #14 (replication); #13 (Bully election) is done"
 
 JOB='{"width":2048,"height":2048,"tile_size":128,"max_iter":3000}'
 COORDINATORS="127.0.0.1:7401,127.0.0.1:7402,127.0.0.1:7403"
