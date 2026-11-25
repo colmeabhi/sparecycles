@@ -34,6 +34,16 @@ Defines the Prometheus metrics. The coordinator serves them on `SC_METRICS_ADDR`
 | `sc_gossip_refutations_total` | counter | Times this node refuted a suspicion about itself |
 | `sc_gossip_detection_seconds` | histogram | Time from the last contact with a member to marking it dead |
 
+## Election metrics (`Election`, part of `Coordinator`)
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `sc_election_term` | gauge | Current term of this coordinator |
+| `sc_elections_started_total` | counter | Elections this coordinator started |
+| `sc_elections_won_total` | counter | Elections it won and then started to lead |
+| `sc_election_stepdowns_total` | counter | Times it stopped being the leader |
+| `sc_election_failover_seconds` | histogram | On the new leader: time from the last contact with the old leader to leading |
+
 `NewGossip(reg)` creates them in any registry. Volunteers create them in a private registry, because they serve no metrics endpoint.
 
 ## Add a metric

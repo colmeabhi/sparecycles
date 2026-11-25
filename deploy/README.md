@@ -8,7 +8,7 @@ Files to run SpareCycles outside a single `go run`.
 
 | Path | Use |
 | --- | --- |
-| `prometheus.yml` | Prometheus scrape config for Docker Compose (`docker-compose.yml` in the repo root) |
+| `prometheus.yml` | Prometheus scrape config for Docker Compose (`docker-compose.yml` in the repo root). It scrapes `coordinator-1` to `coordinator-3` on port 9400. |
 | `terraform/` | AWS EC2 deployment (to come, issue #15) |
 
 ## Rules

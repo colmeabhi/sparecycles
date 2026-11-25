@@ -54,6 +54,23 @@ func TestGossipDefaults(t *testing.T) {
 	}
 }
 
+func TestElectionDefaults(t *testing.T) {
+	c, err := LoadCoordinator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.Election.Heartbeat != 500*time.Millisecond || c.Election.Timeout != 2*time.Second {
+		t.Fatalf("unexpected election defaults: %+v", c.Election)
+	}
+}
+
+func TestClientDefaultReachesComposeCoordinators(t *testing.T) {
+	c := LoadClient()
+	if len(c.Coordinators) != 4 || c.Coordinators[0] != "localhost:7400" || c.Coordinators[3] != "localhost:7403" {
+		t.Fatalf("client coordinators = %v, want localhost:7400 to 7403", c.Coordinators)
+	}
+}
+
 func TestLoadCoordinatorBadValues(t *testing.T) {
 	cases := map[string]string{
 		"SC_NODE_ID":                "one",
@@ -64,6 +81,8 @@ func TestLoadCoordinatorBadValues(t *testing.T) {
 		"SC_GOSSIP_PING_TIMEOUT":    "2s", // not less than the 1s interval
 		"SC_GOSSIP_SUSPECT_TIMEOUT": "-1s",
 		"SC_GOSSIP_INDIRECT":        "-1",
+		"SC_ELECTION_HEARTBEAT":     "1s", // the 2s timeout is not more than 2 heartbeats
+		"SC_ELECTION_TIMEOUT":       "soon",
 	}
 	for key, value := range cases {
 		t.Run(key, func(t *testing.T) {
