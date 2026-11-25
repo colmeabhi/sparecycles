@@ -15,7 +15,7 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has PRs open for Bully election (#13) and replication (#14, stacked on #13); #15 is next.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has 3 stacked PRs open: Bully election (#13), replication (#14, on #13) and Terraform (#15, on #14).
 
 ## Per person
 
@@ -36,9 +36,9 @@ Merge order: #31, #32, #33, #34.
 | --- | --- | --- | --- |
 | [#13 Bully election](https://github.com/colmeabhi/sparecycles/issues/13) | 11-27 | PR open: review, then merge | — |
 | [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | PR open: review, then merge | #13 (stacked on it) |
-| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Add `deploy/terraform` | Failover test on AWS needs #13 and #14 merged |
+| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | PR open. Next: one real `make deploy-up` with the team account, a job from a laptop, then `make deploy-down`; paste the outputs in the PR | #14 (stacked on it); the AWS failover test needs #13 and #14 |
 
-Merge order: #13, then #14.
+Merge order: #13, then #14, then #15. Each PR is stacked on the one before it.
 
 ### Kushagra (`Kushagrabainsla`)
 

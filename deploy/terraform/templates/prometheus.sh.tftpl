@@ -1,0 +1,39 @@
+#!/bin/bash
+# Runs Prometheus as a systemd service that scrapes all coordinators.
+set -euo pipefail
+
+version=2.53.0
+cd /opt
+curl -sSfL "https://github.com/prometheus/prometheus/releases/download/v$${version}/prometheus-$${version}.linux-amd64.tar.gz" | tar xz
+ln -sfn "/opt/prometheus-$${version}.linux-amd64" /opt/prometheus
+useradd --system --no-create-home --shell /sbin/nologin prometheus || true
+
+cat > /opt/prometheus/sparecycles.yml <<'CONFIG'
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: coordinator
+    static_configs:
+      - targets: [${join(", ", [for t in targets : "\"${t}\""])}]
+CONFIG
+
+cat > /etc/systemd/system/prometheus.service <<'UNIT'
+[Unit]
+Description=Prometheus for SpareCycles
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=prometheus
+ExecStart=/opt/prometheus/prometheus --config.file=/opt/prometheus/sparecycles.yml --storage.tsdb.path=/var/lib/prometheus --web.listen-address=:9090
+StateDirectory=prometheus
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now prometheus

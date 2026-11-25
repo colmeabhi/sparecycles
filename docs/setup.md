@@ -126,6 +126,34 @@ Coordinator 2 leads in a higher term within a few seconds. It first loads the ne
 make down
 ```
 
+## 6. Run on AWS (optional)
+
+This creates 3 coordinators in 3 availability zones, volunteers on spot instances, and Prometheus. It costs about $0.13 per hour. Install Terraform first (`brew install hashicorp/tap/terraform`) and log in to AWS.
+
+```bash
+cp deploy/terraform/terraform.tfvars.example deploy/terraform/terraform.tfvars
+```
+
+Fill in `allowed_cidrs` (your IP with `/32`) and `volunteer_tokens`. Then:
+
+```bash
+make deploy-up
+```
+
+Copy the `sc_coordinators` output line into `.env`, and run a job from your laptop:
+
+```bash
+make run-client
+```
+
+Remove everything after each session:
+
+```bash
+make deploy-down
+```
+
+[deploy/terraform/README.md](../deploy/terraform/README.md) explains the variables, the outputs, the leader failover test and AWS Academy settings.
+
 ## Ports
 
 | Port | Use |
