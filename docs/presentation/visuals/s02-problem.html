@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Slide 2 visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #f3f2ed; color: #161616; }
+  .page { width: 1600px; height: 900px; box-sizing: border-box; padding: 40px; display: flex; flex-direction: column; }
+  .panel { border: 3px solid #161616; height: 380px; box-sizing: border-box; }
+  svg { display: block; width: 100%; height: 100%; }
+  .px { font-family: "Silkscreen", monospace; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+  .head { margin: 28px 0 20px; display: flex; gap: 16px; align-items: center; font-family: "Silkscreen", monospace; font-size: 30px; height: 36px; }
+  .head i { width: 22px; height: 22px; background: #ff5a1f; display: inline-block; }
+  .cards { display: flex; gap: 36px; height: 336px; }
+  .card { flex: 1; border: 3px solid #161616; box-shadow: 8px 8px 0 #161616; padding: 26px 30px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
+  .card h3 { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 28px; margin: 0; }
+  .card p { font-family: "Space Grotesk", sans-serif; font-size: 26px; line-height: 1.3; margin: 0; }
+  .strip { display: flex; align-items: center; gap: 18px; }
+  .frame { display: grid; grid-template-columns: repeat(3, 46px); gap: 6px; }
+  .frame i { width: 46px; height: 46px; background: #dcdad2; box-sizing: border-box; }
+  .frame i.k { background: #161616; } .frame i.b { background: #2f5bff; } .frame i.o { background: #ff5a1f; }
+  .frame i.x { background: transparent; border: 3px dashed #55544f; }
+  .arr { width: 0; height: 0; border-left: 18px solid #55544f; border-top: 13px solid transparent; border-bottom: 13px solid transparent; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="panel">
+<svg viewBox="0 0 1514 374">
+  <defs>
+    <marker id="arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#161616"/></marker>
+  </defs>
+
+  <!-- stage 1: one big job -->
+  <g fill="#161616" id="job"></g>
+  <text x="190" y="348" class="mono" font-size="21" fill="#161616" text-anchor="middle">a big job</text>
+
+  <line x1="350" y1="164" x2="452" y2="164" stroke="#161616" stroke-width="4" marker-end="url(#arrow-ink)"/>
+
+  <!-- stage 2: many small units -->
+  <g fill="none" stroke="#161616" stroke-width="3" id="units"></g>
+  <text x="640" y="320" class="mono" font-size="21" fill="#161616" text-anchor="middle">splits into</text>
+  <text x="640" y="348" class="mono" font-size="21" fill="#161616" text-anchor="middle">many small units</text>
+
+  <line x1="828" y1="164" x2="930" y2="164" stroke="#161616" stroke-width="4" marker-end="url(#arrow-ink)"/>
+
+  <!-- stage 3: idle machines -->
+  <g id="machines"></g>
+  <text x="1210" y="320" class="mono" font-size="21" fill="#161616" text-anchor="middle">volunteers run the units</text>
+  <text x="1210" y="348" class="mono" font-size="21" fill="#161616" text-anchor="middle">on their idle machines</text>
+</svg>
+</div>
+
+<div class="head"><i></i>3 things go wrong</div>
+
+<div class="cards">
+  <div class="card">
+    <h3>Volunteer leaves</h3>
+    <div class="strip">
+      <div class="frame"><i class="b"></i><i class="b"></i><i class="b"></i></div><span class="arr"></span>
+      <div class="frame"><i class="b"></i><i class="x"></i><i class="b"></i></div>
+    </div>
+    <p>A volunteer leaves in the middle of a unit.</p>
+  </div>
+  <div class="card">
+    <h3>Wrong result</h3>
+    <div class="strip">
+      <div class="frame"><i class="b"></i><i class="b"></i><i class="b"></i></div><span class="arr"></span>
+      <div class="frame"><i class="k"></i><i class="o"></i><i class="k"></i></div>
+    </div>
+    <p>A volunteer sends a wrong result.</p>
+  </div>
+  <div class="card">
+    <h3>Leader crashes</h3>
+    <div class="strip">
+      <div class="frame"><i class="b"></i><i class="k"></i><i class="k"></i></div><span class="arr"></span>
+      <div class="frame"><i class="x"></i><i class="k"></i><i class="k"></i></div>
+    </div>
+    <p>The leader that hands out the work crashes.</p>
+  </div>
+</div>
+
+</div>
+<script>
+  const ns = "http://www.w3.org/2000/svg";
+  function square(parent, x, y, size, attrs) {
+    const rect = document.createElementNS(ns, "rect");
+    rect.setAttribute("x", x); rect.setAttribute("y", y);
+    rect.setAttribute("width", size); rect.setAttribute("height", size);
+    for (const [key, value] of Object.entries(attrs || {})) rect.setAttribute(key, value);
+    parent.appendChild(rect);
+  }
+
+  // A big job: one 6 x 6 block of cells.
+  const job = document.getElementById("job");
+  for (let row = 0; row < 6; row++)
+    for (let col = 0; col < 6; col++)
+      square(job, 66 + col * 42, 40 + row * 42, 38);
+
+  // Many small units: the same cells, loose.
+  const units = document.getElementById("units");
+  const loose = [[490,46],[556,34],[630,56],[704,38],[512,118],[590,112],[664,128],[738,104],[480,190],[560,200],[636,188],[716,204]];
+  for (const [x, y] of loose) square(units, x, y, 40);
+
+  // Idle machines: 3 screens, each running one unit.
+  const machines = document.getElementById("machines");
+  for (const x of [945, 1135, 1325]) {
+    const screen = document.createElementNS(ns, "rect");
+    screen.setAttribute("x", x); screen.setAttribute("y", 56);
+    screen.setAttribute("width", 150); screen.setAttribute("height", 112);
+    screen.setAttribute("fill", "#f3f2ed"); screen.setAttribute("stroke", "#161616"); screen.setAttribute("stroke-width", "4");
+    machines.appendChild(screen);
+    square(machines, x + 55, 92, 40, { fill: "#2f5bff" });
+    const stand = document.createElementNS(ns, "rect");
+    stand.setAttribute("x", x + 64); stand.setAttribute("y", 170);
+    stand.setAttribute("width", 22); stand.setAttribute("height", 30); stand.setAttribute("fill", "#161616");
+    machines.appendChild(stand);
+    const base = document.createElementNS(ns, "rect");
+    base.setAttribute("x", x + 35); base.setAttribute("y", 200);
+    base.setAttribute("width", 80); base.setAttribute("height", 10); base.setAttribute("fill", "#161616");
+    machines.appendChild(base);
+  }
+</script>
+</body>
+</html>

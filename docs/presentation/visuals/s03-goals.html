@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Slide 3 visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #f3f2ed; color: #161616; }
+  .page { width: 1600px; height: 900px; box-sizing: border-box; padding: 40px; display: flex; gap: 40px; }
+  .panel { border: 3px solid #161616; box-sizing: border-box; }
+  .goals { width: 860px; padding: 40px 44px; display: flex; flex-direction: column; }
+  h2 { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 30px; margin: 0; display: flex; gap: 14px; align-items: center; }
+  h2 i { width: 22px; height: 22px; display: inline-block; }
+  .sub { font-family: "JetBrains Mono", monospace; font-size: 18px; color: #55544f; margin-top: 10px; }
+  ol { list-style: none; margin: 28px 0 0; padding: 0; flex: 1; display: flex; flex-direction: column; }
+  ol li { flex: 1; display: flex; gap: 28px; align-items: center; border-top: 2px solid #d9d7cf; }
+  .n { width: 64px; height: 64px; flex: none; background: #161616; color: #f3f2ed; font-family: "Silkscreen", monospace; font-size: 30px; display: flex; align-items: center; justify-content: center; }
+  .goal { font-family: "Space Grotesk", sans-serif; font-size: 30px; line-height: 1.3; }
+  .goal b { font-weight: 500; }
+  .goal span { color: #55544f; }
+  .fit { flex: 1; display: flex; flex-direction: column; gap: 32px; }
+  .fit .panel { flex: 1; padding: 34px 40px; }
+  .fit ul { list-style: none; margin: 22px 0 0; padding: 0; }
+  .fit li { font-family: "Space Grotesk", sans-serif; font-size: 30px; padding: 20px 0; border-top: 2px solid #d9d7cf; }
+  .chips { display: flex; gap: 14px; margin-top: 10px; }
+  .chip { font-family: "JetBrains Mono", monospace; font-size: 22px; padding: 12px 18px; background: #dcdad2; border: 2px solid #161616; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="panel goals">
+  <h2><i style="background:#2f5bff"></i>Goals</h2>
+  <ol>
+    <li><div class="n">1</div><div class="goal"><b>Correct results</b><br><span>when volunteers leave or crash.</span></div></li>
+    <li><div class="n">2</div><div class="goal"><b>Correct results</b><br><span>when some volunteers lie.</span></div></li>
+    <li><div class="n">3</div><div class="goal"><b>No single point of failure</b><br><span>3 coordinators.</span></div></li>
+    <li><div class="n">4</div><div class="goal"><b>Every algorithm written by us.</b><br><span>No library for election, gossip or replication.</span></div></li>
+  </ol>
+</div>
+
+<div class="fit">
+  <div class="panel">
+    <h2><i style="background:#161616"></i>Good fit</h2>
+    <ul>
+      <li>Units that run alone</li>
+      <li>Same bytes every time</li>
+    </ul>
+    <div class="chips"><span class="chip">fractal tiles</span><span class="chip">Monte Carlo</span></div>
+  </div>
+  <div class="panel">
+    <h2><i style="background:#ff5a1f"></i>Not a fit</h2>
+    <ul>
+      <li>Pieces that talk to each other</li>
+      <li>Replies in milliseconds</li>
+      <li>Private data</li>
+    </ul>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Slide 1 visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #f3f2ed; color: #161616; }
+  .page { width: 1600px; height: 900px; box-sizing: border-box; padding: 40px 60px; display: flex; gap: 60px; align-items: center; }
+  .left { flex: 1; display: flex; flex-direction: column; height: 760px; justify-content: space-between; }
+  .kicker { font-family: "JetBrains Mono", monospace; font-size: 24px; color: #55544f; display: flex; gap: 16px; align-items: center; }
+  .kicker i { width: 16px; height: 16px; background: #2f5bff; display: inline-block; }
+  h1 { font-family: "Silkscreen", monospace; font-weight: 400; font-size: 104px; line-height: 1; margin: 32px 0 0; letter-spacing: -0.01em; }
+  .tagline { font-family: "Silkscreen", monospace; font-size: 54px; line-height: 1.2; margin: 0; }
+  .tagline span { color: #2f5bff; }
+  .rule { height: 3px; background: #161616; width: 100%; }
+  .team { display: flex; gap: 40px; }
+  .person { display: flex; gap: 14px; align-items: center; font-family: "Space Grotesk", sans-serif; font-size: 24px; font-weight: 500; }
+  .ava { display: grid; grid-template-columns: repeat(3, 10px); gap: 2px; }
+  .ava i { width: 10px; height: 10px; background: #161616; }
+  .ava i.b { background: #2f5bff; } .ava i.o { background: #ff5a1f; } .ava i.e { background: #dcdad2; }
+  .board { width: 520px; height: 520px; border: 3px solid #161616; box-shadow: 12px 12px 0 #161616; box-sizing: border-box; padding: 18px; background: #f3f2ed; flex: none; }
+  .grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 6px; width: 100%; height: 100%; }
+  .grid i { background: #dcdad2; position: relative; }
+  .grid i.k { background: #161616; }
+  .grid i.o { background: #ff5a1f; }
+  .grid i.b { background: #f3f2ed; box-shadow: inset 0 0 0 4px #2f5bff; }
+  .grid i.b::after { content: ""; position: absolute; inset: 13px; background: #2f5bff; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="left">
+    <div>
+      <div class="kicker"><i></i>a fault-tolerant volunteer computing platform</div>
+      <h1>SpareCycles</h1>
+    </div>
+    <p class="tagline">One job.<br>Many machines.<br><span>Verified.</span></p>
+    <div>
+      <div class="rule"></div>
+      <div class="team" style="margin-top: 28px;">
+        <div class="person"><div class="ava"><i class="b"></i><i></i><i class="e"></i><i></i><i class="b"></i><i></i><i class="e"></i><i></i><i class="b"></i></div>Tejas Chakkarwar</div>
+        <div class="person"><div class="ava"><i></i><i class="e"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="e"></i><i></i></div>Kushagra Bainsla</div>
+        <div class="person"><div class="ava"><i class="e"></i><i></i><i class="b"></i><i></i><i class="o"></i><i></i><i class="b"></i><i></i><i class="e"></i></div>Abhishek Ahirrao</div>
+      </div>
+    </div>
+  </div>
+  <div class="board"><div class="grid" id="grid"></div></div>
+</div>
+<script>
+  // k = accepted, b = running, o = outvoted, e = waiting (same states as the product page simulation)
+  const rows = [
+    "kkkkkkkk",
+    "kkkkbkkk",
+    "kkokkkbk",
+    "kbkkkokk",
+    "bkbebkbe",
+    "ebeeebee",
+    "eeeoeeee",
+    "eeeeeeee"
+  ];
+  const grid = document.getElementById("grid");
+  for (const row of rows) {
+    for (const state of row) {
+      const cell = document.createElement("i");
+      if (state !== "e") cell.className = state;
+      grid.appendChild(cell);
+    }
+  }
+</script>
+</body>
+</html>

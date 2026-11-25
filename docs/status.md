@@ -36,7 +36,7 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 
 - The "after merge" steps for #31 to #34, #37 and #38 are done (PR #41): new load sweep, `loadgen` default, short lease in `fail-leader.sh`, TC-03 and TC-04 rerun on `main`, diagram I1 and slide 12.
 - Report: the full draft is done (PR #42). Every claim was checked against the code and the run records.
-- Presentation: slides 4 (your part), 9, 11 and 12 are drafted in `docs/presentation/slides.md`, with the final numbers.
+- Presentation: all 14 slides are drafted (PR #43). Next: the demo run-through on 12-01 (you drive the terminal).
 
 ### All three
 
@@ -44,7 +44,7 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 | --- | --- | --- |
 | Final report (IEEE, 10 to 15 pages) | 12-04 | Full draft in `docs/report/` (`make report`): about 13 pages of text, 21 with figures. Each person reads all of it by 12-02, mainly the parts on their own algorithms, and puts the abstract, introduction and conclusions in the team's own words. Tejas and Abhishek add their student ID and email (the only red `\todo` marks left). If the AWS run (#15) happens, update the AWS sentences in sections I, IV-C, IX and X. |
 | UML diagrams (6 design, 3 implementation) | 12-04 | All 9 done (D1 to D6, I1 to I3), drawn from the code. |
-| Recorded presentation (about 15 min) and slides | 12-03 | Agree on [docs/presentation/outline.md](presentation/outline.md) (14 slides, about 5 min each) and its slide tool by 11-24. Slides drafted by 11-30 in [slides.md](presentation/slides.md) (Kushagra's are done; Tejas: 1, 2, 3, 4, 8, 14; Abhishek: 4, 5, 6, 7, 10, 13); run-through and backup demo clips on 12-01. Demo steps: [demo-script.md](presentation/demo-script.md). |
+| Recorded presentation (about 15 min) and slides | 12-03 | All 14 slides are drafted in [slides.md](presentation/slides.md), with speaker notes and an image for each slide in `presentation/visuals/` (PR #43). The notes take about 10.5 min and the demo 3.5 min. Next: choose the slide tool (late; the plan recommends Google Slides) and put the images in the deck; each speaker reads their notes and changes the words to their own; run-through with a timer and backup demo clips on 12-01. Speakers: Tejas 1, 2, 3, 4 (BOINC), 8, 14; Kushagra 4 (SWIM, VECA), 9, 11, 12; Abhishek 4 (Bully, VECTrust), 5, 6, 7, 10, 13. Demo steps: [demo-script.md](presentation/demo-script.md). |
 | Submission README (setup and division of work) | 12-03 | Drafted in [docs/submission.md](submission.md). Each person checks their rows. On 12-03, do its "Before you submit" list. |
 
 ## Waiting on
@@ -68,6 +68,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-25 | [#43](https://github.com/colmeabhi/sparecycles/pull/43) | All 14 slides drafted: text, speaker notes and a 1600×900 image for each slide in the product page style |
 | 2026-11-25 | [#42](https://github.com/colmeabhi/sparecycles/pull/42) | Full report draft: every section, diagrams D1, D2, D4, D5, I2 and I3, screenshots for 8.1, 8.2b and 8.2c; facts checked against the code and the run records |
 | 2026-11-25 | [#41](https://github.com/colmeabhi/sparecycles/pull/41) | After-merge steps: load sweep on the final code (voting costs 32% at 4 volunteers), full mode needs 2 or more volunteers, `loadgen` uses workload defaults, short lease in `fail-leader.sh`, TC-03 and TC-04 rerun on `main`, diagram I1 and slide 12 updated |
 | 2026-11-22 | [#34](https://github.com/colmeabhi/sparecycles/pull/34) | Monte Carlo workload: `montecarlo` estimates pi with integer-only sampling, the same bytes on arm64 and amd64 (TC-15; closes #9) |
