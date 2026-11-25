@@ -43,7 +43,7 @@ Each folder in the table has a `README.md`. Read it before you change the folder
 | `gen/sparecycles/v1/` | Generated code. Run `make proto` after a `.proto` change. Do not edit by hand. | Complete | All |
 | `internal/tasktable/` | Jobs and units. Changes only through `Change` and `Apply`. | Complete | All (discuss changes) |
 | `internal/coordinator/` | Client and volunteer RPCs. Connects all parts. | Complete | All (discuss changes) |
-| `internal/lease/` | Lease length and expiry | `NoExpiry`: leases never expire | Tejas |
+| `internal/lease/` | Lease length and expiry | Done: `Timeout` (`NoExpiry` kept for tests) | Tejas |
 | `internal/verify/` | Majority voting | Done: `Majority` (`FirstResult` kept for tests) | Tejas |
 | `internal/scheduler/` | Resource discovery: which unit goes to which volunteer | Done: `Matcher` with trust (`FIFO` kept for tests) | Tejas |
 | `internal/workload/` | Workloads: split, run, merge | Fractal complete | Tejas (Monte Carlo) |

@@ -37,7 +37,7 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 **Every tick (leader only, `Deps.TickInterval`, default 1 second):**
 
-- `releaseExpiredLeases`: `Leases.Expired` → commit `LeaseReleased`.
+- `releaseExpiredLeases`: `Leases.Expired` → commit `LeaseReleased`, count `sc_leases_expired_total` and log `lease expired`. If the lease ended another way just before (the result came in time), it logs `expired lease already gone` at debug level.
 - `releaseDeadVolunteers`: for each lease held by a volunteer that `Membership.Dead` reports → commit `LeaseReleased`, count `sc_leases_dead_volunteer_total`, and forget the volunteer, its session and its scheduler state (if the Scheduler is a `scheduler.Forgetter`). If gossip was wrong, the volunteer gets `NotFound` on its next request and registers again.
 - `retryStuckVotes` (`recovery.go`): votes again for each open unit that has every copy back and no lease out, and finishes each running job whose units are all done (`Table.RunningJobs`). A vote or a finish only runs when a result arrives, so one whose commit failed, or that an old leader did not commit, would otherwise wait forever.
 - `reportUnitsWithoutVolunteer` (`recovery.go`): sets `sc_units_without_volunteer` and logs `unit stuck: every volunteer already ran it` once per unit whose vote started and that needs another volunteer, but every registered volunteer has already run it.
@@ -53,7 +53,7 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 ## Tests
 
-`server_test.go` runs full jobs in one process with `bufconn` (no network). `membership_test.go` checks that a dead volunteer loses its lease before the lease expires. `session_test.go` sends requests under another volunteer's ID and checks that all are rejected. `voting_test.go` runs majority voting with faulty volunteers, concurrent decisions and late copies. `recovery_test.go` makes an accept or a job finish fail once and checks that the tick finishes them, and checks the stuck-unit report.
+`server_test.go` runs full jobs in one process with `bufconn` (no network). `membership_test.go` checks that a dead volunteer loses its lease before the lease expires. `session_test.go` sends requests under another volunteer's ID and checks that all are rejected. `lease_test.go` checks that an expired lease moves a unit to another volunteer, and uses a fake clock (`Deps.Now`) to check the expiry time. `voting_test.go` runs majority voting with faulty volunteers, concurrent decisions and late copies. `recovery_test.go` makes an accept or a job finish fail once and checks that the tick finishes them, and checks the stuck-unit report.
 
 A test that calls `RequestWork` or `SubmitResult` directly must send the `session_secret` from its `RegisterResponse`.
 

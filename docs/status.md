@@ -9,13 +9,13 @@ GitHub issues hold the task details. This file only summarizes and links.
 
 | Deadline | Date | Days left |
 | --- | --- | ---: |
-| Issues #6, #13 | 2026-11-27 | 2 |
+| Issue #13 | 2026-11-27 | 2 |
 | Issues #14, #35 | 2026-11-28 | 3 |
 | Issues #9, #15 | 2026-11-29 | 4 |
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Majority voting (#7, PR #32) and resource discovery (#8, PR #33) are merged. Tejas has PRs open for his other issues, with the review comments fixed. Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Lease expiry (#6, PR #31), majority voting (#7, PR #32) and resource discovery (#8, PR #33) are merged. Tejas has 1 PR open, for #9 (#34). Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
 
 ## Per person
 
@@ -23,10 +23,9 @@ GitHub issues hold the task details. This file only summarizes and links.
 
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
-| [#6 Lease expiry](https://github.com/colmeabhi/sparecycles/issues/6) | 11-27 | PR [#31](https://github.com/colmeabhi/sparecycles/pull/31): fix the review comments, then merge | — |
 | [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | PR [#34](https://github.com/colmeabhi/sparecycles/pull/34): fix the review comments, then merge | — |
 
-#7 and #8 are done (#32, #33). Merge order: #31, #34.
+#6, #7 and #8 are done (#31, #32, #33). Next: merge #34.
 
 ### Abhishek (`colmeabhi`)
 
@@ -58,6 +57,7 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 | This | Needs |
 | --- | --- |
 | Failover test on AWS | First `make deploy-up` (#15) |
+| The scheduler skips a volunteer that just lost a lease on that unit (a slow volunteer can take back the unit it lost) | A follow-up to #8: needs a record of lost leases |
 
 ## After merge
 
@@ -69,6 +69,7 @@ Do these right after the named PR merges, in the same day:
 | #9 merges | Kushagra: give `cmd/loadgen` an empty `-params` default, as in the client, so `-workload montecarlo` works. |
 | #6 to #9 merge | Kushagra: update diagram I1 (the stubs that were replaced), and the test count on slide 12. |
 | #35 and any PR with new tests merge | A test that calls `RequestWork` or `SubmitResult` directly must send the `session_secret` from its `RegisterResponse`. Whoever merges second fixes the tests. |
+| #6 merges | Kushagra: set a short `SC_LEASE_DURATION` (for example `20s`) in `scripts/fail-leader.sh`. After a failover, units leased to old volunteer IDs otherwise wait up to 3 minutes if gossip does not free them first. |
 | #14 merges | Kushagra: the new leader does not know the old volunteer IDs. Their leases end through gossip (`member dead`) or, after #6, the lease timeout. Check this in `make fail-leader` logs. |
 | Any algorithm issue merges | Update its card and the roadmap on the product page (`site/index.html`). |
 
@@ -76,6 +77,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-24 | [#31](https://github.com/colmeabhi/sparecycles/pull/31) | Lease expiry: `lease.Timeout`; a lost unit moves to another volunteer when its lease ends (TC-13; closes #6) |
 | 2026-11-22 | [#33](https://github.com/colmeabhi/sparecycles/pull/33) | Resource discovery: `scheduler.Matcher` with VECTrust-style trust, speed and memory rules; faulty volunteer blocked after 2 wrong results (TC-14; closes #8; stacked on #32) |
 | 2026-11-22 | [#32](https://github.com/colmeabhi/sparecycles/pull/32) | Majority voting: `verify.Majority`, `SC_VOTE_QUORUM`, faulty mode `SC_FAULTY_RATE`, late copies checked, `make fail-faulty` passes (TC-03; closes #7) |
 | 2026-11-25 | [#40](https://github.com/colmeabhi/sparecycles/pull/40) | Pages workflow split into build and deploy jobs; the deploy no longer fails when GitHub lists the artifact late |
