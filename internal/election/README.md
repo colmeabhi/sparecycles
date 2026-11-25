@@ -27,7 +27,7 @@ type Elector interface {
 
 | Type | Behavior |
 | --- | --- |
-| `Bully` | Bully election with terms and a leader lease. The highest alive ID leads. Used by `cmd/coordinator`. |
+| `Bully` | Bully election with terms and a leader lease. The highest alive ID leads. Used by `cmd/coordinator`. `GRPCTransport` sends its messages on the shared `peerconn.Pool`. |
 | `Static` | The highest node ID is always the leader, in term 1. A leader crash stops the system. Kept for tests. |
 
 ## How `Bully` works
@@ -91,7 +91,7 @@ make up
 docker compose stop coordinator-3
 ```
 
-The logs show `election started` and `became leader` on coordinator 2 in a higher term, and `make run-client` still works. `make fail-leader` runs the same test without Docker once replication (#14) is done.
+The logs show `election started` and `became leader` on coordinator 2 in a higher term, and `make run-client` still works. `make fail-leader` runs the same test without Docker.
 
 ## Rules
 

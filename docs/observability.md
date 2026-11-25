@@ -30,6 +30,9 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Election term | `sc_election_term` |
 | Elections started and won | `increase(sc_elections_started_total[5m])`, `increase(sc_elections_won_total[5m])` |
 | Failover time (old leader silent to new leader acts), p95 | `histogram_quantile(0.95, rate(sc_election_failover_seconds_bucket[10m]))` |
+| Replication time per change, p95 | `histogram_quantile(0.95, rate(sc_replication_seconds_bucket[1m]))` |
+| Backup lag (changes behind the leader) | `sc_replication_backup_lag` |
+| Snapshots served and restored | `increase(sc_replication_snapshots_served_total[5m])`, `increase(sc_replication_snapshots_restored_total[5m])` |
 | Wasted copies (assigned but not needed) | `rate(sc_units_assigned_total[1m]) - rate(sc_results_received_total[1m])` |
 
 ## Log lines for screenshots
@@ -44,6 +47,7 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Security | `registration rejected` and `request rejected: bad session` (coordinator), `bad signature` and `leader rejected the session` (volunteer) |
 | Voting (after #7) | `wrong result`, `no majority, more copies` |
 | Election | `election started`, `became leader`, `new leader`, `stepped down` (each with the term) |
+| Replication | `leader continues from table index`, `snapshot restored`, `backup behind` |
 
 ## Quick view without Prometheus
 

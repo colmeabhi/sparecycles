@@ -310,7 +310,7 @@ footer a{text-decoration:none} footer a:hover{color:var(--run)}
         <dl><dt>found by</dt><dd>Majority vote on the result</dd><dt>response</dt><dd>It loses 2 to 1, and its trust drops</dd></dl>
       </article>
       <article class="fail">
-        <div class="top"><h3>The leader crashes</h3><span class="badge wip">election done · table #14</span></div>
+        <div class="top"><h3>The leader crashes</h3><span class="badge ok">done</span></div>
         <div class="strip" aria-hidden="true">
           <div class="frame"><i class="b"></i><i class="k"></i><i class="k"></i></div><span class="arr">›</span>
           <div class="frame"><i class="x"></i><i class="k"></i><i class="k"></i></div><span class="arr">›</span>
@@ -372,7 +372,7 @@ footer a{text-decoration:none} footer a:hover{color:var(--run)}
     </div>
     <div class="algos">
       <div class="algo"><div class="big">01</div><h3>Leader election</h3><p>Bully algorithm with terms. The highest live node leads, and only one leader acts.</p><div class="meta"><span>internal/election</span><span>■ done</span></div></div>
-      <div class="algo"><div class="big">02</div><h3>Replication</h3><p>Each task-table change reaches a backup before the leader confirms it.</p><div class="meta"><span>internal/replication</span><a href="https://github.com/colmeabhi/sparecycles/issues/14">#14</a></div></div>
+      <div class="algo"><div class="big">02</div><h3>Replication</h3><p>Each task-table change reaches a backup before the leader confirms it.</p><div class="meta"><span>internal/replication</span><span>■ done</span></div></div>
       <div class="algo"><div class="big">03</div><h3>Gossip</h3><p>SWIM probes and indirect pings find failed nodes with a fixed load per node. A dead volunteer's square moves on in seconds.</p><div class="meta"><span>internal/membership</span><span>■ done</span></div></div>
       <div class="algo"><div class="big">04</div><h3>Leases</h3><p>Each square is lent, not given. When the lease ends, someone else gets it.</p><div class="meta"><span>internal/lease</span><a href="https://github.com/colmeabhi/sparecycles/issues/6">#6</a></div></div>
       <div class="algo"><div class="big">05</div><h3>Majority vote</h3><p>3 volunteers run each square. 2 matching results win. No majority means 2 more.</p><div class="meta"><span>internal/verify</span><a href="https://github.com/colmeabhi/sparecycles/issues/7">#7</a></div></div>

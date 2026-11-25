@@ -44,6 +44,15 @@ Defines the Prometheus metrics. The coordinator serves them on `SC_METRICS_ADDR`
 | `sc_election_stepdowns_total` | counter | Times it stopped being the leader |
 | `sc_election_failover_seconds` | histogram | On the new leader: time from the last contact with the old leader to leading |
 
+## Replication metrics (`Replication`, part of `Coordinator`)
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `sc_replication_seconds` | histogram | Leader: time until enough backups have a change |
+| `sc_replication_backup_lag{peer}` | gauge | Leader: its index minus the backup's index, from the last answer of each backup |
+| `sc_replication_snapshots_served_total` | counter | Snapshots this node sent (catch-up of a new leader, or a backup that was behind) |
+| `sc_replication_snapshots_restored_total` | counter | Snapshots this node loaded |
+
 `NewGossip(reg)` creates them in any registry. Volunteers create them in a private registry, because they serve no metrics endpoint.
 
 ## Add a metric

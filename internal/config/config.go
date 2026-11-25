@@ -36,6 +36,7 @@ type Coordinator struct {
 	AdvertiseAddr   string         // address that other nodes use to reach this node
 	Peers           map[int]string // other coordinators, by node ID
 	Election        Election       // leader election, see cluster.go
+	Replication     Replication
 	MetricsAddr     string
 	VolunteerToken  string   // one token for all volunteers; used when VolunteerTokens is empty
 	VolunteerTokens []string // per-volunteer tokens, "name=token" or "token"
@@ -58,6 +59,9 @@ func LoadCoordinator() (Coordinator, error) {
 		return c, err
 	}
 	if c.Election, err = loadElection(); err != nil {
+		return c, err
+	}
+	if c.Replication, err = loadReplication(); err != nil {
 		return c, err
 	}
 	c.MetricsAddr = stringVar("SC_METRICS_ADDR", ":9400")

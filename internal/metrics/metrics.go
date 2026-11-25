@@ -14,7 +14,8 @@ import (
 type Coordinator struct {
 	Registry              *prometheus.Registry
 	IsLeader              prometheus.Gauge
-	Election              *Election // see election.go
+	Election              *Election    // see election.go
+	Replication           *Replication // see replication.go
 	JobsSubmitted         prometheus.Counter
 	JobsFinished          *prometheus.CounterVec // label: state (done, failed)
 	JobDuration           prometheus.Histogram
@@ -100,6 +101,7 @@ func NewCoordinator() *Coordinator {
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 	)
 	m.Election = NewElection(reg)
+	m.Replication = NewReplication(reg)
 	return m
 }
 

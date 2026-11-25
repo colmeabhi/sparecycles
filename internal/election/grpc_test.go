@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/colmeabhi/sparecycles/gen/sparecycles/v1"
+	"github.com/colmeabhi/sparecycles/internal/peerconn"
 )
 
 // grpcNode is one Bully node behind a real gRPC server on localhost.
@@ -48,8 +49,9 @@ func startGRPCNode(t *testing.T, id int, addrs map[int]string, lis net.Listener)
 			peers[other] = a
 		}
 	}
-	transport := NewGRPCTransport()
-	t.Cleanup(func() { _ = transport.Close() })
+	pool := peerconn.New()
+	t.Cleanup(func() { _ = pool.Close() })
+	transport := NewGRPCTransport(pool)
 	b, err := NewBully(BullyConfig{
 		Self: id, Peers: peers, Transport: transport,
 		Heartbeat: 50 * time.Millisecond, Timeout: 300 * time.Millisecond, Log: quiet,

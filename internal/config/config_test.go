@@ -62,6 +62,9 @@ func TestElectionDefaults(t *testing.T) {
 	if c.Election.Heartbeat != 500*time.Millisecond || c.Election.Timeout != 2*time.Second {
 		t.Fatalf("unexpected election defaults: %+v", c.Election)
 	}
+	if c.Replication.Timeout != time.Second {
+		t.Fatalf("replication timeout = %s, want 1s", c.Replication.Timeout)
+	}
 }
 
 func TestClientDefaultReachesComposeCoordinators(t *testing.T) {
@@ -83,6 +86,7 @@ func TestLoadCoordinatorBadValues(t *testing.T) {
 		"SC_GOSSIP_INDIRECT":        "-1",
 		"SC_ELECTION_HEARTBEAT":     "1s", // the 2s timeout is not more than 2 heartbeats
 		"SC_ELECTION_TIMEOUT":       "soon",
+		"SC_REPLICATION_TIMEOUT":    "0s",
 	}
 	for key, value := range cases {
 		t.Run(key, func(t *testing.T) {
