@@ -35,6 +35,8 @@ type Coordinator struct {
 	ListenAddr      string
 	AdvertiseAddr   string         // address that other nodes use to reach this node
 	Peers           map[int]string // other coordinators, by node ID
+	Election        Election       // leader election, see cluster.go
+	Replication     Replication
 	MetricsAddr     string
 	VolunteerToken  string   // one token for all volunteers; used when VolunteerTokens is empty
 	VolunteerTokens []string // per-volunteer tokens, "name=token" or "token"
@@ -55,6 +57,12 @@ func LoadCoordinator() (Coordinator, error) {
 	c.ListenAddr = stringVar("SC_LISTEN_ADDR", ":7400")
 	c.AdvertiseAddr = stringVar("SC_ADVERTISE_ADDR", defaultAdvertise(c.ListenAddr))
 	if c.Peers, err = peersVar("SC_PEERS"); err != nil {
+		return c, err
+	}
+	if c.Election, err = loadElection(); err != nil {
+		return c, err
+	}
+	if c.Replication, err = loadReplication(); err != nil {
 		return c, err
 	}
 	c.MetricsAddr = stringVar("SC_METRICS_ADDR", ":9400")
@@ -85,8 +93,11 @@ func loadVote() (replicas, quorum int, err error) {
 	if quorum, err = intVar("SC_VOTE_QUORUM", replicas/2+1); err != nil {
 		return 0, 0, err
 	}
-	if quorum < 1 || quorum > replicas {
-		return 0, 0, fmt.Errorf("SC_VOTE_QUORUM must be from 1 to SC_VOTE_REPLICAS (%d), got %d", replicas, quorum)
+	// A quorum of half the copies or less lets a minority decide: with 3 copies
+	// and quorum 1, one faulty volunteer is enough, and 2 copies are wasted.
+	if quorum <= replicas/2 || quorum > replicas {
+		return 0, 0, fmt.Errorf("SC_VOTE_QUORUM must be a majority of SC_VOTE_REPLICAS (%d): from %d to %d, got %d",
+			replicas, replicas/2+1, replicas, quorum)
 	}
 	return replicas, quorum, nil
 }
@@ -186,9 +197,15 @@ type Client struct {
 	Coordinators []string
 }
 
+// defaultClientCoordinators reaches one coordinator from make run-coordinator (7400)
+// and the 3 coordinators of Docker Compose (7401 to 7403). The client skips the ones that are down.
+func defaultClientCoordinators() []string {
+	return []string{"localhost:7400", "localhost:7401", "localhost:7402", "localhost:7403"}
+}
+
 // LoadClient reads the client settings.
 func LoadClient() Client {
-	return Client{Coordinators: listVar("SC_COORDINATORS", []string{"localhost:7400"})}
+	return Client{Coordinators: listVar("SC_COORDINATORS", defaultClientCoordinators())}
 }
 
 func stringVar(key, def string) string {

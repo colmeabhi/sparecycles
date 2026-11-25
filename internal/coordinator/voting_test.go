@@ -215,25 +215,27 @@ func TestConcurrentResultsGiveOneDecision(t *testing.T) {
 		if _, err := srv.SubmitJob(ctx, &pb.SubmitJobRequest{Workload: "fractal", Params: params}); err != nil {
 			t.Fatal(err)
 		}
-		// All 3 copies are out before any result comes back.
-		results := map[string][]byte{}
+		// All copies are out before any result comes back.
+		results := map[session][]byte{}
 		var unitID string
 		for i := 0; i < copies; i++ {
 			output := tile
 			if i == 0 {
 				output = []byte("bad")
 			}
-			var volunteerID string
-			volunteerID, unitID = takeOneUnit(t, ctx, srv)
-			results[volunteerID] = output
+			var v session
+			v, unitID = takeOneUnit(t, ctx, srv)
+			results[v] = output
 		}
 		var wg sync.WaitGroup
 		errs := make(chan error, len(results))
-		for volunteerID, output := range results {
+		for v, output := range results {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				_, err := srv.SubmitResult(ctx, &pb.SubmitResultRequest{VolunteerId: volunteerID, UnitId: unitID, Output: output})
+				_, err := srv.SubmitResult(ctx, &pb.SubmitResultRequest{
+					VolunteerId: v.id, SessionSecret: []byte(v.secret), UnitId: unitID, Output: output,
+				})
 				errs <- err
 			}()
 		}
@@ -270,18 +272,29 @@ func honestTile(t *testing.T, params []byte) []byte {
 	return tile
 }
 
+// session is a registered volunteer: its ID and the secret it must send with each request.
+type session struct {
+	id     string
+	secret string // a string, so that a session can be a map key
+}
+
+func newSession(r *pb.RegisterResponse) session {
+	return session{id: r.GetVolunteerId(), secret: string(r.GetSessionSecret())}
+}
+
 // takeOneUnit registers a new volunteer and gives it the oldest unit that needs one.
-func takeOneUnit(t *testing.T, ctx context.Context, srv *Server) (volunteerID, unitID string) {
+func takeOneUnit(t *testing.T, ctx context.Context, srv *Server) (v session, unitID string) {
 	t.Helper()
 	reg, err := srv.Register(ctx, &pb.RegisterRequest{Token: testToken})
 	if err != nil {
 		t.Fatal(err)
 	}
-	work, err := srv.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: reg.GetVolunteerId()})
+	v = newSession(reg)
+	work, err := srv.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: v.id, SessionSecret: []byte(v.secret)})
 	if err != nil || work.GetUnit() == nil {
 		t.Fatalf("got no unit: %v", err)
 	}
-	return reg.GetVolunteerId(), work.GetUnit().GetUnitId()
+	return v, work.GetUnit().GetUnitId()
 }
 
 // The 2 honest copies win before the third copy comes back. The late copy is
@@ -293,12 +306,12 @@ func TestLateCopyIsChecked(t *testing.T) {
 
 	conn, _, m := startVotingNode(t, ctx)
 	vc := pb.NewVolunteerServiceClient(conn)
-	register := func() string {
+	register := func() session {
 		r, err := vc.Register(ctx, &pb.RegisterRequest{Token: testToken})
 		if err != nil {
 			t.Fatal(err)
 		}
-		return r.GetVolunteerId()
+		return newSession(r)
 	}
 	honest1, honest2, last, outsider := register(), register(), register(), register()
 
@@ -308,18 +321,20 @@ func TestLateCopyIsChecked(t *testing.T) {
 	}
 	tiles := map[string][]byte{}
 	for range 2 { // each volunteer takes unit 0, then unit 1
-		for _, id := range []string{honest1, honest2, last} {
-			resp, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: id})
+		for _, v := range []session{honest1, honest2, last} {
+			resp, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: v.id, SessionSecret: []byte(v.secret)})
 			if err != nil || resp.GetUnit() == nil {
-				t.Fatalf("volunteer %s got no unit: %v", id, err)
+				t.Fatalf("volunteer %s got no unit: %v", v.id, err)
 			}
 			if tiles[resp.GetUnit().GetUnitId()], err = (workload.Fractal{}).Run(ctx, resp.GetUnit().GetPayload()); err != nil {
 				t.Fatal(err)
 			}
 		}
 	}
-	submit := func(volunteerID, unitID string, output []byte) bool {
-		r, err := vc.SubmitResult(ctx, &pb.SubmitResultRequest{VolunteerId: volunteerID, UnitId: unitID, Output: output})
+	submit := func(v session, unitID string, output []byte) bool {
+		r, err := vc.SubmitResult(ctx, &pb.SubmitResultRequest{
+			VolunteerId: v.id, SessionSecret: []byte(v.secret), UnitId: unitID, Output: output,
+		})
 		if err != nil {
 			t.Fatal(err)
 		}

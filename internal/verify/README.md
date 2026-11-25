@@ -42,14 +42,14 @@ type Verifier interface {
 | Fewer results than copies, no quorum | Wait |
 | Copies raised to 5, 3 different results back | Wait for the 2 new copies |
 
-If 2 outputs both reach the quorum (possible with 5 or more copies), the one with more results wins. On a tie, the one that reached that count first wins.
+Config requires the quorum to be a majority of the copies, and `Decide` runs after each result and accepts at the first quorum, so 2 outputs cannot both reach it. If a caller ever used a smaller quorum, `Decide` would still choose the same way every time: the output with more results, and on a tie the one that reached that count first.
 
 ## Settings
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `SC_VOTE_REPLICAS` | `3` | Copies of each unit (coordinator) |
-| `SC_VOTE_QUORUM` | majority of `SC_VOTE_REPLICAS` (2 of 3, 1 of 1) | Equal results needed to accept. Must be 1 to `SC_VOTE_REPLICAS`. |
+| `SC_VOTE_QUORUM` | majority of `SC_VOTE_REPLICAS` (2 of 3, 1 of 1) | Equal results needed to accept. Must be a majority: more than half of `SC_VOTE_REPLICAS`, and at most all of them. |
 | `SC_FAULTY_RATE` | `0` | Volunteer: share of units with a wrong output on purpose, for demos and tests |
 
 ## Metrics and logs
@@ -59,8 +59,9 @@ If 2 outputs both reach the quorum (possible with 5 or more copies), the one wit
 | `sc_wrong_results_total` | Results that lost the vote, including late copies |
 | `sc_votes_no_majority_total` | Rounds with no majority, after which a unit got 2 more copies |
 | `sc_units_accepted_total` | Units accepted |
+| `sc_units_without_volunteer` | Gauge: open units whose vote started and that need another volunteer, but every registered volunteer has already run them |
 
-Logs: `wrong result` (with `late=true` for a late copy), `no majority, more copies`. The coordinator logs `copies` and `quorum` at start.
+Logs: `wrong result` (with `late=true` for a late copy), `no majority, more copies`, `unit stuck: every volunteer already ran it` (once per unit). The coordinator logs `copies` and `quorum` at start.
 
 ## Rules
 
@@ -69,7 +70,8 @@ Logs: `wrong result` (with `late=true` for a late copy), `no majority, more copi
 - `Decide` depends only on the unit. It gives the same decision for the same state, and never asks for extra copies twice in one round: after a raise, the unit has fewer results than copies.
 - A unit needs `Quorum` different volunteers, because a volunteer never gets the same unit twice. With 3 copies and quorum 2, run at least 2 volunteers, or set `SC_VOTE_REPLICAS=1` for one.
 - Voting stops one faulty volunteer, or several that send different wrong outputs. It does not stop faulty volunteers that agree on the same wrong output (collusion). Trust scores (#8) help there.
-- There is no limit on extra copies. A unit whose outputs never agree waits until no new volunteer can take it.
+- There is no limit on extra copies. A unit whose outputs never agree waits until a new volunteer joins. The leader reports such a unit with a warn log and `sc_units_without_volunteer`, for example with 2 volunteers where 1 is faulty.
+- A vote whose commit failed (for example `Unavailable` while the backups cannot be reached) runs again on the next leader tick, and so does a job whose last `JobFinished` commit failed. Wrong results are counted only after the accept is committed, so a retry does not count them twice.
 
 ## Demo: a faulty volunteer is outvoted
 

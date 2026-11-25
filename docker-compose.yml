@@ -1,8 +1,11 @@
-# Local cluster: 1 coordinator, 3 volunteers and Prometheus.
+# Local cluster: 3 coordinators, 3 volunteers and Prometheus.
 #
-#   make up        start
+#   make up           start
 #   make run-client   submit a fractal job from this machine
-#   make down      stop
+#   make down         stop
+#
+# Failover demo: docker compose stop coordinator-3
+# The logs show "election started" and "became leader" on coordinator-2.
 #
 # Values come from .env if it exists. The "environment" lines below override
 # the values that must differ inside Docker.
@@ -12,21 +15,48 @@ x-env-file: &env-file
     - path: .env
       required: false
 
+x-coordinator: &coordinator
+  build: .
+  image: sparecycles:local
+  command: ["coordinator"]
+  <<: *env-file
+
 services:
-  coordinator:
-    build: .
-    image: sparecycles:local
-    command: ["coordinator"]
-    <<: *env-file
+  coordinator-1:
+    <<: *coordinator
     environment:
       SC_NODE_ID: "1"
       SC_LISTEN_ADDR: ":7400"
       SC_METRICS_ADDR: ":9400"
-      SC_ADVERTISE_ADDR: "coordinator:7400"
-      SC_PEERS: ""
+      SC_ADVERTISE_ADDR: "coordinator-1:7400"
+      SC_PEERS: "2=coordinator-2:7400,3=coordinator-3:7400"
     ports:
-      - "7400:7400"
-      - "9400:9400"
+      - "7401:7400"
+      - "9401:9400"
+
+  coordinator-2:
+    <<: *coordinator
+    environment:
+      SC_NODE_ID: "2"
+      SC_LISTEN_ADDR: ":7400"
+      SC_METRICS_ADDR: ":9400"
+      SC_ADVERTISE_ADDR: "coordinator-2:7400"
+      SC_PEERS: "1=coordinator-1:7400,3=coordinator-3:7400"
+    ports:
+      - "7402:7400"
+      - "9402:9400"
+
+  coordinator-3:
+    <<: *coordinator
+    environment:
+      SC_NODE_ID: "3"
+      SC_LISTEN_ADDR: ":7400"
+      SC_METRICS_ADDR: ":9400"
+      SC_ADVERTISE_ADDR: "coordinator-3:7400"
+      SC_PEERS: "1=coordinator-1:7400,2=coordinator-2:7400"
+    ports:
+      - "7403:7400"
+      - "9403:9400"
 
   volunteer:
     build: .
@@ -34,13 +64,15 @@ services:
     command: ["volunteer"]
     <<: *env-file
     environment:
-      SC_COORDINATORS: "coordinator:7400"
+      SC_COORDINATORS: "coordinator-1:7400,coordinator-2:7400,coordinator-3:7400"
       SC_VOLUNTEER_NAME: ""
       # Each replica listens for gossip on 7500. Its container host name is its address on the network.
       SC_GOSSIP_ADDR: ":7500"
       SC_GOSSIP_HOST: "hostname"
     depends_on:
-      - coordinator
+      - coordinator-1
+      - coordinator-2
+      - coordinator-3
     deploy:
       replicas: 3
 
@@ -51,4 +83,6 @@ services:
     ports:
       - "9090:9090"
     depends_on:
-      - coordinator
+      - coordinator-1
+      - coordinator-2
+      - coordinator-3

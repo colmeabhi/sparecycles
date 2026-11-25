@@ -92,7 +92,7 @@ func TestDeadVolunteerLosesLeaseBeforeExpiry(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	first, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: a.GetVolunteerId()})
+	first, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: a.GetVolunteerId(), SessionSecret: a.GetSessionSecret()})
 	if err != nil || first.GetUnit() == nil {
 		t.Fatalf("volunteer A got no unit: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestDeadVolunteerLosesLeaseBeforeExpiry(t *testing.T) {
 		t.Fatal(err)
 	}
 	for {
-		resp, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: b.GetVolunteerId()})
+		resp, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: b.GetVolunteerId(), SessionSecret: b.GetSessionSecret()})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -125,7 +125,7 @@ func TestDeadVolunteerLosesLeaseBeforeExpiry(t *testing.T) {
 	if got := testutil.ToFloat64(m.LeasesDeadVolunteer); got != 1 {
 		t.Fatalf("sc_leases_dead_volunteer_total = %v, want 1", got)
 	}
-	_, err = vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: a.GetVolunteerId()})
+	_, err = vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: a.GetVolunteerId(), SessionSecret: a.GetSessionSecret()})
 	if status.Code(err) != codes.NotFound {
 		t.Fatalf("dead volunteer A: code = %v, want NotFound so that it registers again", status.Code(err))
 	}
