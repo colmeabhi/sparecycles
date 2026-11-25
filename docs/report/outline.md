@@ -31,7 +31,7 @@ State: ☐ not started · ◐ draft · ☑ done. Pages are a budget, without fig
 
 | # | Section | Owner | Pages | Sources | State |
 | --- | --- | --- | ---: | --- | :---: |
-| 1 | Cover page: names, student IDs, emails | Kushagra (collects from all) | — | Each person sends their ID and email | ◐ Kushagra done; Tejas and Abhishek: ID and email |
+| 1 | Cover page: names, student IDs, emails | Kushagra (collects from all) | — | Each person sends their ID and email | ☑ all 3 (2026-11-25) |
 | 2 | Goals and motivation | Tejas | 0.5 | `docs/proposal.md` §1–2, `site/index.html` | ◐ full draft (2026-11-25), review on 12-01 |
 | 3 | Distributed systems challenges addressed | Abhishek | 0.5 | `docs/proposal.md` §2, `AGENTS.md` design decisions | ◐ full draft (2026-11-25), review on 12-01 |
 | 4 | Literature review | Each person: own papers | 2.4 | Proposal §3 and references | ◐ full draft (2026-11-25), review on 12-01 |

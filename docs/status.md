@@ -14,13 +14,13 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. All 4 of Tejas's issues are merged: lease expiry (#6, PR #31), majority voting (#7, PR #32), resource discovery (#8, PR #33) and the Monte Carlo workload (#9, PR #34). Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next. The full report draft is in `docs/report/` (PR #42): every section, all 9 diagrams and 4 screenshots. Only Tejas's and Abhishek's ID and email are missing.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. All 4 of Tejas's issues are merged: lease expiry (#6, PR #31), majority voting (#7, PR #32), resource discovery (#8, PR #33) and the Monte Carlo workload (#9, PR #34). Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next. The full report draft is in `docs/report/` (PR #42): every section, all 9 diagrams and 5 screenshots, with the cover page complete. The slides are in a shared Google Slides deck (#46).
 
 ## Per person
 
 ### Tejas (`Tejas-Chakkarwar`)
 
-All 4 issues are done (#6, #7, #8, #9; PRs #31 to #34). Next: add your student ID and email in `docs/report/main.tex`, review the report sections on your algorithms, and do your slides (see "All three").
+All 4 issues are done (#6, #7, #8, #9; PRs #31 to #34). Next: review the report sections on your algorithms, and read your slides and notes in the shared deck (see "All three").
 
 ### Abhishek (`colmeabhi`)
 
@@ -28,7 +28,7 @@ All 4 issues are done (#6, #7, #8, #9; PRs #31 to #34). Next: add your student I
 | --- | --- | --- | --- |
 | [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Terraform is on `main` (#39). Use `main` with #45: before it, a leader crash after a few minutes of load ran the coordinators out of memory. Next: one real `make deploy-up` with the team account, a job from a laptop, the leader failover (`kill_leader_command` output), then `make deploy-down`. Paste the outputs in #15 and close it. | Team AWS account |
 
-#13 and #14 are done (#37, #38). Also: add your student ID and email in `docs/report/main.tex`, and review the report sections on election and replication.
+#13 and #14 are done (#37, #38). Also: review the report sections on election and replication, and read your slides and notes in the shared deck.
 
 ### Kushagra (`Kushagrabainsla`)
 
@@ -43,9 +43,9 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 
 | Work | Due | Next step |
 | --- | --- | --- |
-| Final report (IEEE, 10 to 15 pages) | 12-04 | Full draft in `docs/report/` (`make report`): about 13 pages of text, 22 with figures. Each person reads all of it by 12-02, mainly the parts on their own algorithms, and puts the abstract, introduction and conclusions in the team's own words. Tejas and Abhishek add their student ID and email (the only red `\todo` marks left). If the AWS run (#15) happens, update the AWS sentences in sections I, IV-C, IX and X. |
+| Final report (IEEE, 10 to 15 pages) | 12-04 | Full draft in `docs/report/` (`make report`): about 13 pages of text, 22 with figures. Each person reads all of it by 12-02, mainly the parts on their own algorithms, and puts the abstract, introduction and conclusions in the team's own words. All 3 IDs and emails are on the cover page; no `\todo` marks are left. If the AWS run (#15) happens, update the AWS sentences in sections I, IV-C, IX and X. |
 | UML diagrams (6 design, 3 implementation) | 12-04 | All 9 done (D1 to D6, I1 to I3), drawn from the code. |
-| Recorded presentation (about 15 min) and slides | 12-03 | All 14 slides are drafted in [slides.md](presentation/slides.md), with speaker notes and an image for each slide in `presentation/visuals/` (PR #43). The notes take about 10.5 min and the demo 3.5 min. The deck is in Google Slides ("SpareCycles presentation" in Kushagra's Drive, built 2026-11-25 with all 14 images and speaker notes; slide 11 got its own image). Next: Kushagra shares it with Tejas and Abhishek; each speaker reads their notes in the deck and changes the words to their own; run-through with a timer and backup demo clips on 12-01. Speakers: Tejas 1, 2, 3, 4 (BOINC), 8, 14; Kushagra 4 (SWIM, VECA), 9, 11, 12; Abhishek 4 (Bully, VECTrust), 5, 6, 7, 10, 13. Demo steps: [demo-script.md](presentation/demo-script.md). |
+| Recorded presentation (about 15 min) and slides | 12-03 | All 14 slides are drafted in [slides.md](presentation/slides.md), with speaker notes and an image for each slide in `presentation/visuals/` (PR #43). The notes take about 10.5 min and the demo 3.5 min. The deck is in Google Slides ("SpareCycles presentation" in Kushagra's Drive, built 2026-11-25 with all 14 images and speaker notes; slide 11 got its own image). Tejas and Abhishek have edit access (2026-11-25). Next: each speaker reads their notes in the deck and changes the words to their own; run-through with a timer and backup demo clips on 12-01. Speakers: Tejas 1, 2, 3, 4 (BOINC), 8, 14; Kushagra 4 (SWIM, VECA), 9, 11, 12; Abhishek 4 (Bully, VECTrust), 5, 6, 7, 10, 13. Demo steps: [demo-script.md](presentation/demo-script.md). |
 | Submission README (setup and division of work) | 12-03 | Drafted in [docs/submission.md](submission.md). Each person checks their rows. On 12-03, do its "Before you submit" list. |
 
 ## Waiting on
@@ -70,6 +70,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-25 | [#47](https://github.com/colmeabhi/sparecycles/pull/47) | Report cover page: all 3 student IDs and emails; no `\todo` marks left. Deck shared with Tejas and Abhishek (edit access) |
 | 2026-11-25 | [#46](https://github.com/colmeabhi/sparecycles/pull/46) | Slide tool: Google Slides. The deck has all 14 slides with titles, images and speaker notes; new image for slide 11 (live demo) |
 | 2026-11-25 | [#45](https://github.com/colmeabhi/sparecycles/pull/45) | Task table drops unit outputs it no longer needs: before, a leader crash under load in Docker ran 2 coordinators out of memory and stopped the cluster; now memory stays below 270 MB (TC-12 part 2). Prometheus figure in report 9.3 |
 | 2026-11-25 | [#44](https://github.com/colmeabhi/sparecycles/pull/44) | Demo script checked on `main`: all 5 parts pass; expected output, timings and narration updated; `make fail-faulty` now shows the `volunteer blocked` line |
