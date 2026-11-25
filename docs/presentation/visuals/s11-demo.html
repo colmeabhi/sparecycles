@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Slide 11 visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #f3f2ed; }
+  .page { width: 1600px; height: 900px; box-sizing: border-box; padding: 40px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 30px; }
+  .tile { box-sizing: border-box; border: 3px solid #161616; padding: 30px 34px; display: flex; flex-direction: column; justify-content: space-between; color: #161616; }
+  .tile.dark { background: #161616; color: #f3f2ed; }
+  .num { font-family: "Silkscreen", monospace; font-size: 76px; line-height: 1; color: #2f5bff; }
+  .head { font-family: "Silkscreen", monospace; font-size: 30px; line-height: 1.25; }
+  .meta { font-family: "JetBrains Mono", monospace; font-size: 24px; margin-top: 16px; color: #555; }
+  .tile.dark .meta { color: #c9c7bf; }
+  .cmd { font-family: "JetBrains Mono", monospace; font-size: 24px; margin-top: 10px; color: #2f5bff; }
+  .tile.dark .cmd { color: #8aa5ff; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="tile">
+    <div class="num">1</div>
+    <div><div class="head">One job: split, run, merge</div><div class="cmd">make run-client</div><div class="meta">Kushagra · 0:30</div></div>
+  </div>
+  <div class="tile">
+    <div class="num">2</div>
+    <div><div class="head">A volunteer crashes</div><div class="cmd">make fail-volunteer</div><div class="meta">Kushagra · 0:50</div></div>
+  </div>
+  <div class="tile">
+    <div class="num">3</div>
+    <div><div class="head">A volunteer lies</div><div class="cmd">make fail-faulty</div><div class="meta">Tejas · 0:40</div></div>
+  </div>
+  <div class="tile">
+    <div class="num">4</div>
+    <div><div class="head">The leader crashes</div><div class="cmd">make fail-leader</div><div class="meta">Abhishek · 0:50</div></div>
+  </div>
+  <div class="tile">
+    <div class="num">5</div>
+    <div><div class="head">More volunteers, more users</div><div class="cmd">scripts/load.sh 4 8 4 full</div><div class="meta">Kushagra · 0:40</div></div>
+  </div>
+  <div class="tile dark">
+    <div class="num">3:30</div>
+    <div><div class="head">Live, on one laptop</div><div class="meta">Every node is a separate process.</div></div>
+  </div>
+</div>
+</body>
+</html>

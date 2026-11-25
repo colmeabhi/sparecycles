@@ -19,7 +19,7 @@ The slides must be clear to anyone who took the course. Use one idea per slide, 
 
 | Topic | Recommendation | Why |
 | --- | --- | --- |
-| Slide tool | Google Slides, from one shared deck | All 3 can edit at the same time; exports to PDF for the submission |
+| Slide tool | **Decided (2026-11-25): Google Slides**, one shared deck ("SpareCycles presentation" in Kushagra's Drive) | All 3 can edit at the same time; exports to PDF for the submission |
 | Recording | One Zoom call, all 3 present, the screen recorded at 1080p | One file, natural hand-offs between speakers |
 | Demo | Live in the recording, with pre-recorded clips as a backup | The course asks for a live demo; the clips save the recording if a run fails |
 | Look | The product page style: paper background, pixel headings, tile colors | Ready-made visuals in `site/index.html` |
