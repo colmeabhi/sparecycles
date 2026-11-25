@@ -17,7 +17,8 @@ make run-coordinator
 3. Picks the security parts (`newSecurity`): `SC_VOLUNTEER_TOKENS`, else `SC_VOLUNTEER_TOKEN`, else open; and Ed25519 signing if `SC_SIGNING_KEY` is set. It logs the choice.
 4. Serves gRPC on `SC_LISTEN_ADDR` (default `:7400`).
 5. Serves `/metrics` and `/healthz` on `SC_METRICS_ADDR` (default `:9400`).
-6. Stops cleanly on Ctrl+C or `SIGTERM`.
+6. Logs `coordinator started` with the copies per unit and the quorum.
+7. Stops cleanly on Ctrl+C or `SIGTERM`.
 
 ## Parts in use
 
@@ -27,7 +28,7 @@ make run-coordinator
 | Replicator | `replication.NewQuorum` (done, #14) | — |
 | Membership | `membership.NewSWIM` (done, #10) | — |
 | Leases | `lease.NoExpiry` | Timeout (#6) |
-| Verifier | `verify.FirstResult` | Majority (#7) |
+| Verifier | `verify.Majority` with `SC_VOTE_QUORUM` (done, #7) | — |
 | Scheduler | `scheduler.FIFO` | Matcher (#8) |
 | Auth, Signer | `security.TokenList` or `SharedToken`, and `Ed25519Signer` or `NoSign`, from the settings (done, #11) | — |
 

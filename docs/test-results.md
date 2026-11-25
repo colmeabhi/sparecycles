@@ -8,7 +8,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | --- | --- | --- | --- |
 | TC-01 | Success scenario: one job end to end | `make run-client` with 1 coordinator and 2 volunteers; `TestEndToEndFractal` | Pass |
 | TC-02 | Volunteer crash | `make fail-volunteer` | Pass |
-| TC-03 | Faulty volunteer is outvoted | `make fail-faulty` | Not run yet (needs #7) |
+| TC-03 | Faulty volunteer is outvoted | `make fail-faulty`; `TestFaultyVolunteerIsOutvoted` | Pass |
 | TC-04 | Leader crash | `make fail-leader`; `TestLeaderCrashJobContinues` | Pass |
 | TC-05 | Unknown token is rejected | Manual run; `TestUnknownTokenIsRejectedAndCounted` | Pass |
 | TC-06 | Wrong signing key | Manual run; `TestVolunteerWithWrongKeyStopsAndSendsNothing` | Pass |
@@ -50,7 +50,16 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 - **Goal:** a volunteer that sends wrong results does not change the final result.
 - **Steps:** `make fail-faulty`. 3 honest volunteers and 1 with `SC_FAULTY_RATE=1.0`, 3 copies per unit. The script compares the image with an honest-only reference.
 - **Expected:** `wrong result` lines in the log, and identical images.
-- **Actual:** not run yet. The script prints `SKIP: needs issue #7`.
+- **Actual (2026-11-22):** `PASS: the faulty volunteer was outvoted and the image is correct`. The coordinator started with `copies=3 quorum=2`. The faulty volunteer sent 14 results, and all 14 were caught: 11 lost the vote, and 3 came back after the 2 honest copies had already won and were caught as late copies. The two images are identical (`cmp` finds no difference, 42258 bytes each).
+
+  ```text
+  13:37:05 wrong result  unit=job-786948cf8d3b-38 volunteer=vol-21a5f9a9e1ac
+  13:37:05 wrong result  unit=job-786948cf8d3b-44 volunteer=vol-21a5f9a9e1ac
+  13:37:05 job finished  job=job-786948cf8d3b state=done
+  13:37:05 wrong result  unit=job-786948cf8d3b-45 volunteer=vol-21a5f9a9e1ac late=true
+  ```
+
+  A first run on the same day, before late copies were checked, failed with `no result was outvoted`: the faulty volunteer joined last, so it always ran the third copy, and the 2 honest copies won before it finished. Its 5 results were turned away and never compared. The automated tests `TestFaultyVolunteerIsOutvoted`, `TestNoMajorityAsksForTwoMoreCopies` and `TestLateCopyIsChecked` cover both paths.
 
 ## TC-04 Leader crash
 

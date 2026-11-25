@@ -97,3 +97,53 @@ func TestLoadCoordinatorBadValues(t *testing.T) {
 		})
 	}
 }
+
+func TestVoteQuorumDefaultsToMajority(t *testing.T) {
+	cases := map[string]int{"1": 1, "2": 2, "3": 2, "4": 3, "5": 3}
+	for replicas, want := range cases {
+		t.Run("replicas="+replicas, func(t *testing.T) {
+			t.Setenv("SC_VOTE_REPLICAS", replicas)
+			t.Setenv("SC_VOTE_QUORUM", "")
+			c, err := LoadCoordinator()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c.VoteQuorum != want {
+				t.Fatalf("quorum = %d, want %d", c.VoteQuorum, want)
+			}
+		})
+	}
+}
+
+func TestVoteQuorumBadValues(t *testing.T) {
+	for _, quorum := range []string{"0", "-1", "1", "4", "two"} { // 1 of 3 is not a majority
+		t.Run(quorum, func(t *testing.T) {
+			t.Setenv("SC_VOTE_REPLICAS", "3")
+			t.Setenv("SC_VOTE_QUORUM", quorum)
+			if _, err := LoadCoordinator(); err == nil {
+				t.Fatalf("SC_VOTE_QUORUM=%q with 3 replicas: expected an error", quorum)
+			}
+		})
+	}
+}
+
+func TestFaultyRate(t *testing.T) {
+	t.Setenv("SC_FAULTY_RATE", "")
+	v, err := LoadVolunteer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v.FaultyRate != 0 {
+		t.Fatalf("default faulty rate = %v, want 0", v.FaultyRate)
+	}
+	t.Setenv("SC_FAULTY_RATE", "0.25")
+	if v, err = LoadVolunteer(); err != nil || v.FaultyRate != 0.25 {
+		t.Fatalf("faulty rate = %v, err = %v, want 0.25", v.FaultyRate, err)
+	}
+	for _, bad := range []string{"-0.1", "1.5", "half", "NaN"} {
+		t.Setenv("SC_FAULTY_RATE", bad)
+		if _, err := LoadVolunteer(); err == nil {
+			t.Fatalf("SC_FAULTY_RATE=%q: expected an error", bad)
+		}
+	}
+}
