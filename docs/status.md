@@ -15,7 +15,7 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has 3 stacked PRs open: Bully election (#13), replication (#14, on #13) and Terraform (#15, on #14).
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has 3 stacked PRs open: Bully election (#37), replication (#38, on #37) and Terraform (#39, draft, on #38).
 
 ## Per person
 
@@ -34,11 +34,11 @@ Merge order: #31, #32, #33, #34.
 
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
-| [#13 Bully election](https://github.com/colmeabhi/sparecycles/issues/13) | 11-27 | PR open: review, then merge | — |
-| [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | PR open: review, then merge | #13 (stacked on it) |
-| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | PR open. Next: one real `make deploy-up` with the team account, a job from a laptop, then `make deploy-down`; paste the outputs in the PR | #14 (stacked on it); the AWS failover test needs #13 and #14 |
+| [#13 Bully election](https://github.com/colmeabhi/sparecycles/issues/13) | 11-27 | PR [#37](https://github.com/colmeabhi/sparecycles/pull/37): review, then merge | — |
+| [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | PR [#38](https://github.com/colmeabhi/sparecycles/pull/38): review, then merge | #37 (stacked on it) |
+| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Draft PR [#39](https://github.com/colmeabhi/sparecycles/pull/39). Next: one real `make deploy-up` with the team account, a job from a laptop, then `make deploy-down`; paste the outputs in the PR | #38 (stacked on it); the AWS failover test needs #37 and #38 |
 
-Merge order: #13, then #14, then #15. Each PR is stacked on the one before it.
+Merge order: #37, then #38, then #39. Each PR is stacked on the one before it; after a merge, GitHub moves the next PR to `main`.
 
 ### Kushagra (`Kushagrabainsla`)
 
