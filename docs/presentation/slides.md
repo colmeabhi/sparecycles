@@ -2,7 +2,7 @@
 
 The text and the speaker notes for each slide. The plan (speakers, times, visuals) is in [outline.md](outline.md), and the live demo steps are in [demo-script.md](demo-script.md).
 
-Copy the text into the shared deck. Put the images from [visuals/](visuals/) on the slides. Keep few words on a slide; the rest goes in the speaker notes.
+**The deck is in Google Slides** ("SpareCycles presentation", in Kushagra's Google Drive; ask him for edit access). It was built on 2026-11-25 from this file: each slide has its title from here, its image from [visuals/](visuals/), and these speaker notes (with the speaker and the time first). From now on, edit the words in the deck. If you change a slide here as well, keep both the same. Keep few words on a slide; the rest goes in the speaker notes.
 
 Each image in `visuals/` has an HTML source in the product page style (1600×900). To make the PNG again after a change, open the HTML file in Chrome and take a screenshot, or run headless Chrome:
 
@@ -239,6 +239,8 @@ Every change to the task table reaches a backup before the leader applies it.
 ## Slide 11: Live demo (Kushagra drives, 3:30)
 
 **Title:** Live demo
+
+**Image:** [visuals/s11-demo.png](visuals/s11-demo.png)
 
 **On the slide** (shown before the terminal):
 
