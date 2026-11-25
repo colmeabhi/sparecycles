@@ -35,9 +35,9 @@ All 4 issues are done (#6, #7, #8, #9; PRs #31 to #34). Next: the report section
 
 Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 
-- Run the "after merge" steps below when #31 to #34, #13 and #14 land.
-- Report: your sections, diagrams D3, D6, I1, the 8.2a screenshot, and your ID and email are done. Rerun `make load-sweep` after #7 and update 9.3.
-- Presentation: slides 4 (your part), 9, 11 and 12 are drafted in `docs/presentation/slides.md`. After #7, update slide 12 with the new load numbers.
+- The "after merge" steps for #31 to #34, #37 and #38 are done (PR #41): new load sweep, `loadgen` default, short lease in `fail-leader.sh`, TC-03 and TC-04 rerun on `main`, diagram I1 and slide 12.
+- Report: your sections, diagrams D3, D6, I1, the 8.2a screenshot, 9.3 on the final code, and your ID and email are done.
+- Presentation: slides 4 (your part), 9, 11 and 12 are drafted in `docs/presentation/slides.md`, with the final numbers.
 
 ### All three
 
@@ -61,18 +61,14 @@ Do these right after the named PR merges, in the same day:
 
 | After | Do |
 | --- | --- |
-| #7 merges | Kushagra: change `scripts/load-sweep.sh` so that "full" mode uses 2 or more volunteers (1 volunteer never reaches 2 of 3). Then run `make load-sweep` again, and update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
-| #9 merges | Kushagra: give `cmd/loadgen` an empty `-params` default, as in the client, so `-workload montecarlo` works. |
-| #6 to #9 merge | Kushagra: update diagram I1 (the stubs that were replaced), and the test count on slide 12. |
-| #35 and any PR with new tests merge | A test that calls `RequestWork` or `SubmitResult` directly must send the `session_secret` from its `RegisterResponse`. Whoever merges second fixes the tests. |
-| #6 merges | Kushagra: set a short `SC_LEASE_DURATION` (for example `20s`) in `scripts/fail-leader.sh`. After a failover, units leased to old volunteer IDs otherwise wait up to 3 minutes if gossip does not free them first. |
-| #14 merges | Kushagra: the new leader does not know the old volunteer IDs. Their leases end through gossip (`member dead`) or, after #6, the lease timeout. Check this in `make fail-leader` logs. |
+| Any PR that changes the coordinator's request path | Kushagra: run `make load-sweep` again from a terminal in the foreground, and update TC-07, TC-08, report 9.3 and slide 12 if the numbers change. |
 | Any algorithm issue merges | Update its card and the roadmap on the product page (`site/index.html`). |
 
 ## Done
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-25 | [#41](https://github.com/colmeabhi/sparecycles/pull/41) | After-merge steps: load sweep on the final code (voting costs 32% at 4 volunteers), full mode needs 2 or more volunteers, `loadgen` uses workload defaults, short lease in `fail-leader.sh`, TC-03 and TC-04 rerun on `main`, diagram I1 and slide 12 updated |
 | 2026-11-22 | [#34](https://github.com/colmeabhi/sparecycles/pull/34) | Monte Carlo workload: `montecarlo` estimates pi with integer-only sampling, the same bytes on arm64 and amd64 (TC-15; closes #9) |
 | 2026-11-24 | [#31](https://github.com/colmeabhi/sparecycles/pull/31) | Lease expiry: `lease.Timeout`; a lost unit moves to another volunteer when its lease ends (TC-13; closes #6) |
 | 2026-11-22 | [#33](https://github.com/colmeabhi/sparecycles/pull/33) | Resource discovery: `scheduler.Matcher` with VECTrust-style trust, speed and memory rules; faulty volunteer blocked after 2 wrong results (TC-14; closes #8; stacked on #32) |

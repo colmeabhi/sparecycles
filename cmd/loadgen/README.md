@@ -19,7 +19,7 @@ Usually `scripts/load.sh` runs it for you.
 | `-jobs` | `8` | Jobs to submit |
 | `-concurrency` | `2` | Clients that submit at the same time |
 | `-workload` | `fractal` | Workload name |
-| `-params` | 1024×1024, tile 128, 2000 iterations (64 units) | Workload parameters as JSON |
+| `-params` | empty (the workload's defaults) | Workload parameters as JSON. `scripts/load.sh` sends a fixed fractal job (1024×1024, tile 128, 2000 iterations, 64 units), so the results stay comparable. |
 | `-label` | `full` | Name of the setup in the CSV |
 | `-volunteers` | `0` | Volunteer count, only recorded in the CSV |
 | `-csv` | empty | Append the result to this file |

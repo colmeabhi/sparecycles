@@ -27,8 +27,11 @@ for n in 1 2 3; do
     [ "$m" = "$n" ] && continue
     peers="${peers:+$peers,}$m=127.0.0.1:740$m"
   done
+  # A short lease: after the failover, units leased to old volunteer IDs return
+  # in 20 s at most, also if gossip does not free them first.
   start "coordinator-$n" SC_NODE_ID="$n" SC_LISTEN_ADDR=":740$n" SC_METRICS_ADDR=":940$n" \
-    SC_ADVERTISE_ADDR="127.0.0.1:740$n" SC_PEERS="$peers" "${GOSSIP_FAST[@]}" "$BIN/coordinator"
+    SC_ADVERTISE_ADDR="127.0.0.1:740$n" SC_PEERS="$peers" SC_LEASE_DURATION=20s \
+    "${GOSSIP_FAST[@]}" "$BIN/coordinator"
   [ "$n" = 3 ] && LEADER=$LAST_PID
 done
 for p in 7401 7402 7403; do wait_port "$p"; done

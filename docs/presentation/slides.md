@@ -78,17 +78,17 @@ State: ☐ not started · ◐ draft · ☑ final (after the run-through on 12-01
 **On the slide** (if the image is not used):
 
 - 2.9 s to declare a killed volunteer dead. The lease alone takes 3 minutes.
-- More volunteers: 69 → 110 → 140 units/s (1, 2, 4 volunteers, 1 copy).
-- 3 copies per unit: 74 units/s with 4 volunteers, 47% less.
-- More users: throughput is flat after 2 clients; job time grows from 1.5 s to 4.7 s.
-- 10 of 12 test cases pass. 2 wait for voting and election.
+- More volunteers: 72 → 92 → 112 units/s (1, 2, 4 volunteers, 1 copy).
+- 3 copies per unit, 2 must agree: 76 units/s with 4 volunteers, 32% less.
+- More users: throughput is flat after 2 clients; job time grows from 1.6 s to 4.5 s.
+- 16 of 16 test cases pass. A new leader takes over in 2.5 s.
 
 **Speaker notes:**
 
 > All numbers come from one laptop with 10 cores, and every node is a separate process.
 > First, failure detection. Gossip declared the killed volunteer dead in 2.9 seconds. With leases alone, its unit would wait 3 minutes.
-> Second, scaling. With one copy per unit, throughput grows from 69 to 140 units per second as we go from 1 to 4 volunteers. Our test units are very short, about 15 milliseconds, so the messages to the leader are a large part of the cost. Real 60-second units would scale better.
-> Third, the price of safety. With 3 copies of every unit, 4 volunteers give 74 units per second, about half. That is what it costs to outvote a lying volunteer.
+> Second, scaling. With one copy per unit, throughput grows from 72 to 112 units per second as we go from 1 to 4 volunteers. Our test units are very short, about 15 milliseconds, so the work at the leader for each unit is a large part of the cost. Real 60-second units would scale better.
+> Third, the price of safety. Each unit goes to 3 volunteers, and the leader accepts it when 2 agree. With 4 volunteers, that gives 76 units per second, 32% less than one copy. That is what it costs to outvote a lying volunteer. Full mode starts at 2 volunteers, because one volunteer can never form a majority.
 > Last, more users. Throughput rises up to 2 clients, and then stays flat: the volunteers are busy, so extra jobs wait and job time grows.
 
-**Before the recording:** after issue #7 merges, run `make load-sweep` again and update the numbers on this slide and in the image. Today "full" mode accepts the first result; with voting it waits for 2 of 3.
+The numbers come from `make load-sweep` and `scripts/load.sh 4 8 C full` on 2026-11-25, after all algorithms merged (TC-07, TC-08 and TC-11 in `docs/test-results.md`).
