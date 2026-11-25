@@ -116,6 +116,77 @@ func TestReplayAndSnapshot(t *testing.T) {
 	}
 }
 
+// An accepted unit keeps only the hashes of the copies, and drops its payload.
+func TestAcceptDropsCopyOutputs(t *testing.T) {
+	tb := New()
+	u0 := UnitID("j1", 0)
+	mustApply(t, tb, Change{Kind: JobAdded, JobID: "j1", Units: [][]byte{[]byte("payload")}, Copies: 2})
+	for _, v := range []string{"v1", "v2"} {
+		mustApply(t, tb, Change{Kind: UnitAssigned, UnitID: u0, VolunteerID: v})
+		mustApply(t, tb, Change{Kind: ResultRecorded, UnitID: u0, VolunteerID: v, Output: []byte("out-" + v)})
+	}
+	mustApply(t, tb, Change{Kind: UnitAccepted, UnitID: u0, Output: []byte("out-v1")})
+
+	u, _ := tb.Unit(u0)
+	if u.Payload != nil {
+		t.Fatalf("payload = %q, want nil after accept", u.Payload)
+	}
+	if string(u.Output) != "out-v1" || u.OutputHash != Hash([]byte("out-v1")) {
+		t.Fatalf("output = %q, hash = %s; want the accepted output and its hash", u.Output, u.OutputHash)
+	}
+	for _, r := range u.Results {
+		if r.Output != nil {
+			t.Fatalf("result of %s keeps %q, want nil after accept", r.VolunteerID, r.Output)
+		}
+		if r.Hash != Hash([]byte("out-"+r.VolunteerID)) {
+			t.Fatalf("result of %s lost its hash", r.VolunteerID)
+		}
+	}
+	outputs, ok := tb.Outputs("j1")
+	if !ok || string(outputs[0]) != "out-v1" {
+		t.Fatalf("outputs = %q, %v; want the accepted output before the job finishes", outputs, ok)
+	}
+}
+
+// A finished job keeps only its merged result, so the table and its snapshot
+// do not grow with the size of the unit outputs.
+func TestJobFinishedDropsUnitOutputs(t *testing.T) {
+	const units = 16
+	big := make([]byte, 64<<10) // one fractal tile is 64 KiB
+	tb := New()
+	payloads := make([][]byte, units)
+	for i := range payloads {
+		payloads[i] = []byte("p")
+	}
+	mustApply(t, tb, Change{Kind: JobAdded, JobID: "j1", Units: payloads, Copies: 1})
+	for i := range units {
+		id := UnitID("j1", i)
+		mustApply(t, tb, Change{Kind: UnitAssigned, UnitID: id, VolunteerID: "v1"})
+		mustApply(t, tb, Change{Kind: ResultRecorded, UnitID: id, VolunteerID: "v1", Output: big})
+		mustApply(t, tb, Change{Kind: UnitAccepted, UnitID: id, Output: big})
+	}
+	mustApply(t, tb, Change{Kind: JobFinished, JobID: "j1", Result: []byte("final")})
+
+	u, _ := tb.Unit(UnitID("j1", 0))
+	if u.Output != nil || u.OutputHash != Hash(big) {
+		t.Fatalf("finished unit keeps %d output bytes (hash %s), want none and the hash", len(u.Output), u.OutputHash)
+	}
+	if _, ok := tb.Outputs("j1"); ok {
+		t.Fatal("outputs must not be returned for a finished job")
+	}
+	if job, _ := tb.Job("j1"); string(job.Result) != "final" {
+		t.Fatalf("result = %q, want final", job.Result)
+	}
+	snap, err := tb.Snapshot()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 16 units of 64 KiB were about 1 MiB of outputs; only IDs and hashes remain.
+	if len(snap) > 16<<10 {
+		t.Fatalf("snapshot is %d bytes, want at most 16 KiB", len(snap))
+	}
+}
+
 func TestRunningJobs(t *testing.T) {
 	tbl := New()
 	for _, id := range []string{"job-b", "job-a"} {

@@ -60,6 +60,8 @@ The leader also keeps a little state per backup:
 
 Bully picks the highest ID, not the node with the newest table. Before a new leader acts, `CatchUp` asks each reachable coordinator for its snapshot, and loads the one with the highest index if it is newer than its own. A confirmed change is on a majority, and the new leader reached a majority to win, so the newest table holds every confirmed change. The leader logs `leader continues from table index`.
 
+A snapshot is the whole table, and building, sending and loading it takes several times the table size in memory. The table drops unit outputs that are no longer needed (see `internal/tasktable/README.md`, "Size"), so the snapshot stays small under load.
+
 Not replicated, on purpose: the volunteer list and session secrets (volunteers register again after `NotFound`), and job start times for metrics.
 
 ## Settings
