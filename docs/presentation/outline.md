@@ -64,13 +64,7 @@ Times add up to 15 minutes. Each person speaks about 5 minutes.
 
 ## Depends on
 
-| Slide | Needs |
-| --- | --- |
-| 5, 10 | Diagrams D2 and D5 (Abhishek) |
-| 8 | Diagram D4 (Tejas) |
-| 11, faulty volunteer | Issue #7 |
-| 11, leader crash | Issues #13 and #14 |
-| 12, "full" numbers | Rerun `make load-sweep` after #7 |
+Nothing. All issues are merged, and every slide has its text, speaker notes and image in [slides.md](slides.md) and [visuals/](visuals/) (2026-11-25). The speaker notes take about 10.5 minutes, and the demo takes 3.5 minutes.
 
 ## How to update this file
 

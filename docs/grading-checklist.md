@@ -50,6 +50,8 @@ The full draft is in `docs/report/` (2026-11-25, about 13 pages of text and 21 p
 
 ## 4. Recorded presentation (about 15 minutes)
 
+All 14 slides are drafted with speaker notes and images in `docs/presentation/` (2026-11-25). Check these items after the recording.
+
 - [ ] Introduce the project and the problem.
 - [ ] Related work.
 - [ ] Key design choices and how they relate to the distributed systems challenges.

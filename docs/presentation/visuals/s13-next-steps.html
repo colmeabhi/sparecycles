@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Slide 13 visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #f3f2ed; }
+  .page { width: 1600px; height: 900px; box-sizing: border-box; padding: 40px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 30px; }
+  .tile { box-sizing: border-box; border: 3px solid #161616; padding: 30px 34px; display: flex; flex-direction: column; justify-content: space-between; color: #161616; }
+  .tile.dark { background: #161616; color: #f3f2ed; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .top svg { display: block; width: 220px; height: 110px; }
+  .num { font-family: "Silkscreen", monospace; font-size: 76px; line-height: 1; color: #2f5bff; }
+  .head { font-family: "Silkscreen", monospace; font-size: 30px; line-height: 1.25; }
+  .body { font-family: "Space Grotesk", sans-serif; font-size: 29px; line-height: 1.35; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="tile">
+    <div class="top">
+      <div class="num">1</div>
+      <svg viewBox="0 0 220 110">
+        <rect x="2" y="27" width="56" height="56" fill="#2f5bff"/>
+        <rect x="82" y="27" width="56" height="56" fill="#2f5bff"/>
+        <rect x="162" y="27" width="56" height="56" fill="none" stroke="#161616" stroke-width="3" stroke-dasharray="8 6"/>
+      </svg>
+    </div>
+    <div><div class="head">Adaptive replication</div><div class="body">Fewer copies for trusted volunteers, as in BOINC.</div></div>
+  </div>
+  <div class="tile">
+    <div class="top">
+      <div class="num">2</div>
+      <svg viewBox="0 0 220 110">
+        <rect x="2" y="27" width="56" height="56" fill="#2f5bff"/>
+        <rect x="82" y="27" width="56" height="56" fill="#2f5bff"/>
+        <rect x="162" y="27" width="56" height="56" fill="#dcdad2" stroke="#161616" stroke-width="3"/>
+        <line x1="172" y1="37" x2="208" y2="73" stroke="#ff5a1f" stroke-width="6"/>
+        <line x1="208" y1="37" x2="172" y2="73" stroke="#ff5a1f" stroke-width="6"/>
+      </svg>
+    </div>
+    <div><div class="head">Cancel the 3rd copy</div><div class="body">Cancel the third copy when 2 agree.</div></div>
+  </div>
+  <div class="tile">
+    <div class="top">
+      <div class="num">3</div>
+      <svg viewBox="0 0 220 110">
+        <rect x="2" y="27" width="56" height="56" fill="#161616"/>
+        <rect x="82" y="27" width="56" height="56" fill="#161616"/>
+        <rect x="162" y="27" width="56" height="56" fill="#dcdad2" stroke="#161616" stroke-width="3"/>
+        <rect x="2" y="95" width="136" height="8" fill="#2f5bff"/>
+      </svg>
+    </div>
+    <div><div class="head">Majority catch-up</div><div class="body">Catch-up that waits for a majority of coordinators.</div></div>
+  </div>
+  <div class="tile">
+    <div class="top">
+      <div class="num">4</div>
+      <svg viewBox="0 0 220 110">
+        <path d="M128,52 V30 a27,27 0 0 1 54,0 V52" fill="none" stroke="#161616" stroke-width="10"/>
+        <rect x="112" y="50" width="86" height="58" fill="#161616"/>
+        <rect x="150" y="66" width="10" height="24" fill="#2f5bff"/>
+      </svg>
+    </div>
+    <div><div class="head">TLS</div><div class="body">TLS on all connections.</div></div>
+  </div>
+  <div class="tile">
+    <div class="top">
+      <div class="num">5</div>
+      <svg viewBox="0 0 220 110">
+        <rect x="2" y="41" width="22" height="28" fill="#161616"/>
+        <rect x="30" y="41" width="22" height="28" fill="#161616"/>
+        <rect x="58" y="41" width="22" height="28" fill="#dcdad2"/>
+        <rect x="86" y="41" width="22" height="28" fill="#161616"/>
+        <rect x="114" y="41" width="22" height="28" fill="#dcdad2"/>
+        <rect x="142" y="41" width="22" height="28" fill="none" stroke="#2f5bff" stroke-width="3" stroke-dasharray="5 4"/>
+        <rect x="170" y="41" width="22" height="28" fill="none" stroke="#2f5bff" stroke-width="3" stroke-dasharray="5 4"/>
+        <rect x="198" y="41" width="20" height="28" fill="none" stroke="#2f5bff" stroke-width="3" stroke-dasharray="5 4"/>
+      </svg>
+    </div>
+    <div><div class="head">Availability forecast</div><div class="body">Availability forecasting, as in VECA.</div></div>
+  </div>
+  <div class="tile dark">
+    <div class="top">
+      <div class="num">6</div>
+      <svg viewBox="0 0 220 110">
+        <rect x="2" y="12" width="64" height="90" fill="none" stroke="#f3f2ed" stroke-width="3" stroke-dasharray="8 6"/>
+        <rect x="78" y="12" width="64" height="90" fill="none" stroke="#f3f2ed" stroke-width="3" stroke-dasharray="8 6"/>
+        <rect x="154" y="12" width="64" height="90" fill="none" stroke="#f3f2ed" stroke-width="3" stroke-dasharray="8 6"/>
+        <rect x="18" y="41" width="32" height="32" fill="#2f5bff"/>
+        <rect x="94" y="41" width="32" height="32" fill="#2f5bff"/>
+        <rect x="170" y="41" width="32" height="32" fill="#2f5bff"/>
+      </svg>
+    </div>
+    <div><div class="head">Full AWS run</div><div class="body">A full run on AWS across 3 availability zones.</div></div>
+  </div>
+</div>
+</body>
+</html>
