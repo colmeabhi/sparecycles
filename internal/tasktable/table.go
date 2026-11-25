@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 )
@@ -272,6 +273,20 @@ func (t *Table) Job(id string) (Job, bool) {
 		return Job{}, false
 	}
 	return cloneJob(j), true
+}
+
+// RunningJobs returns the IDs of the jobs that are not finished yet, sorted.
+func (t *Table) RunningJobs() []string {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	var ids []string
+	for id, j := range t.jobs {
+		if j.State == JobRunning {
+			ids = append(ids, id)
+		}
+	}
+	slices.Sort(ids)
+	return ids
 }
 
 // Unit returns a copy of a unit.

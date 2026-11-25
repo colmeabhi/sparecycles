@@ -8,7 +8,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | --- | --- | --- | --- |
 | TC-01 | Success scenario: one job end to end | `make run-client` with 1 coordinator and 2 volunteers; `TestEndToEndFractal` | Pass |
 | TC-02 | Volunteer crash | `make fail-volunteer` | Pass |
-| TC-03 | Faulty volunteer is outvoted | `make fail-faulty` | Not run yet (needs #7) |
+| TC-03 | Faulty volunteer is outvoted | `make fail-faulty`; `TestFaultyVolunteerIsOutvoted` | Pass |
 | TC-04 | Leader crash | `make fail-leader`; `TestLeaderCrashJobContinues` | Pass |
 | TC-05 | Unknown token is rejected | Manual run; `TestUnknownTokenIsRejectedAndCounted` | Pass |
 | TC-06 | Wrong signing key | Manual run; `TestVolunteerWithWrongKeyStopsAndSendsNothing` | Pass |
@@ -19,6 +19,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-10 | Gossip finds a failed node over a real network | `TestGRPCClusterDetectsFailure` | Pass |
 | TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed container | `make up`, `make run-client`, `docker kill` | Pass |
 | TC-13 | Lease expiry moves a lost unit (gossip off) | Manual run in `internal/lease/README.md`; `TestExpiredLeaseMovesUnitToAnotherVolunteer` | Pass |
+| TC-14 | Trust blocks a faulty volunteer; slow volunteers get less work | Manual run in `internal/scheduler/README.md`; `TestFaultyVolunteerLosesTrustAndGetsNoWork` | Pass |
 | TC-16 | Requests under another volunteer's ID are rejected | `TestRequestsUnderAnotherVolunteersIDAreRejected` | Pass |
 
 ## TC-01 Success scenario
@@ -51,7 +52,16 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 - **Goal:** a volunteer that sends wrong results does not change the final result.
 - **Steps:** `make fail-faulty`. 3 honest volunteers and 1 with `SC_FAULTY_RATE=1.0`, 3 copies per unit. The script compares the image with an honest-only reference.
 - **Expected:** `wrong result` lines in the log, and identical images.
-- **Actual:** not run yet. The script prints `SKIP: needs issue #7`.
+- **Actual (2026-11-22):** `PASS: the faulty volunteer was outvoted and the image is correct`. The coordinator started with `copies=3 quorum=2`. The faulty volunteer sent 14 results, and all 14 were caught: 11 lost the vote, and 3 came back after the 2 honest copies had already won and were caught as late copies. The two images are identical (`cmp` finds no difference, 42258 bytes each).
+
+  ```text
+  13:37:05 wrong result  unit=job-786948cf8d3b-38 volunteer=vol-21a5f9a9e1ac
+  13:37:05 wrong result  unit=job-786948cf8d3b-44 volunteer=vol-21a5f9a9e1ac
+  13:37:05 job finished  job=job-786948cf8d3b state=done
+  13:37:05 wrong result  unit=job-786948cf8d3b-45 volunteer=vol-21a5f9a9e1ac late=true
+  ```
+
+  A first run on the same day, before late copies were checked, failed with `no result was outvoted`: the faulty volunteer joined last, so it always ran the third copy, and the 2 honest copies won before it finished. Its 5 results were turned away and never compared. The automated tests `TestFaultyVolunteerIsOutvoted`, `TestNoMajorityAsksForTwoMoreCopies` and `TestLateCopyIsChecked` cover both paths.
 
 ## TC-04 Leader crash
 
@@ -162,6 +172,28 @@ Test cases for the report (section 10). Each case lists how to run it and the re
   ```
 
   The client saved the full image (`done in 34.007s`). The metrics showed `sc_leases_expired_total 1` and `sc_leases_dead_volunteer_total 0`: the lease, not gossip, freed the unit. The automated test `TestExpiredLeaseMovesUnitToAnotherVolunteer` checks the same with a silent volunteer and a 300 ms lease. `TestLeaseIsReleasedOnlyAfterItsExpiry` checks, with a fake clock, that the lease is released only after its expiry, and that a volunteer whose lease expired cannot send a result while the unit is still open.
+
+## TC-14 Trust and speed in resource discovery
+
+- **Goal:** a volunteer that keeps sending wrong results is blocked and gets no more units; slow volunteers get fewer units while fast ones are active.
+- **Steps:** 1 coordinator with the default rules (`min_trust=0.3 last_copy_trust=0.6 slow_speed=0.5`). 4 volunteers: `fast-1` and `fast-2` with `SC_SPEED_SCORE=2.0`, `slow` with `SC_SPEED_SCORE=0.3`, and `faulty` with `SC_FAULTY_RATE=1.0`. Two 1024×1024 jobs of 64 units, one after the other. The steps are in `internal/scheduler/README.md`.
+- **Expected:** `volunteer blocked: low trust` for the faulty volunteer after its 2nd wrong result; it runs no more units; fast volunteers run more units than the slow one; both images are correct.
+- **Actual (2026-11-22):**
+
+  ```text
+  13:50:29 wrong result                  unit=job-f0fe1a9f933a-1 volunteer=vol-857c08921db6
+  13:50:29 wrong result                  unit=job-f0fe1a9f933a-2 volunteer=vol-857c08921db6
+  13:50:29 volunteer blocked: low trust  volunteer=vol-857c08921db6 trust=0.25 correct=0 wrong=2
+  ```
+
+  | Volunteer | Units run |
+  | --- | ---: |
+  | fast-1 (speed 2.0) | 126 |
+  | fast-2 (speed 2.0) | 123 |
+  | slow (speed 0.3) | 69 |
+  | faulty | 4, all caught as wrong |
+
+  The faulty volunteer took 4 first copies before any vote, then was blocked and got nothing for the rest of the 2 jobs. The metrics showed `sc_scheduler_picks_total{speed="fast"} 253`, `{speed="slow"} 69`, `sc_volunteers_blocked_total 1` and `sc_wrong_results_total 4`. Both job images are identical. All volunteers compute at the same real speed on one machine, so the gap between fast and slow comes from the pick rules alone.
 
 ## TC-16 Session secrets
 

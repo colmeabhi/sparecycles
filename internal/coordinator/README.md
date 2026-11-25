@@ -15,7 +15,7 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 | `Membership` | `membership` | `Register`, `Run` |
 | `Leases` | `lease` | `RequestWork` (lease length), `tick` (expired leases) |
 | `Verifier` | `verify` | `decide` |
-| `Scheduler` | `scheduler` | `RequestWork` |
+| `Scheduler` | `scheduler` | `RequestWork`; `decide` and `checkLateResult` (trust hook) |
 | `Auth`, `Signer` | `security` | `Register`, `RequestWork` (session secrets: `Register`, `volunteer`) |
 | `Workloads` | `workload` | `SubmitJob`, `finishJobIfDone` |
 
@@ -31,10 +31,16 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 **Take a result:** `SubmitResult` → commit `ResultRecorded` → `decide` → `Verifier.Decide` → commit `CopiesRaised` and/or `UnitAccepted` → when all units are done, workload `Merge` → commit `JobFinished`.
 
+- `SubmitResult` holds `decideMu` from recording the result to the end of the vote, so each result is recorded and voted on in one step. Two results that arrive together give one decision (one accept or one raise, each wrong result counted once, no error for a volunteer whose result was recorded), and no result is recorded unseen while another vote is halfway. The job merge also runs under this lock, so a large merge pauses other votes for that time.
+- **Late copies** (`latecopies.go`): when a unit is accepted, the volunteers that still hold a lease on it are remembered until their lease ends. If one of them sends its result later, the result is not recorded, but it is compared with the accepted output and counted as a wrong result if it differs (BOINC checks late results the same way). Results from any other volunteer are ignored. Together with the session secrets (only the real volunteer can send under its ID), nobody can make another volunteer look faulty. This is leader-local and is lost after a failover.
+- **Trust hook:** after a unit is accepted, `recordVotes` reports each result in the vote as right or wrong (wrong means listed in `Decision.Wrong`), and `checkLateResult` reports each checked late copy. Only registered volunteers are reported. Both go to `Scheduler.RecordResult` if the scheduler is a `scheduler.TrustRecorder` (type assertion). `FIFO` is not, so it ignores trust.
+
 **Every tick (leader only, `Deps.TickInterval`, default 1 second):**
 
 - `releaseExpiredLeases`: `Leases.Expired` → commit `LeaseReleased`, count `sc_leases_expired_total` and log `lease expired`. If the lease ended another way just before (the result came in time), it logs `expired lease already gone` at debug level.
-- `releaseDeadVolunteers`: for each lease held by a volunteer that `Membership.Dead` reports → commit `LeaseReleased`, count `sc_leases_dead_volunteer_total`, and forget the volunteer and its session. If gossip was wrong, the volunteer gets `NotFound` on its next request and registers again.
+- `releaseDeadVolunteers`: for each lease held by a volunteer that `Membership.Dead` reports → commit `LeaseReleased`, count `sc_leases_dead_volunteer_total`, and forget the volunteer, its session and its scheduler state (if the Scheduler is a `scheduler.Forgetter`). If gossip was wrong, the volunteer gets `NotFound` on its next request and registers again.
+- `retryStuckVotes` (`recovery.go`): votes again for each open unit that has every copy back and no lease out, and finishes each running job whose units are all done (`Table.RunningJobs`). A vote or a finish only runs when a result arrives, so one whose commit failed, or that an old leader did not commit, would otherwise wait forever.
+- `reportUnitsWithoutVolunteer` (`recovery.go`): sets `sc_units_without_volunteer` and logs `unit stuck: every volunteer already ran it` once per unit whose vote started and that needs another volunteer, but every registered volunteer has already run it.
 
 **Every change:** `commit` → `Table.Validate` → `Replicator.Send` → `Table.Apply`. One mutex keeps the changes in order.
 
@@ -47,7 +53,7 @@ The coordinator server. It handles the client and volunteer RPCs and connects al
 
 ## Tests
 
-`server_test.go` runs full jobs in one process with `bufconn` (no network). `membership_test.go` checks that a dead volunteer loses its lease before the lease expires. `session_test.go` sends requests under another volunteer's ID and checks that all are rejected. `lease_test.go` checks that an expired lease moves a unit to another volunteer, and uses a fake clock (`Deps.Now`) to check the expiry time.
+`server_test.go` runs full jobs in one process with `bufconn` (no network). `membership_test.go` checks that a dead volunteer loses its lease before the lease expires. `session_test.go` sends requests under another volunteer's ID and checks that all are rejected. `lease_test.go` checks that an expired lease moves a unit to another volunteer, and uses a fake clock (`Deps.Now`) to check the expiry time. `voting_test.go` runs majority voting with faulty volunteers, concurrent decisions and late copies. `recovery_test.go` makes an accept or a job finish fail once and checks that the tick finishes them, and checks the stuck-unit report.
 
 A test that calls `RequestWork` or `SubmitResult` directly must send the `session_secret` from its `RegisterResponse`.
 

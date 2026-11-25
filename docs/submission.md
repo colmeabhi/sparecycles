@@ -67,7 +67,7 @@ make test
 
 ### Step 4: Run one job on one machine
 
-Open 3 terminals in the repository folder.
+Open 4 terminals in the repository folder.
 
 Terminal 1, the coordinator (gRPC on port 7400, metrics on port 9400):
 
@@ -75,13 +75,13 @@ Terminal 1, the coordinator (gRPC on port 7400, metrics on port 9400):
 make run-coordinator
 ```
 
-Terminal 2, a volunteer. Run the same command in more terminals to add more volunteers:
+Terminals 2 and 3, two volunteers. Each unit runs on 3 volunteers and needs 2 equal results, so start at least 2. Run the same command in more terminals to add more volunteers:
 
 ```bash
 make run-volunteer
 ```
 
-Terminal 3, the client. It submits a 1024×1024 fractal job of 16 units:
+Terminal 4, the client. It submits a 1024×1024 fractal job of 16 units:
 
 ```bash
 make run-client
@@ -176,8 +176,8 @@ Each algorithm is a Go package behind an interface. The base version has a simpl
 | Session secrets: no requests under another volunteer's ID | `internal/security/`, `internal/coordinator/`, `internal/volunteer/`, `proto/` | Kushagra | [#35](https://github.com/colmeabhi/sparecycles/issues/35) | [#36](https://github.com/colmeabhi/sparecycles/pull/36) |
 | Failure scripts, load generator and baseline mode | `scripts/`, `cmd/loadgen/`, `results/` | Kushagra | [#12](https://github.com/colmeabhi/sparecycles/issues/12) | [#21](https://github.com/colmeabhi/sparecycles/pull/21), [#26](https://github.com/colmeabhi/sparecycles/pull/26) |
 | Lease expiry and reassignment | `internal/lease/` | Tejas | [#6](https://github.com/colmeabhi/sparecycles/issues/6) | [#31](https://github.com/colmeabhi/sparecycles/pull/31) |
-| Majority voting | `internal/verify/` | Tejas | [#7](https://github.com/colmeabhi/sparecycles/issues/7) | *In progress* |
-| Resource discovery with trust scores | `internal/scheduler/` | Tejas (Abhishek reviews) | [#8](https://github.com/colmeabhi/sparecycles/issues/8) | *In progress* |
+| Majority voting | `internal/verify/` | Tejas | [#7](https://github.com/colmeabhi/sparecycles/issues/7) | [#32](https://github.com/colmeabhi/sparecycles/pull/32) |
+| Resource discovery with trust scores | `internal/scheduler/` | Tejas (Abhishek reviews) | [#8](https://github.com/colmeabhi/sparecycles/issues/8) | [#33](https://github.com/colmeabhi/sparecycles/pull/33) |
 | Monte Carlo workload | `internal/workload/` | Tejas | [#9](https://github.com/colmeabhi/sparecycles/issues/9) | *In progress* |
 | Bully election with terms | `internal/election/` | Abhishek | [#13](https://github.com/colmeabhi/sparecycles/issues/13) | *In progress* |
 | Task-table replication | `internal/replication/` | Abhishek | [#14](https://github.com/colmeabhi/sparecycles/issues/14) | *In progress* |

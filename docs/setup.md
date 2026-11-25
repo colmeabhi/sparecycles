@@ -76,7 +76,7 @@ A volunteer with a wrong token stops at registration. A volunteer with a wrong p
 
 ## 4. Run on one machine
 
-Open 3 terminals in the repo folder.
+Open 4 terminals in the repo folder.
 
 Terminal 1, the coordinator:
 
@@ -84,13 +84,15 @@ Terminal 1, the coordinator:
 make run-coordinator
 ```
 
-Terminal 2, a volunteer. Run this in more terminals to add more volunteers:
+Terminals 2 and 3, two volunteers. Each unit runs on 3 different volunteers, and 2 equal results accept it, so the job needs at least 2 volunteers. Run the same command in more terminals to add more:
 
 ```bash
 make run-volunteer
 ```
 
-Terminal 3, the client. It submits a 1024×1024 fractal job and saves `result.png`:
+To try with only 1 volunteer, start the coordinator with 1 copy per unit: `SC_VOTE_REPLICAS=1 make run-coordinator`.
+
+Terminal 4, the client. It submits a 1024×1024 fractal job and saves `result.png`:
 
 ```bash
 make run-client
