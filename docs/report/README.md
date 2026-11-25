@@ -11,7 +11,7 @@ The final report in LaTeX (IEEE conference template), with its diagrams. The pla
 | `references.bib` | References. [1] to [6] match the proposal. |
 | `diagrams/*.puml` | PlantUML sources. The file header names the diagram ID (D1 to D6, I1 to I3) and the owner. |
 | `diagrams/*.png` | Rendered diagrams. They are committed, so Overleaf can build the report. |
-| `screenshots/*.png` | Screenshots for section 8 (`s1` success, `s2` to `s4` the 3 failure scenarios). Use a dark terminal, about 110 columns wide, at 2× scale. |
+| `screenshots/*.png` | Screenshots for section 8 (`s1` success, `s2` to `s4` the 3 failure scenarios; dark terminal, about 110 columns wide, at 2× scale) and section 9.3 (`s5` Prometheus graphs from the Docker run in TC-12 part 2; light theme, 3 graphs side by side). |
 | `outline.md` | Sections, owners, page budget, UML plan and screenshots |
 
 ## Build

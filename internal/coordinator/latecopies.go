@@ -72,7 +72,8 @@ func (s *Server) checkLateResult(unitID, volunteerID string, output []byte) {
 	if !ok || u.State != tasktable.UnitDone {
 		return
 	}
-	correct := tasktable.Hash(output) == tasktable.Hash(u.Output)
+	// Compare with the hash: the accepted output itself is dropped when the job finishes.
+	correct := tasktable.Hash(output) == u.OutputHash
 	s.recordTrust(volunteerID, correct)
 	if correct {
 		s.d.Log.Debug("late result agrees", "unit", unitID, "volunteer", volunteerID)

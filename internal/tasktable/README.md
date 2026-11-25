@@ -16,7 +16,7 @@ The task table holds the state of all jobs and work units. Every coordinator has
 | --- | --- |
 | `change.go` | `Change`, the change kinds, `Encode` and `DecodeChange` |
 | `table.go` | `Table`, `Job`, `Unit`, `Assignment`, `Result`, `Apply`, `Validate`, `Snapshot`, `Restore` |
-| `table_test.go` | Life cycle, lease release, replay and snapshot tests |
+| `table_test.go` | Life cycle, lease release, replay and snapshot tests; dropped outputs after accept and after job finish |
 
 ## Change kinds
 
@@ -27,8 +27,19 @@ The task table holds the state of all jobs and work units. Every coordinator has
 | `LeaseReleased` | Removes a lease without a result (for example, it expired) |
 | `ResultRecorded` | Stores a result and removes the lease |
 | `CopiesRaised` | Asks more volunteers to run a unit (no majority) |
-| `UnitAccepted` | Marks a unit as done with its accepted output |
-| `JobFinished` | Stores the merged result or an error |
+| `UnitAccepted` | Marks a unit as done with its accepted output and its hash. Drops the payload and the output bytes of each copy (their hashes stay). |
+| `JobFinished` | Stores the merged result or an error. Drops the accepted outputs of the job's units (their hashes stay). |
+
+## Size
+
+The table drops the bytes that no step needs any more. Without this, each finished fractal job kept about 4 MB of tile outputs, and a coordinator under load grew by 7 to 9 MB per second. The catch-up snapshot after a failover then needed several GB, and Docker stopped the coordinators for lack of memory (2026-11-25).
+
+| Kept for a finished job | Dropped |
+| --- | --- |
+| Job: parameters, unit IDs, merged result or error | Unit payloads |
+| Unit: state, copies, volunteer IDs and hashes of the copies, hash of the accepted output | Output bytes of each copy, accepted output bytes |
+
+The merged result of each job stays, because the client fetches it. For a fractal job it is a PNG of about 50 KB. The table still grows by that much per job; a long-running cluster would need a way to remove finished jobs.
 
 ## Rules
 

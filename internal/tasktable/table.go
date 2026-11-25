@@ -38,23 +38,30 @@ type Assignment struct {
 }
 
 // Result is the output that one volunteer sent for a unit.
+// Output is dropped when the unit is accepted; Hash stays.
 type Result struct {
 	VolunteerID string `json:"volunteer_id"`
-	Output      []byte `json:"output"`
+	Output      []byte `json:"output,omitempty"`
 	Hash        string `json:"hash"` // hex SHA-256 of Output
 }
 
 // Unit is one piece of a job.
+//
+// The table drops bytes that no step needs any more, so that its size (and the
+// size of a catch-up snapshot) does not grow with every finished job:
+// UnitAccepted drops Payload and the Output of each Result, and JobFinished
+// drops Output. The hashes stay, so late copies can still be checked.
 type Unit struct {
 	ID          string                `json:"id"`
 	JobID       string                `json:"job_id"`
 	Index       int                   `json:"index"`
-	Payload     []byte                `json:"payload"`
+	Payload     []byte                `json:"payload,omitempty"`
 	State       UnitState             `json:"state"`
 	Copies      int                   `json:"copies"` // number of volunteers that must run the unit
 	Assignments map[string]Assignment `json:"assignments"`
 	Results     []Result              `json:"results"`
-	Output      []byte                `json:"output,omitempty"` // accepted output
+	Output      []byte                `json:"output,omitempty"`      // accepted output, until the job finishes
+	OutputHash  string                `json:"output_hash,omitempty"` // hex SHA-256 of the accepted output
 }
 
 // HasVolunteer reports whether the volunteer holds a lease on the unit or already sent a result.
@@ -226,8 +233,12 @@ func (t *Table) apply(c Change, dry bool) error {
 			return nil
 		}
 		u.State = UnitDone
-		u.Output = c.Output
+		u.Output, u.OutputHash = c.Output, Hash(c.Output)
 		u.Assignments = map[string]Assignment{} // other leases are no longer needed
+		u.Payload = nil                         // a done unit is never sent again
+		for i := range u.Results {
+			u.Results[i].Output = nil // the vote is over; the hash is enough
+		}
 		t.jobs[u.JobID].Done++
 
 	case JobFinished:
@@ -246,11 +257,22 @@ func (t *Table) apply(c Change, dry bool) error {
 		} else {
 			job.State, job.Result = JobDone, c.Result
 		}
+		t.dropOutputs(job)
 
 	default:
 		return fmt.Errorf("unknown change kind %q", c.Kind)
 	}
 	return nil
+}
+
+// dropOutputs removes the accepted outputs of a finished job. The merged
+// result in the job replaces them.
+func (t *Table) dropOutputs(job *Job) {
+	for _, id := range job.UnitIDs {
+		if u := t.units[id]; u.State == UnitDone {
+			u.Output = nil
+		}
+	}
 }
 
 func (t *Table) openUnit(id string) (*Unit, error) {
@@ -313,13 +335,13 @@ func (t *Table) OpenUnits() []Unit {
 	return out
 }
 
-// Outputs returns the accepted outputs of a job, in unit order.
-// It returns false if the job is unknown or a unit is not done.
+// Outputs returns the accepted outputs of a running job, in unit order.
+// It returns false if the job is unknown or finished, or a unit is not done.
 func (t *Table) Outputs(jobID string) ([][]byte, bool) {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 	job, ok := t.jobs[jobID]
-	if !ok {
+	if !ok || job.State != JobRunning {
 		return nil, false
 	}
 	out := make([][]byte, len(job.UnitIDs))

@@ -39,6 +39,9 @@ Paste these into the Prometheus web page (Graph tab). Each one makes one panel f
 | Backup lag (changes behind the leader) | `sc_replication_backup_lag` |
 | Snapshots served and restored | `increase(sc_replication_snapshots_served_total[5m])`, `increase(sc_replication_snapshots_restored_total[5m])` |
 | Wasted copies (assigned but not needed) | `rate(sc_units_assigned_total[1m]) - rate(sc_results_received_total[1m])` |
+| Coordinator memory (the task table is most of it) | `process_resident_memory_bytes` |
+
+The report figure in section 9.3 (`docs/report/screenshots/s5-prometheus.png`) shows throughput, `sc_gossip_members{state="alive"}` and memory. To make it again, see TC-12 part 2 in `docs/test-results.md`.
 
 ## Log lines for screenshots
 

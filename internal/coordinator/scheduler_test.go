@@ -97,9 +97,8 @@ func wrongVolunteers(t *testing.T, table *tasktable.Table, jobID string) []strin
 	var ids []string
 	for _, id := range job.UnitIDs {
 		u, _ := table.Unit(id)
-		accepted := tasktable.Hash(u.Output)
 		for _, r := range u.Results {
-			if r.Hash != accepted && !seen[r.VolunteerID] {
+			if r.Hash != u.OutputHash && !seen[r.VolunteerID] {
 				seen[r.VolunteerID] = true
 				ids = append(ids, r.VolunteerID)
 			}

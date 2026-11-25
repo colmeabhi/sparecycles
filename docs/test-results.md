@@ -17,7 +17,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-11 | Performance as clients (users) increase | `scripts/load.sh 4 8 C full` for C = 1, 2, 4, 8 | Pass |
 | TC-09 | Gossip load does not grow with group size | `TestLoadPerPeriodDoesNotGrowWithGroupSize` | Pass |
 | TC-10 | Gossip finds a failed node over a real network | `TestGRPCClusterDetectsFailure` | Pass |
-| TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed container | `make up`, `make run-client`, `docker kill` | Pass |
+| TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed volunteer; leader crash under load | `make up`, `make run-client`, `docker kill`; `loadgen` with 2 `docker kill` | Pass (part 2 failed before the table fix, 2026-11-25) |
 | TC-13 | Lease expiry moves a lost unit (gossip off) | Manual run in `internal/lease/README.md`; `TestExpiredLeaseMovesUnitToAnotherVolunteer` | Pass |
 | TC-14 | Trust blocks a faulty volunteer; slow volunteers get less work | Manual run in `internal/scheduler/README.md`; `TestFaultyVolunteerLosesTrustAndGetsNoWork` | Pass |
 | TC-15 | Second workload: Monte Carlo estimate of pi, the same bytes on arm64 and amd64 | Client command in `docs/setup.md`; `TestEndToEndMonteCarlo`, `TestMonteCarloGoldenCounts` | Pass |
@@ -163,7 +163,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 ## TC-12 Docker Compose cluster
 
 - **Goal:** the local cluster in containers runs a job, gossips across the Docker network, and Prometheus scrapes the coordinator.
-- **Steps:** `make up` (1 coordinator, 3 volunteers, Prometheus; default gossip settings: 1 s interval, 5 s suspect timeout). `make run-client`. Then `docker kill sparecycles-volunteer-1` and `make run-client` again. `make down`.
+- **Steps:** `make up` (at that time 1 coordinator, 3 volunteers, Prometheus; default gossip settings: 1 s interval, 5 s suspect timeout). `make run-client`. Then `docker kill sparecycles-volunteer-1` and `make run-client` again. `make down`.
 - **Expected:** the job finishes on 3 volunteers; gossip marks the killed volunteer dead; the second job still finishes.
 - **Actual (2026-11-21):**
   - All 3 volunteers registered and joined gossip with their container host names. The first job (16 units, 3 copies) finished in 1.0 s; all 3 volunteers sent results.
@@ -178,6 +178,27 @@ Test cases for the report (section 10). Each case lists how to run it and the re
     ```
 
     The second job finished on the 2 other volunteers in 2.0 s. Detection takes longer than in TC-02 (6.8 s against 2.9 s) because TC-02 uses fast demo gossip settings.
+
+### Part 2: leader crash under load (2026-11-25)
+
+- **Steps:** `make up` (now 3 coordinators, 3 volunteers, Prometheus). `bin/loadgen -jobs 1000 -concurrency 2` with `SC_COORDINATORS=localhost:7401,localhost:7402,localhost:7403`. After 90 s, `docker kill sparecycles-volunteer-1`. After 90 s more, `docker kill sparecycles-coordinator-3-1` (the leader). Stop the load 2 minutes later.
+- **Expected:** the job stream continues through both crashes, and coordinator memory stays small.
+- **Actual, before the fix (code of PR #44):** **Fail.** Coordinator memory grew by 7 to 9 MB/s: 1.2 to 1.6 GB per coordinator after 3 minutes and about 300 jobs. The task table kept every finished job with all its tile outputs. At the leader crash, the catch-up snapshot raised two coordinators to 3.4 and 3.75 GB, and Docker (8 GB) killed both for lack of memory (`OOMKilled=true`). The last coordinator had no majority and started a new election every 2.5 s. A second run with the crash after 80 s (about 700 MB per coordinator) failed the same way.
+- **Fix:** the task table drops the bytes that no step needs: the payload and the copy outputs when a unit is accepted, the accepted outputs when the job finishes. Only hashes and the merged result stay (`internal/tasktable/README.md`, "Size").
+- **Actual, after the fix (times in UTC):** **Pass.** 447 jobs finished. Memory after 3 minutes: 80 to 100 MB per coordinator. Peak during catch-up: 230 to 260 MB.
+
+  ```text
+  08:04:15 member dead             member=vol-19f430b9107b silent_for=8.816s
+  08:05:39 election started        node=2 term=2
+  08:05:40 leader continues from table index  node=2 index=26273
+  08:05:40 became leader           node=2 term=2
+  08:05:41 snapshot restored       node=1 from=2 index=26273
+  08:05:41 volunteer registered    node=2 (first volunteer)
+  08:05:42 job finished            node=2 state=done
+  08:05:58 volunteer registered    node=2 (second volunteer)
+  ```
+
+  The kill was at 08:05:37.9, so node 2 became leader 2.3 s after it. The 3 coordinators declared the killed volunteer dead 7.8 to 9.0 s after their last contact. Until the second volunteer registered again (about 18 s after the takeover), no unit could get 2 matching copies, so few jobs finished in that time. The Prometheus graphs are in the report (Fig. `fig:prometheus`, `docs/report/screenshots/s5-prometheus.png`).
 
 ## TC-13 Lease expiry without gossip
 

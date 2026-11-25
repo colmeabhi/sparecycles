@@ -93,7 +93,7 @@ Save them in `docs/report/screenshots/`.
 | 8.2a | Coordinator log: suspect, dead, lease released | `make fail-volunteer` | `s2-volunteer-crash.png` ☑ |
 | 8.2b | Coordinator log: wrong result; same image as the reference | `make fail-faulty` | `s3-faulty-volunteer.png` ☑ |
 | 8.2c | Logs of node 2: election, became leader | `make fail-leader` | `s4-leader-crash.png` ☑ |
-| 9.2 | Prometheus panels: throughput, members by state | Queries in `docs/observability.md` |
+| 9.2 | Prometheus panels: throughput, live members, memory (Docker run, volunteer and leader killed under load) | Queries in `docs/observability.md`; TC-12 part 2 | `s5-prometheus.png` ☑ |
 | 9.3 | Chart from `results/load.csv`: units/s by volunteers, baseline and full | Any chart tool |
 
 ## How to update this file
