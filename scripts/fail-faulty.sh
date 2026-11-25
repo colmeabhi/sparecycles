@@ -35,7 +35,7 @@ wait_log "$RUN_DIR/coordinator.log" "volunteer registered" 4 20
 ( cd "$RUN_DIR" && "$BIN/client" -params "$JOB" -out "$RUN_DIR/result.png" -timeout 3m ) || fail "the job with a faulty volunteer failed"
 
 say "coordinator log"
-show "$RUN_DIR/coordinator.log" "wrong result|no majority|job finished" | tail -n 8
+show "$RUN_DIR/coordinator.log" "wrong result|no majority|volunteer blocked|job finished" | tail -n 10
 
 [ "$(count "$RUN_DIR/coordinator.log" "wrong result")" -ge 1 ] || fail "no result was outvoted"
 cmp -s "$RUN_DIR/reference.png" "$RUN_DIR/result.png" || fail "the image differs from the honest reference"
