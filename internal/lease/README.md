@@ -54,7 +54,9 @@ The coordinator logs `lease expired` with the unit and the volunteer, and logs `
 
 - A policy keeps no state. Expiry times live in the task table, so a new leader can continue after a failover.
 - Design decision: 3 minutes for a 60-second unit. A slow volunteer has 3 times the normal unit time before it loses the unit.
-- The expiry is a wall-clock time set by the leader. The volunteer compares it with its own clock, so a volunteer with a wrong clock stops a little early or late. With 3-minute leases this does not matter.
+- The expiry is a wall-clock time set by the leader, and the leader compares it with its own wall clock. A clock step (for example an NTP correction) on the leader, or a clock difference between coordinators after a failover, makes the leases that are out shorter or longer by that much.
+- The volunteer compares the expiry with its own clock, so a volunteer with a wrong clock stops a little early or late. With 3-minute leases and synced clocks this does not matter.
+- After a failover, the new leader does not know the old volunteer IDs. Their leases end through gossip (`member dead`) or, at the latest, through this timeout.
 
 ## Demo: a lost unit moves on
 

@@ -62,8 +62,9 @@ type Server struct {
 	commitMu sync.Mutex // orders all changes
 
 	mu         sync.Mutex
-	volunteers map[string]scheduler.Volunteer // leader-local; volunteers register again after a failover
-	submitted  map[string]time.Time           // leader-local; for the job duration metric
+	volunteers map[string]scheduler.Volunteer  // leader-local; volunteers register again after a failover
+	sessions   map[string]security.SessionHash // leader-local; by volunteer ID, removed with the volunteer
+	submitted  map[string]time.Time            // leader-local; for the job duration metric
 }
 
 // New returns a Server.
@@ -77,7 +78,12 @@ func New(d Deps) *Server {
 	if d.TickInterval <= 0 {
 		d.TickInterval = time.Second
 	}
-	return &Server{d: d, volunteers: map[string]scheduler.Volunteer{}, submitted: map[string]time.Time{}}
+	return &Server{
+		d:          d,
+		volunteers: map[string]scheduler.Volunteer{},
+		sessions:   map[string]security.SessionHash{},
+		submitted:  map[string]time.Time{},
+	}
 }
 
 // RegisterServices adds the coordinator services, and the services of its parts, to a gRPC server.
@@ -161,6 +167,7 @@ func (s *Server) releaseDeadVolunteers(ctx context.Context) {
 	for id := range s.volunteers {
 		if s.d.Membership.Dead(id) {
 			delete(s.volunteers, id)
+			delete(s.sessions, id)
 			s.d.Log.Info("volunteer removed: dead", "volunteer", id)
 		}
 	}
@@ -278,22 +285,34 @@ func (s *Server) Register(_ context.Context, req *pb.RegisterRequest) (*pb.Regis
 			CPUCores: int(r.GetCpuCores()), MemoryMB: int(r.GetMemoryMb()), SpeedScore: r.GetSpeedScore(),
 		},
 	}
+	secret, hash := security.NewSession()
 	s.mu.Lock()
 	s.volunteers[v.ID] = v
+	s.sessions[v.ID] = hash
 	s.mu.Unlock()
 	s.d.Membership.Join(membership.Member{ID: v.ID, Address: v.Address})
 	s.d.Metrics.VolunteersRegistered.Inc()
 	s.d.Log.Info("volunteer registered", "volunteer", v.ID, "name", v.Name, "token", tokenName,
 		"cpu", v.Resources.CPUCores, "speed", v.Resources.SpeedScore)
-	return &pb.RegisterResponse{VolunteerId: v.ID}, nil
+	return &pb.RegisterResponse{VolunteerId: v.ID, SessionSecret: secret}, nil
 }
 
-func (s *Server) volunteer(id string) (scheduler.Volunteer, error) {
+// volunteer returns a registered volunteer if the request carries its session
+// secret. Gossip shares volunteer IDs with every member, so the ID alone does not
+// prove who sends the request. An unknown ID gives NotFound and a wrong secret
+// gives Unauthenticated; in both cases the volunteer registers again.
+func (s *Server) volunteer(id string, secret []byte) (scheduler.Volunteer, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	v, ok := s.volunteers[id]
+	hash := s.sessions[id]
+	s.mu.Unlock()
 	if !ok {
 		return v, status.Errorf(codes.NotFound, "unknown volunteer %q: register again", id)
+	}
+	if err := hash.Check(secret); err != nil {
+		s.d.Metrics.RequestsRejected.Inc()
+		s.d.Log.Warn("request rejected: bad session", "volunteer", id)
+		return scheduler.Volunteer{}, status.Error(codes.Unauthenticated, err.Error())
 	}
 	return v, nil
 }
@@ -303,7 +322,7 @@ func (s *Server) RequestWork(ctx context.Context, req *pb.RequestWorkRequest) (*
 	if err := s.requireLeader(); err != nil {
 		return nil, err
 	}
-	v, err := s.volunteer(req.GetVolunteerId())
+	v, err := s.volunteer(req.GetVolunteerId(), req.GetSessionSecret())
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +362,7 @@ func (s *Server) SubmitResult(ctx context.Context, req *pb.SubmitResultRequest) 
 	if err := s.requireLeader(); err != nil {
 		return nil, err
 	}
-	v, err := s.volunteer(req.GetVolunteerId())
+	v, err := s.volunteer(req.GetVolunteerId(), req.GetSessionSecret())
 	if err != nil {
 		return nil, err
 	}

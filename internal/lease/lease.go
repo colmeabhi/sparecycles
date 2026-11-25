@@ -29,7 +29,7 @@ type Policy interface {
 	Expired(units []tasktable.Unit, now time.Time) []Expired
 }
 
-// NoExpiry gives leases of a fixed length but never releases them. It is the base stub.
+// NoExpiry gives leases of a fixed length but never releases them. Tests that must not lose leases use it.
 type NoExpiry struct {
 	Length time.Duration
 }

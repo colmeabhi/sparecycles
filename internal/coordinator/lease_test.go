@@ -72,7 +72,9 @@ func startLeaseNode(t *testing.T, ctx context.Context, now func() time.Time) (*g
 }
 
 // A volunteer takes a unit and goes silent. Its lease expires, another volunteer
-// runs the unit, the job finishes, and a late result from the silent volunteer is refused.
+// runs the unit, and the job finishes. A late result from the silent volunteer is
+// refused here because the unit is done; TestLeaseIsReleasedOnlyAfterItsExpiry
+// checks the refusal while the unit is still open.
 func TestExpiredLeaseMovesUnitToAnotherVolunteer(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
@@ -91,7 +93,7 @@ func TestExpiredLeaseMovesUnitToAnotherVolunteer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	taken, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: silent.GetVolunteerId()})
+	taken, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: silent.GetVolunteerId(), SessionSecret: silent.GetSessionSecret()})
 	if err != nil || taken.GetUnit() == nil {
 		t.Fatalf("the silent volunteer got no unit: %v", err)
 	}
@@ -117,7 +119,7 @@ func TestExpiredLeaseMovesUnitToAnotherVolunteer(t *testing.T) {
 	}
 
 	late, err := vc.SubmitResult(ctx, &pb.SubmitResultRequest{
-		VolunteerId: silent.GetVolunteerId(), UnitId: lost.GetUnitId(), Output: []byte("too late"),
+		VolunteerId: silent.GetVolunteerId(), SessionSecret: silent.GetSessionSecret(), UnitId: lost.GetUnitId(), Output: []byte("too late"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -186,7 +188,7 @@ func TestLeaseIsReleasedOnlyAfterItsExpiry(t *testing.T) {
 
 	// The unit is still open, but the volunteer lost its lease, so its result must be refused.
 	late, err := vc.SubmitResult(ctx, &pb.SubmitResultRequest{
-		VolunteerId: watched.volunteerID, UnitId: watched.unitID, Output: []byte("too late"),
+		VolunteerId: watched.volunteerID, SessionSecret: watched.session, UnitId: watched.unitID, Output: []byte("too late"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -199,8 +201,11 @@ func TestLeaseIsReleasedOnlyAfterItsExpiry(t *testing.T) {
 	}
 }
 
-// heldLease names one lease in the table.
-type heldLease struct{ unitID, volunteerID string }
+// heldLease names one lease in the table, and the session of its volunteer.
+type heldLease struct {
+	unitID, volunteerID string
+	session             []byte
+}
 
 // takeUnit registers a new volunteer and gives it one unit.
 func takeUnit(t *testing.T, ctx context.Context, vc pb.VolunteerServiceClient) heldLease {
@@ -209,11 +214,11 @@ func takeUnit(t *testing.T, ctx context.Context, vc pb.VolunteerServiceClient) h
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: reg.GetVolunteerId()})
+	resp, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: reg.GetVolunteerId(), SessionSecret: reg.GetSessionSecret()})
 	if err != nil || resp.GetUnit() == nil {
 		t.Fatalf("got no unit: %v", err)
 	}
-	return heldLease{unitID: resp.GetUnit().GetUnitId(), volunteerID: reg.GetVolunteerId()}
+	return heldLease{unitID: resp.GetUnit().GetUnitId(), volunteerID: reg.GetVolunteerId(), session: reg.GetSessionSecret()}
 }
 
 func holdsLease(table *tasktable.Table, l heldLease) bool {

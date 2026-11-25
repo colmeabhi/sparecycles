@@ -14,11 +14,14 @@ import (
 type Coordinator struct {
 	Registry              *prometheus.Registry
 	IsLeader              prometheus.Gauge
+	Election              *Election    // see election.go
+	Replication           *Replication // see replication.go
 	JobsSubmitted         prometheus.Counter
 	JobsFinished          *prometheus.CounterVec // label: state (done, failed)
 	JobDuration           prometheus.Histogram
 	VolunteersRegistered  prometheus.Counter
 	RegistrationsRejected prometheus.Counter
+	RequestsRejected      prometheus.Counter
 	UnitsAssigned         prometheus.Counter
 	ResultsReceived       prometheus.Counter
 	UnitsAccepted         prometheus.Counter
@@ -53,6 +56,9 @@ func NewCoordinator() *Coordinator {
 		RegistrationsRejected: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_registrations_rejected_total", Help: "Volunteer registrations rejected for a bad token.",
 		}),
+		RequestsRejected: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_requests_rejected_total", Help: "Volunteer requests rejected for a missing or wrong session secret.",
+		}),
 		UnitsAssigned: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_units_assigned_total", Help: "Unit leases given to volunteers.",
 		}),
@@ -83,6 +89,7 @@ func NewCoordinator() *Coordinator {
 		m.JobDuration,
 		m.VolunteersRegistered,
 		m.RegistrationsRejected,
+		m.RequestsRejected,
 		m.UnitsAssigned,
 		m.ResultsReceived,
 		m.UnitsAccepted,
@@ -93,6 +100,8 @@ func NewCoordinator() *Coordinator {
 		prometheus.NewGoCollector(),
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 	)
+	m.Election = NewElection(reg)
+	m.Replication = NewReplication(reg)
 	return m
 }
 

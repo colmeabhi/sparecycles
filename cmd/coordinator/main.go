@@ -22,6 +22,7 @@ import (
 	"github.com/colmeabhi/sparecycles/internal/logging"
 	"github.com/colmeabhi/sparecycles/internal/membership"
 	"github.com/colmeabhi/sparecycles/internal/metrics"
+	"github.com/colmeabhi/sparecycles/internal/peerconn"
 	"github.com/colmeabhi/sparecycles/internal/replication"
 	"github.com/colmeabhi/sparecycles/internal/scheduler"
 	"github.com/colmeabhi/sparecycles/internal/security"
@@ -60,16 +61,23 @@ func run(cfg config.Coordinator, log *slog.Logger) error {
 		return err
 	}
 	m := metrics.NewCoordinator()
-	elector := election.NewStatic(cfg.NodeID, cfg.Peers)
+	pool := peerconn.New()
+	defer pool.Close()
+	table := tasktable.New()
+	elector, replicator, err := newElectionAndReplication(cfg, table, pool, m, log)
+	if err != nil {
+		return err
+	}
 	transport := membership.NewGRPCTransport()
 	defer transport.Close()
-	srv := newServer(cfg, elector, newMembership(cfg, transport, m, log), sec, m, log)
+	cluster := clusterParts{table: table, elector: elector, replicator: replicator}
+	srv := newServer(cfg, cluster, newMembership(cfg, transport, m, log), sec, m, log)
 
 	lis, err := net.Listen("tcp", cfg.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("listen on %s: %w", cfg.ListenAddr, err)
 	}
-	grpcSrv := grpc.NewServer()
+	grpcSrv := grpc.NewServer(peerconn.ServerOptions()...)
 	srv.RegisterServices(grpcSrv)
 	httpSrv := newHTTPServer(cfg.MetricsAddr, m)
 
@@ -99,13 +107,20 @@ func run(cfg config.Coordinator, log *slog.Logger) error {
 	return runErr
 }
 
+// clusterParts are the parts that keep the coordinators in agreement. They share the table.
+type clusterParts struct {
+	table      *tasktable.Table
+	elector    election.Elector
+	replicator replication.Replicator
+}
+
 // newServer builds the coordinator with the current implementation of each part.
 // To replace a stub, change only its line here (see README.md).
-func newServer(cfg config.Coordinator, elector election.Elector, members membership.Membership, sec securityParts, m *metrics.Coordinator, log *slog.Logger) *coordinator.Server {
+func newServer(cfg config.Coordinator, cluster clusterParts, members membership.Membership, sec securityParts, m *metrics.Coordinator, log *slog.Logger) *coordinator.Server {
 	return coordinator.New(coordinator.Deps{
-		Table:        tasktable.New(),
-		Elector:      elector,
-		Replicator:   replication.Noop{},
+		Table:        cluster.table,
+		Elector:      cluster.elector,
+		Replicator:   cluster.replicator,
 		Membership:   members,
 		Leases:       lease.Timeout{Length: cfg.LeaseDuration},
 		Verifier:     verify.FirstResult{},
@@ -155,6 +170,40 @@ func newSecurity(cfg config.Coordinator, log *slog.Logger) (securityParts, error
 	p.signer = signer
 	log.Info("tasks are signed with Ed25519", "public_key", signer.PublicKeyBase64())
 	return p, nil
+}
+
+// newElectionAndReplication builds the Bully elector and the Quorum replicator.
+// They need each other: replication reads the term, and a new leader loads the
+// newest table (CatchUp) before it acts. With no peers, the node leads at once.
+func newElectionAndReplication(cfg config.Coordinator, table *tasktable.Table, pool *peerconn.Pool, m *metrics.Coordinator, log *slog.Logger) (*election.Bully, *replication.Quorum, error) {
+	var quorum *replication.Quorum
+	elector, err := election.NewBully(election.BullyConfig{
+		Self:       cfg.NodeID,
+		Peers:      cfg.Peers,
+		Transport:  election.NewGRPCTransport(pool),
+		Heartbeat:  cfg.Election.Heartbeat,
+		Timeout:    cfg.Election.Timeout,
+		BeforeLead: func(ctx context.Context, _ uint64) error { return quorum.CatchUp(ctx) },
+		Metrics:    m.Election,
+		Log:        log,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("election: %w", err)
+	}
+	quorum, err = replication.NewQuorum(replication.QuorumConfig{
+		Self:      cfg.NodeID,
+		Peers:     cfg.Peers,
+		Table:     table,
+		Elector:   elector,
+		Transport: replication.NewGRPCTransport(pool),
+		Timeout:   cfg.Replication.Timeout,
+		Metrics:   m.Replication,
+		Log:       log,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("replication: %w", err)
+	}
+	return elector, quorum, nil
 }
 
 // newMembership builds the SWIM member of this coordinator. The other coordinators are the seeds.

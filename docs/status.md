@@ -3,19 +3,19 @@
 Read this file right after `AGENTS.md`. It says what is left, who does it next, and what blocks it.
 GitHub issues hold the task details. This file only summarizes and links.
 
-**Updated:** 2026-11-22 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
+**Updated:** 2026-11-25 · **Update it in every PR** (see the definition of done in `AGENTS.md`).
 
 ## Now
 
 | Deadline | Date | Days left |
 | --- | --- | ---: |
-| Issues #7, #13 | 2026-11-27 | 5 |
-| Issues #8, #14 | 2026-11-28 | 6 |
-| Issues #9, #15 | 2026-11-29 | 7 |
-| Code and recorded presentation | 2026-12-03 | 11 |
-| Final report | 2026-12-04 | 12 |
+| Issues #7, #13 | 2026-11-27 | 2 |
+| Issues #8, #14, #35 | 2026-11-28 | 3 |
+| Issues #9, #15 | 2026-11-29 | 4 |
+| Code and recorded presentation | 2026-12-03 | 8 |
+| Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, leases, security, scripts and the product page are done. 6 of 10 issues are open. 2 of the 6 course algorithms (gossip, leases) are real today; the other 4 are stubs.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Lease expiry (#6, PR #31) is merged. Tejas has PRs open for his other 3 issues (#32 to #34), with review comments fixed. Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
 
 ## Per person
 
@@ -23,27 +23,25 @@ GitHub issues hold the task details. This file only summarizes and links.
 
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
-| [#7 Majority voting](https://github.com/colmeabhi/sparecycles/issues/7) | 11-27 | Add `verify.Majority` and `SC_FAULTY_RATE` | — |
-| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | Add `scheduler.Matcher` with trust scores | Trust input needs #7 (can start before) |
-| [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | Add the `montecarlo` workload | — |
+| [#7 Majority voting](https://github.com/colmeabhi/sparecycles/issues/7) | 11-27 | PR [#32](https://github.com/colmeabhi/sparecycles/pull/32): fix the review comments, then merge | — |
+| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | PR [#33](https://github.com/colmeabhi/sparecycles/pull/33): fix the block bug, then merge | #32 (stacked on it) |
+| [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | PR [#34](https://github.com/colmeabhi/sparecycles/pull/34): fix the review comments, then merge | — |
 
-#6 is done. Suggested order: #7, #8, #9.
+#6 is done (#31). Merge order: #32, #33, #34.
 
 ### Abhishek (`colmeabhi`)
 
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
-| [#13 Bully election](https://github.com/colmeabhi/sparecycles/issues/13) | 11-27 | Add `election.Bully` with terms and the `BeforeLead` hook | — |
-| [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | Add `replication.Quorum` and leader catch-up | Terms and `BeforeLead` from #13 (backup side can start) |
-| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Add `deploy/terraform` | Failover test on AWS needs #13 and #14 |
+| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Terraform is on `main` (#39). Next: one real `make deploy-up` with the team account, a job from a laptop, the leader failover (`kill_leader_command` output), then `make deploy-down`. Paste the outputs in #15 and close it. | Team AWS account |
 
-Suggested order: #13, #14, #15.
+#13 and #14 are done (#37, #38).
 
 ### Kushagra (`Kushagrabainsla`)
 
-All issues done (#10, #11, #12). Next:
+Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 
-- Run the "after merge" steps below when #7, #13 and #14 land.
+- Run the "after merge" steps below when #31 to #34, #13 and #14 land.
 - Report: your sections, diagrams D3, D6, I1, the 8.2a screenshot, and your ID and email are done. Rerun `make load-sweep` after #7 and update 9.3.
 - Presentation: slides 4 (your part), 9, 11 and 12 are drafted in `docs/presentation/slides.md`. After #7, update slide 12 with the new load numbers.
 
@@ -61,11 +59,9 @@ All issues done (#10, #11, #12). Next:
 | This | Needs |
 | --- | --- |
 | `make fail-faulty`, test case TC-03 | #7 |
-| `make fail-leader`, test case TC-04 | #13 and #14 |
 | Trust scores in #8 | #7 (`Decision.Wrong`) |
-| #14 leader catch-up | #13 (`BeforeLead` hook, terms) |
-| Election-time metric (grading checklist, part 2) | #13 |
-| Failover test on AWS | #13, #14, #15 |
+| Failover test on AWS | First `make deploy-up` (#15) |
+| The scheduler skips a volunteer that just lost a lease on that unit (a slow volunteer can take back the unit it lost) | A follow-up to #8: needs a record of lost leases |
 
 ## After merge
 
@@ -74,15 +70,24 @@ Do these right after the named PR merges, in the same day:
 | After | Do |
 | --- | --- |
 | #7 merges | Run `make fail-faulty`. Record TC-03 in `docs/test-results.md`. |
-| #13 and #14 merge | Run `make fail-leader`. Record TC-04. Check the "failure scripts" and "metrics" items in `docs/grading-checklist.md`. |
-| #7 merges | Run `make load-sweep` again: "full" mode then waits for 2 of 3 results. Update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
+| #7 merges | Kushagra: change `scripts/load-sweep.sh` so that "full" mode uses 2 or more volunteers (1 volunteer never reaches 2 of 3). Then run `make load-sweep` again, and update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
+| #9 merges | Kushagra: give `cmd/loadgen` an empty `-params` default, as in the client, so `-workload montecarlo` works. |
+| #6 to #9 merge | Kushagra: update diagram I1 (the stubs that were replaced), and the test count on slide 12. |
+| #35 and any PR with new tests merge | A test that calls `RequestWork` or `SubmitResult` directly must send the `session_secret` from its `RegisterResponse`. Whoever merges second fixes the tests. |
+| #6 merges | Kushagra: set a short `SC_LEASE_DURATION` (for example `20s`) in `scripts/fail-leader.sh`. After a failover, units leased to old volunteer IDs otherwise wait up to 3 minutes if gossip does not free them first. |
+| #14 merges | Kushagra: the new leader does not know the old volunteer IDs. Their leases end through gossip (`member dead`) or, after #6, the lease timeout. Check this in `make fail-leader` logs. |
 | Any algorithm issue merges | Update its card and the roadmap on the product page (`site/index.html`). |
 
 ## Done
 
 | Date | PR | What |
 | --- | --- | --- |
-| 2026-11-22 | [#31](https://github.com/colmeabhi/sparecycles/pull/31) | Lease expiry: `lease.Timeout`; a lost unit moves to another volunteer when its lease ends (TC-13; closes #6) |
+| 2026-11-24 | [#31](https://github.com/colmeabhi/sparecycles/pull/31) | Lease expiry: `lease.Timeout`; a lost unit moves to another volunteer when its lease ends (TC-13; closes #6) |
+| 2026-11-25 | [#40](https://github.com/colmeabhi/sparecycles/pull/40) | Pages workflow split into build and deploy jobs; the deploy no longer fails when GitHub lists the artifact late |
+| 2026-11-25 | [#39](https://github.com/colmeabhi/sparecycles/pull/39) | Terraform for AWS: 3 coordinators in 3 zones, spot volunteers, Prometheus; `make deploy-up` and `deploy-down`; CI checks it (refs #15; first apply to do) |
+| 2026-11-25 | [#38](https://github.com/colmeabhi/sparecycles/pull/38) | Task-table replication (2 of 3 copies) and leader catch-up; `make fail-leader` passes (closes #14, TC-04) |
+| 2026-11-25 | [#37](https://github.com/colmeabhi/sparecycles/pull/37) | Bully election with terms, majority and leader lease; 3 coordinators in Docker Compose (closes #13) |
+| 2026-11-23 | [#36](https://github.com/colmeabhi/sparecycles/pull/36) | Session secrets: nobody can act under another volunteer's ID (closes #35, TC-16) |
 | 2026-11-21 | [#30](https://github.com/colmeabhi/sparecycles/pull/30) | Docker Compose cluster tested with gossip and Prometheus (TC-12); Kushagra's ID and email in the report |
 | 2026-11-21 | [#29](https://github.com/colmeabhi/sparecycles/pull/29) | Slide text and speaker notes (`slides.md`); Kushagra's slides 4, 9, 11, 12 with 2 images |
 | 2026-11-21 | [#28](https://github.com/colmeabhi/sparecycles/pull/28) | Report 8.2a: terminal screenshot of the volunteer crash; `docs/report/screenshots/` for section 8 |
