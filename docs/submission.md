@@ -181,6 +181,7 @@ Each algorithm is a Go package behind an interface. The base version has a simpl
 | Base version: gRPC contract, task table, coordinator, volunteer, client, CI | `proto/`, `internal/tasktable/`, `internal/coordinator/`, `internal/volunteer/`, `cmd/` | Kushagra | — | [#5](https://github.com/colmeabhi/sparecycles/pull/5) |
 | SWIM gossip and failure detection | `internal/membership/` | Kushagra | [#10](https://github.com/colmeabhi/sparecycles/issues/10) | [#19](https://github.com/colmeabhi/sparecycles/pull/19) |
 | Volunteer tokens and Ed25519 signed tasks | `internal/security/`, `cmd/keygen/` | Kushagra | [#11](https://github.com/colmeabhi/sparecycles/issues/11) | [#20](https://github.com/colmeabhi/sparecycles/pull/20) |
+| Session secrets: no requests under another volunteer's ID | `internal/security/`, `internal/coordinator/`, `internal/volunteer/`, `proto/` | Kushagra | [#35](https://github.com/colmeabhi/sparecycles/issues/35) | [#36](https://github.com/colmeabhi/sparecycles/pull/36) |
 | Failure scripts, load generator and baseline mode | `scripts/`, `cmd/loadgen/`, `results/` | Kushagra | [#12](https://github.com/colmeabhi/sparecycles/issues/12) | [#21](https://github.com/colmeabhi/sparecycles/pull/21), [#26](https://github.com/colmeabhi/sparecycles/pull/26) |
 | Lease expiry and reassignment | `internal/lease/` | Tejas | [#6](https://github.com/colmeabhi/sparecycles/issues/6) | *In progress* |
 | Majority voting | `internal/verify/` | Tejas | [#7](https://github.com/colmeabhi/sparecycles/issues/7) | *In progress* |

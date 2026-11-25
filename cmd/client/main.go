@@ -24,11 +24,14 @@ func main() {
 	// Empty parameters mean the defaults of the chosen workload. For fractal they
 	// are a 1024×1024 image with 256-pixel tiles and 1000 iterations.
 	params := flag.String("params", "", "workload parameters as JSON (empty: the workload's defaults)")
-	out := flag.String("out", "result.png", "file for the result")
+	out := flag.String("out", "", "file for the result (empty: result.png for fractal, result.json for other workloads)")
 	poll := flag.Duration("poll", time.Second, "time between progress checks")
 	timeout := flag.Duration("timeout", 30*time.Minute, "maximum time to wait")
 	flag.Parse()
 
+	if *out == "" {
+		*out = defaultOut(*workloadName)
+	}
 	if err := run(cfg.Coordinators, *workloadName, *params, *out, *poll, *timeout); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
@@ -96,4 +99,13 @@ func run(addrs []string, workloadName, params, out string, poll, timeout time.Du
 			return fmt.Errorf("job failed: %s", job.GetError())
 		}
 	}
+}
+
+// defaultOut is the result file name when -out is not given. Fractal results are
+// PNG images; the other workloads return JSON.
+func defaultOut(workloadName string) string {
+	if workloadName == "fractal" {
+		return "result.png"
+	}
+	return "result.json"
 }

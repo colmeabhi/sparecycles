@@ -147,11 +147,11 @@ func TestVolunteerNeverGetsSameUnitTwice(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	first, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: reg.GetVolunteerId()})
+	first, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: reg.GetVolunteerId(), SessionSecret: reg.GetSessionSecret()})
 	if err != nil || first.GetUnit() == nil {
 		t.Fatalf("first request: unit=%v err=%v", first.GetUnit(), err)
 	}
-	second, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: reg.GetVolunteerId()})
+	second, err := vc.RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: reg.GetVolunteerId(), SessionSecret: reg.GetSessionSecret()})
 	if err != nil {
 		t.Fatal(err)
 	}

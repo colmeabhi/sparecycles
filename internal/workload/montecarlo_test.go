@@ -122,7 +122,7 @@ func TestMonteCarloBadParams(t *testing.T) {
 		`{"units":-1}`,
 		`{"units":10001}`,
 		`{"samples_per_unit":-5}`,
-		`{"samples_per_unit":20000000001}`,
+		`{"samples_per_unit":5000000001}`,
 		`{"seed":-1}`,
 		`{"sample_per_unit":1000}`, // typo: unknown field
 		`{"units":2} {"units":3}`,  // data after the object
@@ -166,7 +166,7 @@ func TestMonteCarloBadOutputs(t *testing.T) {
 // The volunteer cancels the context when its lease ends, and Run must stop
 // soon, also in the middle of the loop.
 func TestMonteCarloStopsWhenCancelled(t *testing.T) {
-	units, err := MonteCarlo{}.Split([]byte(`{"units":1,"samples_per_unit":20000000000}`)) // about a minute of work
+	units, err := MonteCarlo{}.Split([]byte(`{"units":1,"samples_per_unit":5000000000}`)) // many seconds of work
 	if err != nil {
 		t.Fatal(err)
 	}

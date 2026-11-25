@@ -1,0 +1,21 @@
+# Copy to terraform.tfvars (git ignores it) and fill in.
+#   cp terraform.tfvars.example terraform.tfvars
+
+# Your laptop's public IP with /32. Find it with: curl -s https://checkip.amazonaws.com
+allowed_cidrs = ["203.0.113.7/32"]
+
+# Volunteer tokens (name=token). EC2 volunteers use the first one; give each laptop its own.
+volunteer_tokens = ["aws=replace-with-a-long-random-secret", "alice=another-long-secret"]
+
+# Task signing keys from: make keys
+signing_key        = ""
+signing_public_key = ""
+
+# SSH key pair that exists in the region. AWS Academy: "vockey".
+ssh_key_name = ""
+
+# AWS Academy cannot create IAM roles. Uncomment this line there.
+# instance_profile_name = "LabInstanceProfile"
+
+# volunteer_count = 3
+# volunteer_spot  = true

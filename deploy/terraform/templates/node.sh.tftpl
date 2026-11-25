@@ -1,0 +1,41 @@
+#!/bin/bash
+# Installs one SpareCycles binary from S3 and runs it as a systemd service.
+# Binary etag: ${etag} (a new binary replaces the instance)
+set -euo pipefail
+
+useradd --system --no-create-home --shell /sbin/nologin sparecycles || true
+
+for attempt in 1 2 3 4 5; do
+  aws s3 cp "s3://${bucket}/${binary}" /usr/local/bin/${binary} && break
+  sleep $((attempt * 5)) # the instance role can take a few seconds to work
+done
+chmod 755 /usr/local/bin/${binary}
+
+install -m 600 -o sparecycles /dev/null /etc/sparecycles.env
+cat > /etc/sparecycles.env <<'SETTINGS'
+%{ for key, value in env ~}
+${key}=${value}
+%{ endfor ~}
+SETTINGS
+
+cat > /etc/systemd/system/sparecycles.service <<'UNIT'
+[Unit]
+Description=SpareCycles ${binary}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=sparecycles
+EnvironmentFile=/etc/sparecycles.env
+ExecStart=/usr/local/bin/${binary}
+StateDirectory=sparecycles
+WorkingDirectory=/var/lib/sparecycles
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now sparecycles

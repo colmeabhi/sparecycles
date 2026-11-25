@@ -14,6 +14,7 @@ Defines the Prometheus metrics. The coordinator serves them on `SC_METRICS_ADDR`
 | `sc_job_duration_seconds` | histogram | Time from submit to result |
 | `sc_volunteers_registered_total` | counter | Volunteer registrations |
 | `sc_registrations_rejected_total` | counter | Registrations rejected for a bad token |
+| `sc_requests_rejected_total` | counter | `RequestWork` and `SubmitResult` calls rejected for a missing or wrong session secret |
 | `sc_units_assigned_total` | counter | Leases given out |
 | `sc_results_received_total` | counter | Results recorded |
 | `sc_units_accepted_total` | counter | Units accepted |
@@ -32,6 +33,25 @@ Defines the Prometheus metrics. The coordinator serves them on `SC_METRICS_ADDR`
 | `sc_gossip_indirect_probes_total` | counter | Indirect ping requests sent |
 | `sc_gossip_refutations_total` | counter | Times this node refuted a suspicion about itself |
 | `sc_gossip_detection_seconds` | histogram | Time from the last contact with a member to marking it dead |
+
+## Election metrics (`Election`, part of `Coordinator`)
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `sc_election_term` | gauge | Current term of this coordinator |
+| `sc_elections_started_total` | counter | Elections this coordinator started |
+| `sc_elections_won_total` | counter | Elections it won and then started to lead |
+| `sc_election_stepdowns_total` | counter | Times it stopped being the leader |
+| `sc_election_failover_seconds` | histogram | On the new leader: time from the last contact with the old leader to leading |
+
+## Replication metrics (`Replication`, part of `Coordinator`)
+
+| Metric | Type | Meaning |
+| --- | --- | --- |
+| `sc_replication_seconds` | histogram | Leader: time until enough backups have a change |
+| `sc_replication_backup_lag{peer}` | gauge | Leader: its index minus the backup's index, from the last answer of each backup |
+| `sc_replication_snapshots_served_total` | counter | Snapshots this node sent (catch-up of a new leader, or a backup that was behind) |
+| `sc_replication_snapshots_restored_total` | counter | Snapshots this node loaded |
 
 `NewGossip(reg)` creates them in any registry. Volunteers create them in a private registry, because they serve no metrics endpoint.
 

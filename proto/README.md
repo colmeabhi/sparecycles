@@ -16,6 +16,8 @@ The gRPC contract between all nodes. `gen/` holds the Go code made from it.
 
 A follower answers client and volunteer RPCs with gRPC `FAILED_PRECONDITION`. The caller then tries the next coordinator.
 
+`Register` returns a `session_secret`. The volunteer sends it in every `RequestWork` and `SubmitResult`. A missing or wrong secret gives `UNAUTHENTICATED` (see `internal/security`).
+
 ## Change the contract
 
 1. Discuss the change with the team. Every part depends on this file.

@@ -36,10 +36,11 @@ type monteCarloUnit struct {
 
 const (
 	maxMonteCarloUnits = 10_000
-	// maxSamplesPerUnit is about 60 seconds on a laptop (3 ns per sample). The
-	// design is 60-second units with 3-minute leases: a unit that takes longer
-	// than its lease is given out again and again, and never finishes.
-	maxSamplesPerUnit    = 20_000_000_000
+	// maxSamplesPerUnit is 15 to 40 seconds on a laptop (3 to 8 ns per sample)
+	// and stays well under a 3-minute lease on a slower machine too, for example
+	// a cloud instance without CPU credits. A unit that takes longer than its
+	// lease is given out again and again, and never finishes.
+	maxSamplesPerUnit    = 5_000_000_000
 	monteCarloOutputSize = 16 // inside and total, 2 big-endian uint64
 
 	// pcgStream is the second PCG seed, the same for every unit. Only the first
@@ -137,7 +138,7 @@ func countInside(ctx context.Context, src *rand.PCG, samples int64) (uint64, err
 	for i := int64(0); i < samples; i++ {
 		if i%checkEvery == 0 {
 			if err := ctx.Err(); err != nil {
-				return 0, err
+				return 0, fmt.Errorf("montecarlo: stopped after %d of %d samples: %w", i, samples, err)
 			}
 		}
 		r := src.Uint64()

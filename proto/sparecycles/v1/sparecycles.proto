@@ -78,10 +78,15 @@ message RegisterRequest {
 
 message RegisterResponse {
   string volunteer_id = 1;
+  // Secret for this registration. The volunteer sends it with every later
+  // request, so that nobody else can act under its ID. Keep it private.
+  bytes session_secret = 2;
 }
 
 message RequestWorkRequest {
   string volunteer_id = 1;
+  // The session_secret from RegisterResponse.
+  bytes session_secret = 2;
 }
 
 message WorkUnit {
@@ -105,6 +110,8 @@ message SubmitResultRequest {
   string volunteer_id = 1;
   string unit_id = 2;
   bytes output = 3;
+  // The session_secret from RegisterResponse.
+  bytes session_secret = 4;
 }
 
 message SubmitResultResponse {

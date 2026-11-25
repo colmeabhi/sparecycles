@@ -38,6 +38,7 @@ type Volunteer struct {
 	verifier  security.Verifier
 	log       *slog.Logger
 	id        string
+	session   []byte // secret from the last registration; sent with every request
 }
 
 // New returns a Volunteer. The verifier checks the signature of each task before it runs.
@@ -74,6 +75,14 @@ func (v *Volunteer) Run(ctx context.Context) error {
 				v.id = ""
 				continue
 			}
+			if status.Code(err) == codes.Unauthenticated {
+				// The leader did not accept the session secret. Wait before the new
+				// registration, so that a lasting fault cannot cause a fast loop.
+				v.log.Warn("leader rejected the session, registering again", "err", err)
+				v.id = ""
+				sleep(ctx, backoff.next())
+				continue
+			}
 			if ctx.Err() == nil {
 				v.log.Warn("work step failed", "err", err)
 			}
@@ -99,6 +108,7 @@ func (v *Volunteer) register(ctx context.Context) error {
 			return err
 		}
 		v.id = resp.GetVolunteerId()
+		v.session = resp.GetSessionSecret()
 		v.log.Info("registered", "volunteer", v.id)
 		if v.cfg.OnRegister != nil {
 			v.cfg.OnRegister(v.id)
@@ -113,7 +123,9 @@ func (v *Volunteer) step(ctx context.Context) (time.Duration, error) {
 	var unit *pb.WorkUnit
 	var retry time.Duration
 	err := v.pool.Do(ctx, func(conn *grpc.ClientConn) error {
-		resp, err := pb.NewVolunteerServiceClient(conn).RequestWork(ctx, &pb.RequestWorkRequest{VolunteerId: v.id})
+		resp, err := pb.NewVolunteerServiceClient(conn).RequestWork(ctx, &pb.RequestWorkRequest{
+			VolunteerId: v.id, SessionSecret: v.session,
+		})
 		if err != nil {
 			return err
 		}
@@ -144,7 +156,7 @@ func (v *Volunteer) step(ctx context.Context) (time.Duration, error) {
 
 	return 0, v.pool.Do(ctx, func(conn *grpc.ClientConn) error {
 		resp, err := pb.NewVolunteerServiceClient(conn).SubmitResult(ctx, &pb.SubmitResultRequest{
-			VolunteerId: v.id, UnitId: unit.GetUnitId(), Output: output,
+			VolunteerId: v.id, SessionSecret: v.session, UnitId: unit.GetUnitId(), Output: output,
 		})
 		if err != nil {
 			return err

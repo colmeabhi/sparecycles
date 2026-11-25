@@ -26,7 +26,7 @@ go run ./cmd/client -workload montecarlo -params '{"units":8,"samples_per_unit":
 | --- | --- | --- |
 | `-workload` | `fractal` | Workload name (see `internal/workload`) |
 | `-params` | empty: the workload's defaults (fractal: 1024×1024, tiles of 256, 1000 iterations) | Workload parameters as JSON |
-| `-out` | `result.png` | File for the result |
+| `-out` | `result.png` for `fractal`, `result.json` for other workloads | File for the result |
 | `-poll` | `1s` | Time between progress checks |
 | `-timeout` | `30m` | Maximum time to wait |
 

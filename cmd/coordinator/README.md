@@ -23,8 +23,8 @@ make run-coordinator
 
 | Part | Now | After |
 | --- | --- | --- |
-| Elector | `election.NewStatic` | Bully (#13) |
-| Replicator | `replication.Noop` | Quorum (#14) |
+| Elector | `election.NewBully` (done, #13) | — |
+| Replicator | `replication.NewQuorum` (done, #14) | — |
 | Membership | `membership.NewSWIM` (done, #10) | — |
 | Leases | `lease.NoExpiry` | Timeout (#6) |
 | Verifier | `verify.FirstResult` | Majority (#7) |
@@ -32,3 +32,24 @@ make run-coordinator
 | Auth, Signer | `security.TokenList` or `SharedToken`, and `Ed25519Signer` or `NoSign`, from the settings (done, #11) | — |
 
 To replace a part, change only its line in `main.go`, and update this table.
+
+## Election and replication
+
+`newElectionAndReplication` builds the Bully elector and the Quorum replicator together:
+
+- The elector uses `SC_NODE_ID`, `SC_PEERS`, `SC_ELECTION_HEARTBEAT` and `SC_ELECTION_TIMEOUT`. With no peers, the node leads at once, so `make run-coordinator` works alone.
+- The replicator shares the task table and uses `SC_REPLICATION_TIMEOUT`.
+- The elector's `BeforeLead` hook calls `Quorum.CatchUp`, so a new leader loads the newest table before it acts.
+- Both use one connection pool to the other coordinators (`internal/peerconn`). The gRPC server and the pool accept messages up to 256 MB, for table snapshots and large results.
+
+## Three coordinators
+
+`make up` (Docker Compose) runs `coordinator-1` to `coordinator-3`. Each has its own `SC_NODE_ID` and the other two in `SC_PEERS`:
+
+| Service | gRPC on the host | Metrics on the host |
+| --- | --- | --- |
+| `coordinator-1` | 7401 | 9401 |
+| `coordinator-2` | 7402 | 9402 |
+| `coordinator-3` | 7403 | 9403 |
+
+Coordinator 3 leads first (highest ID). `docker compose stop coordinator-3` makes coordinator 2 the leader; it continues from the replicated table.
