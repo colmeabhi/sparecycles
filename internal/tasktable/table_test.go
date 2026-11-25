@@ -115,3 +115,18 @@ func TestReplayAndSnapshot(t *testing.T) {
 		t.Fatalf("unexpected restored job: %+v", job)
 	}
 }
+
+func TestRunningJobs(t *testing.T) {
+	tbl := New()
+	for _, id := range []string{"job-b", "job-a"} {
+		if err := tbl.Apply(Change{Kind: JobAdded, JobID: id, Units: [][]byte{[]byte("p")}, Copies: 1}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := tbl.Apply(Change{Kind: JobFinished, JobID: "job-b", Error: "stopped"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := tbl.RunningJobs(); len(got) != 1 || got[0] != "job-a" {
+		t.Fatalf("running jobs = %v, want [job-a]", got)
+	}
+}

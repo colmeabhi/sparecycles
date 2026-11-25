@@ -26,10 +26,13 @@ type Coordinator struct {
 	ResultsReceived       prometheus.Counter
 	UnitsAccepted         prometheus.Counter
 	WrongResults          prometheus.Counter
+	NoMajority            prometheus.Counter
+	UnitsWithoutVolunteer prometheus.Gauge
 	LeasesExpired         prometheus.Counter
 	LeasesDeadVolunteer   prometheus.Counter
 	ReplicationErrors     prometheus.Counter
 	Gossip                *Gossip
+	Scheduler             *Scheduler
 }
 
 // NewCoordinator creates the coordinator metrics in a new registry.
@@ -71,6 +74,12 @@ func NewCoordinator() *Coordinator {
 		WrongResults: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_wrong_results_total", Help: "Results that disagreed with the accepted output.",
 		}),
+		NoMajority: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_votes_no_majority_total", Help: "Voting rounds with no majority, after which a unit got more copies.",
+		}),
+		UnitsWithoutVolunteer: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "sc_units_without_volunteer", Help: "Open units that need another volunteer, but every registered volunteer has already run them.",
+		}),
 		LeasesExpired: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_leases_expired_total", Help: "Leases released because they expired.",
 		}),
@@ -80,7 +89,8 @@ func NewCoordinator() *Coordinator {
 		ReplicationErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "sc_replication_errors_total", Help: "Changes that could not be replicated.",
 		}),
-		Gossip: NewGossip(reg),
+		Gossip:    NewGossip(reg),
+		Scheduler: NewScheduler(reg),
 	}
 	reg.MustRegister(
 		m.IsLeader,
@@ -94,6 +104,8 @@ func NewCoordinator() *Coordinator {
 		m.ResultsReceived,
 		m.UnitsAccepted,
 		m.WrongResults,
+		m.NoMajority,
+		m.UnitsWithoutVolunteer,
 		m.LeasesExpired,
 		m.LeasesDeadVolunteer,
 		m.ReplicationErrors,
@@ -140,6 +152,30 @@ func NewGossip(reg prometheus.Registerer) *Gossip {
 	}
 	reg.MustRegister(g.Members, g.PingsSent, g.PingFailures, g.IndirectProbes, g.Refutations, g.DetectionSeconds)
 	return g
+}
+
+// Scheduler holds the resource discovery metrics.
+type Scheduler struct {
+	Picks    *prometheus.CounterVec // label: speed (slow, or fast meaning not slow)
+	Refusals *prometheus.CounterVec // label: reason (low_trust, low_memory, slow_endgame)
+	Blocked  prometheus.Counter
+}
+
+// NewScheduler creates the scheduler metrics and registers them in reg.
+func NewScheduler(reg prometheus.Registerer) *Scheduler {
+	s := &Scheduler{
+		Picks: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "sc_scheduler_picks_total", Help: "Units the scheduler picked for a volunteer, by speed class: slow (below SC_SLOW_SPEED) or fast (not slow).",
+		}, []string{"speed"}),
+		Refusals: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "sc_scheduler_refusals_total", Help: "Work requests that got no unit on purpose, by reason.",
+		}, []string{"reason"}),
+		Blocked: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "sc_volunteers_blocked_total", Help: "Volunteers blocked because their trust fell below the minimum.",
+		}),
+	}
+	reg.MustRegister(s.Picks, s.Refusals, s.Blocked)
+	return s
 }
 
 // Handler returns the HTTP handler for /metrics.

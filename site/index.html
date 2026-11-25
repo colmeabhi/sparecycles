@@ -300,7 +300,7 @@ footer a{text-decoration:none} footer a:hover{color:var(--run)}
         <dl><dt>found by</dt><dd>The lease ends, or gossip marks it dead</dd><dt>response</dt><dd>Another volunteer gets the square</dd></dl>
       </article>
       <article class="fail">
-        <div class="top"><h3>A volunteer lies</h3><span class="badge wip">in progress #7</span></div>
+        <div class="top"><h3>A volunteer lies</h3><span class="badge ok">done</span></div>
         <div class="strip" aria-hidden="true">
           <div class="frame"><i class="b"></i><i class="b"></i><i class="b"></i></div><span class="arr">›</span>
           <div class="frame"><i class="k"></i><i class="o"></i><i class="k"></i></div><span class="arr">›</span>
@@ -375,8 +375,8 @@ footer a{text-decoration:none} footer a:hover{color:var(--run)}
       <div class="algo"><div class="big">02</div><h3>Replication</h3><p>Each task-table change reaches a backup before the leader confirms it.</p><div class="meta"><span>internal/replication</span><span>■ done</span></div></div>
       <div class="algo"><div class="big">03</div><h3>Gossip</h3><p>SWIM probes and indirect pings find failed nodes with a fixed load per node. A dead volunteer's square moves on in seconds.</p><div class="meta"><span>internal/membership</span><span>■ done</span></div></div>
       <div class="algo"><div class="big">04</div><h3>Leases</h3><p>Each square is lent, not given. When the lease ends, someone else gets it.</p><div class="meta"><span>internal/lease</span><a href="https://github.com/colmeabhi/sparecycles/issues/6">#6</a></div></div>
-      <div class="algo"><div class="big">05</div><h3>Majority vote</h3><p>3 volunteers run each square. 2 matching results win. No majority means 2 more.</p><div class="meta"><span>internal/verify</span><a href="https://github.com/colmeabhi/sparecycles/issues/7">#7</a></div></div>
-      <div class="algo"><div class="big">06</div><h3>Resource discovery</h3><p>Match squares to volunteer speed and trust, based on VECTrust.</p><div class="meta"><span>internal/scheduler</span><a href="https://github.com/colmeabhi/sparecycles/issues/8">#8</a></div></div>
+      <div class="algo"><div class="big">05</div><h3>Majority vote</h3><p>3 volunteers run each square. 2 matching results win. No majority means 2 more. A late wrong copy is still caught.</p><div class="meta"><span>internal/verify</span><span>■ done</span></div></div>
+      <div class="algo"><div class="big">06</div><h3>Resource discovery</h3><p>Match squares to volunteer speed and trust, based on VECTrust. A volunteer that keeps losing votes gets no more squares.</p><div class="meta"><span>internal/scheduler</span><span>■ done</span></div></div>
     </div>
   </div>
 </section>
@@ -394,8 +394,9 @@ footer a{text-decoration:none} footer a:hover{color:var(--run)}
 <span class="p">$</span> git clone https://github.com/colmeabhi/sparecycles.git
 <span class="p">$</span> make -C sparecycles test
 
-<span class="d"># one terminal each</span>
+<span class="d"># one terminal each (2 volunteers or more: each square needs 2 equal results)</span>
 <span class="p">$</span> make run-coordinator
+<span class="p">$</span> make run-volunteer
 <span class="p">$</span> make run-volunteer
 <span class="p">$</span> make run-client
 submitted job-d2aa3e085e2e with 16 units

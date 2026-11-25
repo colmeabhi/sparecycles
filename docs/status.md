@@ -9,13 +9,13 @@ GitHub issues hold the task details. This file only summarizes and links.
 
 | Deadline | Date | Days left |
 | --- | --- | ---: |
-| Issues #6, #7, #13 | 2026-11-27 | 2 |
-| Issues #8, #14, #35 | 2026-11-28 | 3 |
+| Issues #6, #13 | 2026-11-27 | 2 |
+| Issues #14, #35 | 2026-11-28 | 3 |
 | Issue #15 | 2026-11-29 | 4 |
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. The Monte Carlo workload (#9, PR #34) is merged. Tejas has PRs open for his other issues, with the review comments fixed. Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Majority voting (#7, PR #32), resource discovery (#8, PR #33) and the Monte Carlo workload (#9, PR #34) are merged. Tejas has 1 PR open, for #6 (#31). Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
 
 ## Per person
 
@@ -24,10 +24,8 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
 | [#6 Lease expiry](https://github.com/colmeabhi/sparecycles/issues/6) | 11-27 | PR [#31](https://github.com/colmeabhi/sparecycles/pull/31): fix the review comments, then merge | — |
-| [#7 Majority voting](https://github.com/colmeabhi/sparecycles/issues/7) | 11-27 | PR [#32](https://github.com/colmeabhi/sparecycles/pull/32): fix the review comments, then merge | — |
-| [#8 Resource discovery](https://github.com/colmeabhi/sparecycles/issues/8) | 11-28 | PR [#33](https://github.com/colmeabhi/sparecycles/pull/33): fix the block bug, then merge | #32 (stacked on it) |
 
-#9 is done (#34). Merge order: #31, #32, #33.
+#7, #8 and #9 are done (#32, #33, #34). Next: merge #31.
 
 ### Abhishek (`colmeabhi`)
 
@@ -58,8 +56,6 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 
 | This | Needs |
 | --- | --- |
-| `make fail-faulty`, test case TC-03 | #7 |
-| Trust scores in #8 | #7 (`Decision.Wrong`) |
 | Failover test on AWS | First `make deploy-up` (#15) |
 
 ## After merge
@@ -68,7 +64,6 @@ Do these right after the named PR merges, in the same day:
 
 | After | Do |
 | --- | --- |
-| #7 merges | Run `make fail-faulty`. Record TC-03 in `docs/test-results.md`. |
 | #7 merges | Kushagra: change `scripts/load-sweep.sh` so that "full" mode uses 2 or more volunteers (1 volunteer never reaches 2 of 3). Then run `make load-sweep` again, and update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
 | #9 merges | Kushagra: give `cmd/loadgen` an empty `-params` default, as in the client, so `-workload montecarlo` works. |
 | #6 to #9 merge | Kushagra: update diagram I1 (the stubs that were replaced), and the test count on slide 12. |
@@ -81,6 +76,8 @@ Do these right after the named PR merges, in the same day:
 | Date | PR | What |
 | --- | --- | --- |
 | 2026-11-22 | [#34](https://github.com/colmeabhi/sparecycles/pull/34) | Monte Carlo workload: `montecarlo` estimates pi with integer-only sampling, the same bytes on arm64 and amd64 (TC-15; closes #9) |
+| 2026-11-22 | [#33](https://github.com/colmeabhi/sparecycles/pull/33) | Resource discovery: `scheduler.Matcher` with VECTrust-style trust, speed and memory rules; faulty volunteer blocked after 2 wrong results (TC-14; closes #8; stacked on #32) |
+| 2026-11-22 | [#32](https://github.com/colmeabhi/sparecycles/pull/32) | Majority voting: `verify.Majority`, `SC_VOTE_QUORUM`, faulty mode `SC_FAULTY_RATE`, late copies checked, `make fail-faulty` passes (TC-03; closes #7) |
 | 2026-11-25 | [#40](https://github.com/colmeabhi/sparecycles/pull/40) | Pages workflow split into build and deploy jobs; the deploy no longer fails when GitHub lists the artifact late |
 | 2026-11-25 | [#39](https://github.com/colmeabhi/sparecycles/pull/39) | Terraform for AWS: 3 coordinators in 3 zones, spot volunteers, Prometheus; `make deploy-up` and `deploy-down`; CI checks it (refs #15; first apply to do) |
 | 2026-11-25 | [#38](https://github.com/colmeabhi/sparecycles/pull/38) | Task-table replication (2 of 3 copies) and leader catch-up; `make fail-leader` passes (closes #14, TC-04) |

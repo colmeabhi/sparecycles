@@ -123,14 +123,27 @@ func newServer(cfg config.Coordinator, cluster clusterParts, members membership.
 		Replicator:   cluster.replicator,
 		Membership:   members,
 		Leases:       lease.NoExpiry{Length: cfg.LeaseDuration},
-		Verifier:     verify.FirstResult{},
-		Scheduler:    scheduler.FIFO{},
+		Verifier:     verify.Majority{Quorum: cfg.VoteQuorum},
+		Scheduler:    newScheduler(cfg, m, log),
 		Auth:         sec.auth,
 		Signer:       sec.signer,
 		Workloads:    workload.Default(),
 		Metrics:      m,
 		VoteReplicas: cfg.VoteReplicas,
 		Log:          log,
+	})
+}
+
+// newScheduler builds the resource discovery Matcher. A fast volunteer counts as
+// active for one lease length after its last request, because it may be busy
+// with a unit for that long.
+func newScheduler(cfg config.Coordinator, m *metrics.Coordinator, log *slog.Logger) *scheduler.Matcher {
+	d := cfg.Discovery
+	log.Info("resource discovery", "min_trust", d.MinTrust, "last_copy_trust", d.LastCopyTrust,
+		"slow_speed", d.SlowSpeed, "min_memory_mb", d.MinMemoryMB)
+	return scheduler.NewMatcher(scheduler.MatcherConfig{
+		MinTrust: d.MinTrust, LastCopyTrust: d.LastCopyTrust, SlowSpeed: d.SlowSpeed, MinMemoryMB: d.MinMemoryMB,
+		ActiveWindow: cfg.LeaseDuration, Metrics: m.Scheduler, Log: log,
 	})
 }
 
@@ -242,5 +255,6 @@ func newHTTPServer(addr string, m *metrics.Coordinator) *http.Server {
 func logStart(cfg config.Coordinator, elector election.Elector, log *slog.Logger) {
 	leader, _ := elector.Leader()
 	log.Info("coordinator started", "grpc", cfg.ListenAddr, "metrics", cfg.MetricsAddr,
-		"peers", len(cfg.Peers), "leader", leader, "is_leader", elector.IsLeader())
+		"peers", len(cfg.Peers), "leader", leader, "is_leader", elector.IsLeader(),
+		"copies", cfg.VoteReplicas, "quorum", cfg.VoteQuorum)
 }

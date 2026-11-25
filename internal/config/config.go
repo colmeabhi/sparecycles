@@ -42,8 +42,18 @@ type Coordinator struct {
 	VolunteerTokens []string // per-volunteer tokens, "name=token" or "token"
 	SigningKey      string   // base64 Ed25519 seed; empty means tasks are not signed
 	LeaseDuration   time.Duration
-	VoteReplicas    int
+	VoteReplicas    int // volunteers that run each unit
+	VoteQuorum      int // equal results needed to accept a unit
 	Gossip          Gossip
+	Discovery       Discovery
+}
+
+// Discovery holds the resource discovery rules (internal/scheduler, Matcher).
+type Discovery struct {
+	MinTrust      float64 // below this trust, a volunteer gets no unit
+	LastCopyTrust float64 // below this trust, a volunteer avoids the last copy of a unit
+	SlowSpeed     float64 // a speed score below this is slow
+	MinMemoryMB   int     // 0 means no memory limit
 }
 
 // LoadCoordinator reads the coordinator settings.
@@ -71,16 +81,73 @@ func LoadCoordinator() (Coordinator, error) {
 	if c.LeaseDuration, err = durationVar("SC_LEASE_DURATION", 3*time.Minute); err != nil {
 		return c, err
 	}
-	if c.VoteReplicas, err = intVar("SC_VOTE_REPLICAS", 3); err != nil {
+	if c.VoteReplicas, c.VoteQuorum, err = loadVote(); err != nil {
 		return c, err
-	}
-	if c.VoteReplicas < 1 {
-		return c, fmt.Errorf("SC_VOTE_REPLICAS must be 1 or more, got %d", c.VoteReplicas)
 	}
 	if c.Gossip, err = loadGossip(); err != nil {
 		return c, err
 	}
+	if c.Discovery, err = loadDiscovery(); err != nil {
+		return c, err
+	}
 	return c, nil
+}
+
+func loadDiscovery() (Discovery, error) {
+	var d Discovery
+	var err error
+	if d.MinTrust, err = unitIntervalVar("SC_TRUST_MIN", 0.3); err != nil {
+		return d, err
+	}
+	if d.LastCopyTrust, err = unitIntervalVar("SC_TRUST_LAST_COPY", 0.6); err != nil {
+		return d, err
+	}
+	if d.SlowSpeed, err = floatVar("SC_SLOW_SPEED", 0.5); err != nil {
+		return d, err
+	}
+	if !(d.SlowSpeed >= 0) { // also rejects NaN
+		return d, fmt.Errorf("SC_SLOW_SPEED must be 0 or more, got %v", d.SlowSpeed)
+	}
+	if d.MinMemoryMB, err = intVar("SC_MIN_MEMORY_MB", 0); err != nil {
+		return d, err
+	}
+	if d.MinMemoryMB < 0 {
+		return d, fmt.Errorf("SC_MIN_MEMORY_MB must be 0 or more, got %d", d.MinMemoryMB)
+	}
+	return d, nil
+}
+
+// unitIntervalVar reads a number from 0 to 1.
+func unitIntervalVar(key string, def float64) (float64, error) {
+	f, err := floatVar(key, def)
+	if err != nil {
+		return 0, err
+	}
+	if !(f >= 0 && f <= 1) { // also rejects NaN
+		return 0, fmt.Errorf("%s must be from 0 to 1, got %v", key, f)
+	}
+	return f, nil
+}
+
+// loadVote reads the copies per unit and the quorum. The default quorum is a
+// majority of the copies (2 of 3), so baseline mode with 1 copy needs no extra setting.
+func loadVote() (replicas, quorum int, err error) {
+	if replicas, err = intVar("SC_VOTE_REPLICAS", 3); err != nil {
+		return 0, 0, err
+	}
+	if replicas < 1 {
+		return 0, 0, fmt.Errorf("SC_VOTE_REPLICAS must be 1 or more, got %d", replicas)
+	}
+	if quorum, err = intVar("SC_VOTE_QUORUM", replicas/2+1); err != nil {
+		return 0, 0, err
+	}
+	// A quorum of half the copies or less lets a minority decide: with 3 copies
+	// and quorum 1, one faulty volunteer is enough, and 2 copies are wasted.
+	if quorum <= replicas/2 || quorum > replicas {
+		return 0, 0, fmt.Errorf("SC_VOTE_QUORUM must be a majority of SC_VOTE_REPLICAS (%d): from %d to %d, got %d",
+			replicas, replicas/2+1, replicas, quorum)
+	}
+	return replicas, quorum, nil
 }
 
 // GossipOff is the SC_GOSSIP_ADDR value that turns the volunteer gossip listener off.
@@ -99,6 +166,9 @@ type Volunteer struct {
 	Gossip       Gossip
 	// SigningPublicKey is the base64 Ed25519 public key of the coordinators. Empty means no check.
 	SigningPublicKey string
+	// FaultyRate is the share of units (0 to 1) for which the volunteer sends a wrong
+	// output on purpose. It is for failure demos and tests only.
+	FaultyRate float64
 }
 
 // LoadVolunteer reads the volunteer settings.
@@ -116,6 +186,9 @@ func LoadVolunteer() (Volunteer, error) {
 		return v, err
 	}
 	if v.SpeedScore, err = floatVar("SC_SPEED_SCORE", 1.0); err != nil {
+		return v, err
+	}
+	if v.FaultyRate, err = unitIntervalVar("SC_FAULTY_RATE", 0); err != nil {
 		return v, err
 	}
 	v.SigningPublicKey = stringVar("SC_SIGNING_PUBLIC_KEY", "")

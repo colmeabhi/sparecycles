@@ -53,6 +53,10 @@ func run(cfg config.Volunteer, log *slog.Logger) error {
 	vcfg := volunteer.Config{
 		Name: cfg.Name, Token: cfg.Token,
 		CPUCores: cfg.CPUCores, MemoryMB: cfg.MemoryMB, SpeedScore: cfg.SpeedScore,
+		FaultyRate: cfg.FaultyRate,
+	}
+	if cfg.FaultyRate > 0 {
+		log.Warn("faulty mode on: some results will be wrong on purpose", "rate", cfg.FaultyRate)
 	}
 	if cfg.GossipAddr != config.GossipOff {
 		gossip, stopGossip, err := startGossip(ctx, cfg, log)
