@@ -16,13 +16,17 @@ Or with your own values:
 go run ./cmd/client -workload fractal -params '{"width":2048,"height":2048,"tile_size":256}' -out big.png
 ```
 
+```bash
+go run ./cmd/client -workload montecarlo -params '{"units":8,"samples_per_unit":1000000}' -out pi.json
+```
+
 ## Flags
 
 | Flag | Default | Meaning |
 | --- | --- | --- |
 | `-workload` | `fractal` | Workload name (see `internal/workload`) |
-| `-params` | 1024×1024 fractal | Workload parameters as JSON |
-| `-out` | `result.png` | File for the result |
+| `-params` | empty: the workload's defaults (fractal: 1024×1024, tiles of 256, 1000 iterations) | Workload parameters as JSON |
+| `-out` | `result.png` for `fractal`, `result.json` for other workloads | File for the result |
 | `-poll` | `1s` | Time between progress checks |
 | `-timeout` | `30m` | Maximum time to wait |
 

@@ -39,7 +39,7 @@ func NewRegistry(ws ...Workload) *Registry {
 
 // Default returns a registry with all built-in workloads.
 func Default() *Registry {
-	return NewRegistry(Fractal{})
+	return NewRegistry(Fractal{}, MonteCarlo{})
 }
 
 // Get returns the workload with this name.

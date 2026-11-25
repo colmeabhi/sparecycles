@@ -20,6 +20,7 @@ Test cases for the report (section 10). Each case lists how to run it and the re
 | TC-12 | Docker Compose cluster: job, gossip, Prometheus, a killed container | `make up`, `make run-client`, `docker kill` | Pass |
 | TC-13 | Lease expiry moves a lost unit (gossip off) | Manual run in `internal/lease/README.md`; `TestExpiredLeaseMovesUnitToAnotherVolunteer` | Pass |
 | TC-14 | Trust blocks a faulty volunteer; slow volunteers get less work | Manual run in `internal/scheduler/README.md`; `TestFaultyVolunteerLosesTrustAndGetsNoWork` | Pass |
+| TC-15 | Second workload: Monte Carlo estimate of pi, the same bytes on arm64 and amd64 | Client command in `docs/setup.md`; `TestEndToEndMonteCarlo`, `TestMonteCarloGoldenCounts` | Pass |
 | TC-16 | Requests under another volunteer's ID are rejected | `TestRequestsUnderAnotherVolunteersIDAreRejected` | Pass |
 
 ## TC-01 Success scenario
@@ -194,6 +195,24 @@ Test cases for the report (section 10). Each case lists how to run it and the re
   | faulty | 4, all caught as wrong |
 
   The faulty volunteer took 4 first copies before any vote, then was blocked and got nothing for the rest of the 2 jobs. The metrics showed `sc_scheduler_picks_total{speed="fast"} 253`, `{speed="slow"} 69`, `sc_volunteers_blocked_total 1` and `sc_wrong_results_total 4`. Both job images are identical. All volunteers compute at the same real speed on one machine, so the gap between fast and slow comes from the pick rules alone.
+
+## TC-15 Monte Carlo workload
+
+- **Goal:** the second workload runs through the cluster, gives a correct estimate of pi, and gives the same bytes on every CPU, so that votes can compare hashes.
+- **Steps:** 1 coordinator and 2 volunteers on one machine. Run the client command from `docs/setup.md` (8 units of 1,000,000 samples), then the client with no `-params` and no `-out` (the default size, 16 units of 50,000,000 samples, saved to `result.json`). Run the golden test on arm64 and on amd64 (`GOARCH=amd64 go test -run MonteCarlo ./internal/workload/`, with Rosetta on Apple silicon).
+- **Expected:** both jobs finish with an estimate near 3.1416. The golden counts are the same on both CPUs.
+- **Actual (2026-11-24):** the client printed:
+
+  ```text
+  submitted job-7d75ab6cbafe with 8 units
+  8/8 units done
+  done in 1.003s
+  saved pi.json (65 bytes)
+  ```
+
+  `pi.json` holds `{"estimate":3.1419955,"inside":6283991,"total":8000000,"units":8}`. The default run printed `submitted job-dba55a5bbc38 with 16 units`, `done in 4.001s` and `saved result.json (71 bytes)`, and `result.json` holds `{"estimate":3.14158544,"inside":628317088,"total":800000000,"units":16}`.
+
+  The counts for seed 42 (786162, 785489 and 785008 inside of 1,000,000) were the same on arm64 and on amd64. One sample takes about 3 ns (3.2 ns on arm64, 2.2 ns on amd64 under Rosetta). The automated test `TestEndToEndMonteCarlo` runs a job through the coordinator and checks that the result is byte for byte the same as the job run in the test.
 
 ## TC-16 Session secrets
 

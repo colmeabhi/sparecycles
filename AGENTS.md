@@ -46,7 +46,7 @@ Each folder in the table has a `README.md`. Read it before you change the folder
 | `internal/lease/` | Lease length and expiry | Done: `Timeout` (`NoExpiry` kept for tests) | Tejas |
 | `internal/verify/` | Majority voting | Done: `Majority` (`FirstResult` kept for tests) | Tejas |
 | `internal/scheduler/` | Resource discovery: which unit goes to which volunteer | Done: `Matcher` with trust (`FIFO` kept for tests) | Tejas |
-| `internal/workload/` | Workloads: split, run, merge | Fractal complete | Tejas (Monte Carlo) |
+| `internal/workload/` | Workloads: split, run, merge | Fractal and Monte Carlo complete | Tejas (Monte Carlo) |
 | `internal/membership/` | SWIM gossip and failure detection | Done: `SWIM` (`Static` kept for tests) | Kushagra |
 | `internal/security/` | Volunteer tokens, session secrets and task signatures | Done: `TokenList`, `SessionHash`, Ed25519 (`NoSign` when no key) | Kushagra |
 | `internal/election/` | Bully election with terms | Done: `Bully` (`Static` kept for tests) | Abhishek |

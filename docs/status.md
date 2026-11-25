@@ -11,21 +11,17 @@ GitHub issues hold the task details. This file only summarizes and links.
 | --- | --- | ---: |
 | Issue #13 | 2026-11-27 | 2 |
 | Issues #14, #35 | 2026-11-28 | 3 |
-| Issues #9, #15 | 2026-11-29 | 4 |
+| Issue #15 | 2026-11-29 | 4 |
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Lease expiry (#6, PR #31), majority voting (#7, PR #32) and resource discovery (#8, PR #33) are merged. Tejas has 1 PR open, for #9 (#34). Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. All 4 of Tejas's issues are merged: lease expiry (#6, PR #31), majority voting (#7, PR #32), resource discovery (#8, PR #33) and the Monte Carlo workload (#9, PR #34). Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
 
 ## Per person
 
 ### Tejas (`Tejas-Chakkarwar`)
 
-| Issue | Due | Next step | Blocked by |
-| --- | --- | --- | --- |
-| [#9 Monte Carlo](https://github.com/colmeabhi/sparecycles/issues/9) | 11-29 | PR [#34](https://github.com/colmeabhi/sparecycles/pull/34): fix the review comments, then merge | — |
-
-#6, #7 and #8 are done (#31, #32, #33). Next: merge #34.
+All 4 issues are done (#6, #7, #8, #9; PRs #31 to #34). Next: the report sections, diagrams and slides in "All three" below.
 
 ### Abhishek (`colmeabhi`)
 
@@ -77,6 +73,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-22 | [#34](https://github.com/colmeabhi/sparecycles/pull/34) | Monte Carlo workload: `montecarlo` estimates pi with integer-only sampling, the same bytes on arm64 and amd64 (TC-15; closes #9) |
 | 2026-11-24 | [#31](https://github.com/colmeabhi/sparecycles/pull/31) | Lease expiry: `lease.Timeout`; a lost unit moves to another volunteer when its lease ends (TC-13; closes #6) |
 | 2026-11-22 | [#33](https://github.com/colmeabhi/sparecycles/pull/33) | Resource discovery: `scheduler.Matcher` with VECTrust-style trust, speed and memory rules; faulty volunteer blocked after 2 wrong results (TC-14; closes #8; stacked on #32) |
 | 2026-11-22 | [#32](https://github.com/colmeabhi/sparecycles/pull/32) | Majority voting: `verify.Majority`, `SC_VOTE_QUORUM`, faulty mode `SC_FAULTY_RATE`, late copies checked, `make fail-faulty` passes (TC-03; closes #7) |
