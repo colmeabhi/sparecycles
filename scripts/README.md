@@ -2,7 +2,7 @@
 
 One-command demos and load tests. They produce the evidence for the report and the presentation (see `docs/grading-checklist.md`, section 2).
 
-**Owner:** Kushagra · **State:** complete; 2 failure demos wait for other issues · **Issue:** #12
+**Owner:** Kushagra · **State:** complete; all 3 failure demos pass on `main` (2026-11-25) · **Issue:** #12
 
 ## How they work
 
@@ -18,7 +18,7 @@ One-command demos and load tests. They produce the evidence for the report and t
 | Script | Make target | Shows | Needs |
 | --- | --- | --- | --- |
 | `fail-volunteer.sh` | `make fail-volunteer` | `kill -9` a volunteer during a 256-unit job. Gossip marks it dead, its unit moves on, the job finishes. | — |
-| `fail-faulty.sh` | `make fail-faulty` | 1 faulty volunteer (`SC_FAULTY_RATE=1.0`) among 3 honest ones. It is outvoted, and the image equals an honest reference. | #7 |
+| `fail-faulty.sh` | `make fail-faulty` | 1 faulty volunteer (`SC_FAULTY_RATE=1.0`) among 3 honest ones. It is outvoted and blocked (the log shows `volunteer blocked`), and the image equals an honest reference. | #7 |
 | `fail-leader.sh` | `make fail-leader` | `kill -9` the leader of 3 coordinators during a job. Node 2 becomes leader and the job finishes. | #13, #14 |
 | `load.sh` | `make load` | One load test. Appends a row to `results/load.csv`. | — |
 | `load-sweep.sh` | `make load-sweep` | Load tests in baseline mode (1, 2 and 4 volunteers) and full mode (2, 3 and 4 volunteers). | — |
@@ -44,4 +44,7 @@ Run load tests from a terminal in the foreground. A background run on macOS can 
 ## Leader demo settings
 
 `fail-leader.sh` sets `SC_LEASE_DURATION=20s` on the coordinators. After a failover the volunteers register under new IDs. Gossip usually frees the units of the old IDs in a few seconds; the short lease frees them in 20 s at most if gossip does not.
-- If a log line or setting name differs, change the script in the same PR, and update `docs/test-results.md`.
+
+## Change a script
+
+The scripts look for exact log lines and setting names. If a PR changes one of them, change the script in the same PR, and update `docs/test-results.md` and `docs/presentation/demo-script.md`.

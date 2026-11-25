@@ -36,7 +36,7 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 
 - The "after merge" steps for #31 to #34, #37 and #38 are done (PR #41): new load sweep, `loadgen` default, short lease in `fail-leader.sh`, TC-03 and TC-04 rerun on `main`, diagram I1 and slide 12.
 - Report: the full draft is done (PR #42). Every claim was checked against the code and the run records.
-- Presentation: all 14 slides are drafted (PR #43). Next: the demo run-through on 12-01 (you drive the terminal).
+- Presentation: all 14 slides are drafted (PR #43), and all 5 demo parts were checked on `main` (PR #44). Next: the demo run-through on 12-01 (you drive the terminal).
 
 ### All three
 
@@ -68,6 +68,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-25 | [#44](https://github.com/colmeabhi/sparecycles/pull/44) | Demo script checked on `main`: all 5 parts pass; expected output, timings and narration updated; `make fail-faulty` now shows the `volunteer blocked` line |
 | 2026-11-25 | [#43](https://github.com/colmeabhi/sparecycles/pull/43) | All 14 slides drafted: text, speaker notes and a 1600×900 image for each slide in the product page style |
 | 2026-11-25 | [#42](https://github.com/colmeabhi/sparecycles/pull/42) | Full report draft: every section, diagrams D1, D2, D4, D5, I2 and I3, screenshots for 8.1, 8.2b and 8.2c; facts checked against the code and the run records |
 | 2026-11-25 | [#41](https://github.com/colmeabhi/sparecycles/pull/41) | After-merge steps: load sweep on the final code (voting costs 32% at 4 volunteers), full mode needs 2 or more volunteers, `loadgen` uses workload defaults, short lease in `fail-leader.sh`, TC-03 and TC-04 rerun on `main`, diagram I1 and slide 12 updated |
