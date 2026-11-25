@@ -2,4 +2,42 @@
 \section{Testing Results}
 \label{sec:testing}
 
-\todo{Tejas, about 0.6 page. Turn docs/test-results.md into a table of the test cases (ID, goal, method, result) and a short discussion. At least 5 cases; TC-01, TC-02 and TC-05 to TC-10 already have results. Add TC-03 (faulty volunteer) and TC-04 (leader crash) when \#7, \#13 and \#14 are merged. Mention that CI runs all automated tests with the race detector on every change.}
+Table~\ref{tab:tests} lists our sixteen test cases. They cover normal operation (TC-01, TC-15), each failure the system is designed to survive (TC-02 to TC-04, TC-06, TC-12, TC-13), the security mechanisms (TC-05, TC-06, TC-16), the behavior of individual algorithms (TC-09, TC-10, TC-14) and performance (TC-07, TC-08, TC-11). The three main failure scenarios each run with one command (\texttt{make fail-volunteer}, \texttt{fail-faulty} and \texttt{fail-leader}) that starts a local cluster, injects the fault and checks the outcome, and most cases also have an automated Go test. Most automated tests run complete jobs inside one process over an in-memory gRPC connection, and tests that depend on time use short deadlines or a fake clock rather than relying on lucky timing.
+
+\begin{table*}[t]
+\centering
+\caption{Test cases and results. All runs used one Apple silicon laptop with 10 cores; TC-12 ran in Docker Compose on the same machine.}
+\label{tab:tests}
+\footnotesize
+% Ragged-right cells avoid wide gaps in the narrow columns (the array package is not loaded).
+\makeatletter
+\let\scParboxRestore\@arrayparboxrestore
+\def\@arrayparboxrestore{\scParboxRestore\raggedright\let\\\tabularnewline}
+\makeatother
+\begin{tabular}{@{}lp{0.23\textwidth}p{0.30\textwidth}p{0.34\textwidth}@{}}
+\toprule
+ID & Goal & Method & Result \\
+\midrule
+TC-01 & One job is split, computed and merged & \texttt{make run-client}, 1 coordinator, 2 volunteers, 16-unit fractal; \texttt{TestEndToEndFractal} & Pass. 16/16 units in 1.0\,s; each tile ran twice and was accepted when both results agreed \\
+TC-02 & A dead volunteer's unit moves on before its lease ends & \texttt{make fail-volunteer}: \texttt{kill -9} one of 2 volunteers during a 256-unit job, fast gossip settings & Pass. Declared dead 2.9\,s after it fell silent; its unit was released and the job finished \\
+TC-03 & Wrong results do not change the output & \texttt{make fail-faulty}: 3 honest volunteers and 1 with \texttt{SC\_FAULTY\_RATE=1.0}; compare with an honest-only image & Pass. Every wrong result caught: 14 of 14 in an earlier run (11 by the vote, 3 as late copies), 8 of 8 on the final code, blocked after the 2nd; images identical \\
+TC-04 & A new leader takes over and finishes the job & \texttt{make fail-leader}: \texttt{kill -9} the leader of 3 coordinators during a job; \texttt{TestLeaderCrashJobContinues} & Pass. Node 2 became leader (term 3) 2.5\,s after the kill; 256-unit job done in 10.0\,s; no accepted unit ran again \\
+TC-05 & Only known volunteers can register & Per-volunteer tokens; a volunteer with a guessed token; \texttt{TestUnknownTokenIsRejected\allowbreak AndCounted} & Pass. Rejected as \texttt{Unauthenticated} and counted \\
+TC-06 & Volunteers run only tasks the leader signed & A volunteer with a wrong public key during a 256-unit job; \texttt{TestVolunteerWithWrongKey\allowbreak StopsAndSendsNothing} & Pass. Bad signature on its first task; it ran nothing and stopped; dead after 7.4\,s; job finished with all 256 units \\
+TC-07 & Baseline throughput grows with volunteers & \texttt{make load-sweep}: 8 jobs of 64 units, 2 clients, 1 copy per unit & Pass. 72.0, 91.6 and 112.0 units/s with 1, 2 and 4 volunteers \\
+TC-08 & Cost of fault tolerance & \texttt{make load-sweep}: 3 copies per unit, quorum 2 & Measured. 76.4 units/s with 4 volunteers, 68\% of the baseline (cost 32\%) \\
+TC-09 & Gossip load per member does not grow with the group & Healthy groups of 5, 20 and 50 members; \texttt{TestLoadPerPeriod\allowbreak DoesNotGrowWithGroupSize} & Pass. 1 ping and 0 indirect requests per period at every size \\
+TC-10 & Gossip detects a failed node over a real network & 5 SWIM nodes over gRPC on localhost; stop one; \texttt{TestGRPCClusterDetectsFailure} & Pass. All 4 others declared it dead and no live node was declared dead, in 5 runs with the race detector \\
+TC-11 & Performance as more users submit jobs & \texttt{scripts/load.sh} with 1, 2, 4 and 8 clients, 4 volunteers, 3 copies & Pass. 39.7 rising to about 75 units/s; mean job time 1.6\,s to 4.5\,s \\
+TC-12 & The containerized cluster runs jobs, gossips and exports metrics & \texttt{make up}, a job, \texttt{docker kill} of one volunteer, another job & Pass. Killed volunteer dead after 6.8\,s; second job done on 2 volunteers in 2.0\,s; Prometheus scraped the coordinator \\
+TC-13 & A lease frees a unit that gossip cannot see & \texttt{SC\_LEASE\_DURATION=10s}; \texttt{kill -9} a volunteer running with gossip off; \texttt{TestExpiredLeaseMoves\allowbreak UnitToAnotherVolunteer} & Pass. Lease expired 11\,s after the kill; all 256 units done; 1 lease expired, 0 released by gossip \\
+TC-14 & Trust blocks a faulty volunteer; slow volunteers get less work & 2 fast, 1 slow and 1 faulty volunteer, two 64-unit jobs; \texttt{TestFaultyVolunteerLosesTrust\allowbreak AndGetsNoWork} & Pass. Blocked at trust 0.25 after 2 wrong results, having run 4 units, all caught; fast volunteers ran 126 and 123 units, the slow one 69 \\
+TC-15 & Monte Carlo is correct and identical across CPUs & Client job of 8 units of $10^6$ samples; golden counts on arm64 and amd64; \texttt{TestEndToEndMonteCarlo} & Pass. Estimate 3.14200; $8\times10^8$ samples gave 3.14159; identical counts on both CPUs \\
+TC-16 & No requests under another volunteer's identifier & An attacker sends \texttt{RequestWork} and \texttt{SubmitResult} with the victim's identifier, with no secret and with its own; \texttt{TestRequestsUnderAnother\allowbreak VolunteersIDAreRejected} & Pass. All 4 requests rejected and nothing recorded; the victim's result finished the job \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The tests also found a real defect. The first run of TC-03 failed: the faulty volunteer had joined last, so it always received the third copy of each unit, and the two honest copies had already been accepted when its result arrived. Its five wrong results were turned away without ever being compared, so a faulty volunteer that always finished last would never have been detected. This led to the late-copy check of Section~\ref{sec:algorithms}, after which the same scenario caught every wrong result. The repeated runs on the final code also confirmed how the mechanisms combine: in TC-04, with a 20-second lease, gossip declared the volunteers' old identifiers dead and the new leader released their leases 4.5\,s after taking over, before any lease expired.
+
+Continuous integration runs on every push to the main branch and on every pull request. It checks formatting with \texttt{gofmt}, runs \texttt{go vet}, runs all automated tests with the race detector (\texttt{go test -race ./...}) and builds every binary; separate jobs validate the Terraform configuration and build the Docker image. A change is merged only when all of these pass. The main limitation of our testing is its environment: all cases ran on a single machine, so network delay and loss between zones were not exercised, and the measurements should be repeated on the AWS deployment.

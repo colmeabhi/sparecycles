@@ -1,0 +1,49 @@
+@startuml d1-use-case
+' D1 (design, use case): what clients, volunteers and operators do with SpareCycles. Owner: team.
+' In "left to right direction", PlantUML stacks the use cases bottom-up,
+' so each group is declared in reverse order.
+skinparam dpi 220
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam nodesep 6
+skinparam ranksep 40
+left to right direction
+
+actor Client
+actor Volunteer
+actor Operator
+
+rectangle "SpareCycles" {
+  usecase "Get result\n(GetJob, state done)" as UC_Result
+  usecase "Check progress\n(GetJob)" as UC_Progress
+  usecase "Submit job\n(SubmitJob)" as UC_Submit
+
+  usecase "Gossip\n(Ping, PingReq)" as UC_Gossip
+  usecase "Submit result\n(SubmitResult)" as UC_SubmitResult
+  usecase "Run unit\n(check task signature)" as UC_Run
+  usecase "Pull work\n(RequestWork)" as UC_Pull
+  usecase "Register with token\n(Register)" as UC_Register
+
+  usecase "Run failure demos\n(make fail-leader, ...)" as UC_Demos
+  usecase "Watch metrics\nin Prometheus" as UC_Metrics
+  usecase "Configure tokens and keys\n(SC_VOLUNTEER_TOKENS, make keys)" as UC_Configure
+  usecase "Start cluster\n(Docker Compose or Terraform)" as UC_Start
+}
+
+Client --> UC_Submit
+Client --> UC_Progress
+Client --> UC_Result
+
+Volunteer --> UC_Register
+Volunteer --> UC_Pull
+Volunteer --> UC_Run
+Volunteer --> UC_SubmitResult
+Volunteer --> UC_Gossip
+
+Operator --> UC_Start
+Operator --> UC_Configure
+Operator --> UC_Metrics
+Operator --> UC_Demos
+@enduml

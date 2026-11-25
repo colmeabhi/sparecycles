@@ -9,19 +9,18 @@ GitHub issues hold the task details. This file only summarizes and links.
 
 | Deadline | Date | Days left |
 | --- | --- | ---: |
-| Issue #13 | 2026-11-27 | 2 |
-| Issues #14, #35 | 2026-11-28 | 3 |
-| Issue #15 | 2026-11-29 | 4 |
+| Issue #15 (first AWS run) | 2026-11-29 | 4 |
+| Report review by all three | 2026-12-02 | 7 |
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. All 4 of Tejas's issues are merged: lease expiry (#6, PR #31), majority voting (#7, PR #32), resource discovery (#8, PR #33) and the Monte Carlo workload (#9, PR #34). Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. All 4 of Tejas's issues are merged: lease expiry (#6, PR #31), majority voting (#7, PR #32), resource discovery (#8, PR #33) and the Monte Carlo workload (#9, PR #34). Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next. The full report draft is in `docs/report/` (PR #42): every section, all 9 diagrams and 4 screenshots. Only Tejas's and Abhishek's ID and email are missing.
 
 ## Per person
 
 ### Tejas (`Tejas-Chakkarwar`)
 
-All 4 issues are done (#6, #7, #8, #9; PRs #31 to #34). Next: the report sections, diagrams and slides in "All three" below.
+All 4 issues are done (#6, #7, #8, #9; PRs #31 to #34). Next: add your student ID and email in `docs/report/main.tex`, review the report sections on your algorithms, and do your slides (see "All three").
 
 ### Abhishek (`colmeabhi`)
 
@@ -29,22 +28,22 @@ All 4 issues are done (#6, #7, #8, #9; PRs #31 to #34). Next: the report section
 | --- | --- | --- | --- |
 | [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Terraform is on `main` (#39). Next: one real `make deploy-up` with the team account, a job from a laptop, the leader failover (`kill_leader_command` output), then `make deploy-down`. Paste the outputs in #15 and close it. | Team AWS account |
 
-#13 and #14 are done (#37, #38).
+#13 and #14 are done (#37, #38). Also: add your student ID and email in `docs/report/main.tex`, and review the report sections on election and replication.
 
 ### Kushagra (`Kushagrabainsla`)
 
 Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 
 - The "after merge" steps for #31 to #34, #37 and #38 are done (PR #41): new load sweep, `loadgen` default, short lease in `fail-leader.sh`, TC-03 and TC-04 rerun on `main`, diagram I1 and slide 12.
-- Report: your sections, diagrams D3, D6, I1, the 8.2a screenshot, 9.3 on the final code, and your ID and email are done.
+- Report: the full draft is done (PR #42). Every claim was checked against the code and the run records.
 - Presentation: slides 4 (your part), 9, 11 and 12 are drafted in `docs/presentation/slides.md`, with the final numbers.
 
 ### All three
 
 | Work | Due | Next step |
 | --- | --- | --- |
-| Final report (IEEE, 10 to 15 pages) | 12-04 | The LaTeX report is in `docs/report/` (`make report`). Fill your red `\todo` parts; first drafts by 11-30. Each person adds their student ID and email. |
-| UML diagrams (6 design, 3 implementation) | 12-04 | 3 of 9 done (D3, D6, I1). Tejas: D1, D4, I3. Abhishek: D2, D5, I2. PlantUML in `docs/report/diagrams/`. |
+| Final report (IEEE, 10 to 15 pages) | 12-04 | Full draft in `docs/report/` (`make report`): about 13 pages of text, 21 with figures. Each person reads all of it by 12-02, mainly the parts on their own algorithms, and puts the abstract, introduction and conclusions in the team's own words. Tejas and Abhishek add their student ID and email (the only red `\todo` marks left). If the AWS run (#15) happens, update the AWS sentences in sections I, IV-C, IX and X. |
+| UML diagrams (6 design, 3 implementation) | 12-04 | All 9 done (D1 to D6, I1 to I3), drawn from the code. |
 | Recorded presentation (about 15 min) and slides | 12-03 | Agree on [docs/presentation/outline.md](presentation/outline.md) (14 slides, about 5 min each) and its slide tool by 11-24. Slides drafted by 11-30 in [slides.md](presentation/slides.md) (Kushagra's are done; Tejas: 1, 2, 3, 4, 8, 14; Abhishek: 4, 5, 6, 7, 10, 13); run-through and backup demo clips on 12-01. Demo steps: [demo-script.md](presentation/demo-script.md). |
 | Submission README (setup and division of work) | 12-03 | Drafted in [docs/submission.md](submission.md). Each person checks their rows. On 12-03, do its "Before you submit" list. |
 
@@ -54,6 +53,7 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 | --- | --- |
 | Failover test on AWS | First `make deploy-up` (#15) |
 | The scheduler skips a volunteer that just lost a lease on that unit (a slow volunteer can take back the unit it lost) | A follow-up to #8: needs a record of lost leases |
+| Catch-up waits for a majority of snapshots (today a new leader uses the snapshots that arrive within `SC_REPLICATION_TIMEOUT`; with 2 snapshots at the same index it keeps the first) | A follow-up to #14 (Abhishek). The report lists it as an improvement. |
 
 ## After merge
 
@@ -68,6 +68,7 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-25 | [#42](https://github.com/colmeabhi/sparecycles/pull/42) | Full report draft: every section, diagrams D1, D2, D4, D5, I2 and I3, screenshots for 8.1, 8.2b and 8.2c; facts checked against the code and the run records |
 | 2026-11-25 | [#41](https://github.com/colmeabhi/sparecycles/pull/41) | After-merge steps: load sweep on the final code (voting costs 32% at 4 volunteers), full mode needs 2 or more volunteers, `loadgen` uses workload defaults, short lease in `fail-leader.sh`, TC-03 and TC-04 rerun on `main`, diagram I1 and slide 12 updated |
 | 2026-11-22 | [#34](https://github.com/colmeabhi/sparecycles/pull/34) | Monte Carlo workload: `montecarlo` estimates pi with integer-only sampling, the same bytes on arm64 and amd64 (TC-15; closes #9) |
 | 2026-11-24 | [#31](https://github.com/colmeabhi/sparecycles/pull/31) | Lease expiry: `lease.Timeout`; a lost unit moves to another volunteer when its lease ends (TC-13; closes #6) |
