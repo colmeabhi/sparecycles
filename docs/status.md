@@ -15,7 +15,7 @@ GitHub issues hold the task details. This file only summarizes and links.
 | Code and recorded presentation | 2026-12-03 | 8 |
 | Final report | 2026-12-04 | 9 |
 
-**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Abhishek has PRs open for Bully election (#13) and replication (#14, stacked on #13); #15 is next.
+**State:** the base platform, gossip, security (now with session secrets, #35), scripts and the product page are done. Tejas has PRs open for all 4 of his issues (#31 to #34), with review comments. Bully election (#37), replication (#38) and the Terraform files (#39) are merged; the first real AWS run is next.
 
 ## Per person
 
@@ -34,11 +34,9 @@ Merge order: #31, #32, #33, #34.
 
 | Issue | Due | Next step | Blocked by |
 | --- | --- | --- | --- |
-| [#13 Bully election](https://github.com/colmeabhi/sparecycles/issues/13) | 11-27 | PR open: review, then merge | — |
-| [#14 Replication](https://github.com/colmeabhi/sparecycles/issues/14) | 11-28 | PR open: review, then merge | #13 (stacked on it) |
-| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Add `deploy/terraform` | Failover test on AWS needs #13 and #14 merged |
+| [#15 AWS with Terraform](https://github.com/colmeabhi/sparecycles/issues/15) | 11-29 | Terraform is on `main` (#39). Next: one real `make deploy-up` with the team account, a job from a laptop, the leader failover (`kill_leader_command` output), then `make deploy-down`. Paste the outputs in #15 and close it. | Team AWS account |
 
-Merge order: #13, then #14.
+#13 and #14 are done (#37, #38).
 
 ### Kushagra (`Kushagrabainsla`)
 
@@ -63,7 +61,7 @@ Issues #10, #11, #12 and #35 (session secrets) are done. Next:
 | --- | --- |
 | `make fail-faulty`, test case TC-03 | #7 |
 | Trust scores in #8 | #7 (`Decision.Wrong`) |
-| Failover test on AWS | #13, #14, #15 |
+| Failover test on AWS | First `make deploy-up` (#15) |
 
 ## After merge
 
@@ -72,7 +70,6 @@ Do these right after the named PR merges, in the same day:
 | After | Do |
 | --- | --- |
 | #7 merges | Run `make fail-faulty`. Record TC-03 in `docs/test-results.md`. |
-| #13 and #14 merge | Run `make fail-leader` on `main` to confirm TC-04 (it passed on the #14 branch). |
 | #7 merges | Kushagra: change `scripts/load-sweep.sh` so that "full" mode uses 2 or more volunteers (1 volunteer never reaches 2 of 3). Then run `make load-sweep` again, and update TC-08, report 9.3 and slide 12 (`docs/presentation/visuals/s12-evaluation.html`). |
 | #9 merges | Kushagra: give `cmd/loadgen` an empty `-params` default, as in the client, so `-workload montecarlo` works. |
 | #6 to #9 merge | Kushagra: update diagram I1 (the stubs that were replaced), and the test count on slide 12. |
@@ -84,6 +81,9 @@ Do these right after the named PR merges, in the same day:
 
 | Date | PR | What |
 | --- | --- | --- |
+| 2026-11-25 | [#39](https://github.com/colmeabhi/sparecycles/pull/39) | Terraform for AWS: 3 coordinators in 3 zones, spot volunteers, Prometheus; `make deploy-up` and `deploy-down`; CI checks it (refs #15; first apply to do) |
+| 2026-11-25 | [#38](https://github.com/colmeabhi/sparecycles/pull/38) | Task-table replication (2 of 3 copies) and leader catch-up; `make fail-leader` passes (closes #14, TC-04) |
+| 2026-11-25 | [#37](https://github.com/colmeabhi/sparecycles/pull/37) | Bully election with terms, majority and leader lease; 3 coordinators in Docker Compose (closes #13) |
 | 2026-11-23 | [#36](https://github.com/colmeabhi/sparecycles/pull/36) | Session secrets: nobody can act under another volunteer's ID (closes #35, TC-16) |
 | 2026-11-21 | [#30](https://github.com/colmeabhi/sparecycles/pull/30) | Docker Compose cluster tested with gossip and Prometheus (TC-12); Kushagra's ID and email in the report |
 | 2026-11-21 | [#29](https://github.com/colmeabhi/sparecycles/pull/29) | Slide text and speaker notes (`slides.md`); Kushagra's slides 4, 9, 11, 12 with 2 images |

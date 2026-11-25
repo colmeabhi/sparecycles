@@ -2,7 +2,8 @@ MODULE := github.com/colmeabhi/sparecycles
 GOBIN  := $(shell go env GOPATH)/bin
 
 .PHONY: help proto build test vet keys run-coordinator run-volunteer run-client up down logs clean \
-	load load-sweep fail-volunteer fail-faulty fail-leader evidence report
+	load load-sweep fail-volunteer fail-faulty fail-leader evidence report \
+	deploy-build deploy-up deploy-down deploy-check
 
 help:
 	@echo "make build            Build all binaries into ./bin"
@@ -22,6 +23,10 @@ help:
 	@echo "make fail-leader      Failure demo: kill the leader during a job"
 	@echo "make evidence         All 3 failure demos"
 	@echo "make report           Render diagrams and build docs/report/build/main.pdf"
+	@echo "make deploy-build     Build Linux binaries into ./dist for AWS"
+	@echo "make deploy-up        Build, then create the AWS cluster (Terraform)"
+	@echo "make deploy-down      Remove the AWS cluster"
+	@echo "make deploy-check     terraform fmt and validate (no AWS account needed)"
 
 proto:
 	protoc \
@@ -83,5 +88,22 @@ report:
 	mkdir -p docs/report/build
 	tectonic --outdir docs/report/build docs/report/main.tex
 
+TERRAFORM := terraform -chdir=deploy/terraform
+
+deploy-build:
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o dist/ ./cmd/coordinator ./cmd/volunteer ./cmd/client
+
+deploy-up: deploy-build
+	$(TERRAFORM) init -input=false
+	$(TERRAFORM) apply
+
+deploy-down:
+	$(TERRAFORM) destroy
+
+deploy-check:
+	$(TERRAFORM) fmt -check -recursive
+	$(TERRAFORM) init -backend=false -input=false
+	$(TERRAFORM) validate
+
 clean:
-	rm -rf bin result.png runs
+	rm -rf bin dist result.png runs
